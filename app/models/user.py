@@ -25,6 +25,7 @@ class User(BaseModel):
     # Relationships
     invoices = relationship("Invoice", back_populates="user")
     quotes = relationship("Quote", back_populates="user")
+    products = relationship("Product", back_populates="user")
     
     @property
     def full_name(self) -> str:

@@ -7,6 +7,8 @@ from app.models.base import Base
 from app.models.user import User
 from app.models.client import Client
 from app.models.invoice import Invoice, InvoiceItem, InvoiceStatus
+from app.models.product import Product
+from app.models.payment import Payment
 from app.core.security import get_password_hash
 from datetime import date, timedelta
 import uuid
@@ -92,6 +94,38 @@ def create_seed_data():
         db.add(client3)
         db.flush()
         
+        # Create sample products
+        product1 = Product(
+            name="Web Development Services",
+            description="Custom website development and programming",
+            price=100.00,
+            sku="WEB-DEV-001",
+            user_id=admin_user.id,
+            is_active=True
+        )
+        db.add(product1)
+        
+        product2 = Product(
+            name="SEO Optimization",
+            description="Search engine optimization services",
+            price=50.00,
+            sku="SEO-OPT-001", 
+            user_id=admin_user.id,
+            is_active=True
+        )
+        db.add(product2)
+        
+        product3 = Product(
+            name="Consulting Services",
+            description="Business and technical consulting",
+            price=150.00,
+            sku="CONSULT-001",
+            user_id=admin_user.id,
+            is_active=True
+        )
+        db.add(product3)
+        db.flush()
+        
         # Create sample invoices
         invoice1 = Invoice(
             user_id=admin_user.id,
@@ -115,10 +149,11 @@ def create_seed_data():
         # Add items to invoice1
         item1 = InvoiceItem(
             invoice_id=invoice1.id,
+            product_id=product1.id,
             name="Web Development Services",
             description="Custom website development",
-            quantity=1,
-            price=800.00,
+            quantity=8,
+            price=100.00,
             subtotal=800.00,
             total=800.00
         )
@@ -126,10 +161,11 @@ def create_seed_data():
         
         item2 = InvoiceItem(
             invoice_id=invoice1.id,
+            product_id=product2.id,
             name="SEO Optimization",
             description="Search engine optimization services",
-            quantity=1,
-            price=200.00,
+            quantity=4,
+            price=50.00,
             subtotal=200.00,
             total=200.00
         )
@@ -156,6 +192,7 @@ def create_seed_data():
         
         item3 = InvoiceItem(
             invoice_id=invoice2.id,
+            product_id=product3.id,
             name="Consulting Services",
             description="Business consultation",
             quantity=5,
@@ -164,6 +201,17 @@ def create_seed_data():
             total=500.00
         )
         db.add(item3)
+        
+        # Add payment for invoice2 (paid invoice)
+        payment1 = Payment(
+            invoice_id=invoice2.id,
+            amount=550.00,
+            payment_date=date.today() - timedelta(days=5),
+            payment_method="Bank Transfer",
+            reference_number="TXN-2025-001",
+            notes="Payment received via bank transfer"
+        )
+        db.add(payment1)
         
         # Draft invoice
         invoice3 = Invoice(
@@ -185,10 +233,11 @@ def create_seed_data():
         
         item4 = InvoiceItem(
             invoice_id=invoice3.id,
+            product_id=product1.id,
             name="Design Services",
             description="Logo and branding design",
-            quantity=1,
-            price=750.00,
+            quantity=5,
+            price=150.00,
             subtotal=750.00,
             total=750.00
         )

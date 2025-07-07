@@ -59,6 +59,10 @@ db-init:
 db-shell:
 	docker-compose -f docker-compose.python.yml exec db psql -U invoiceplane -d invoiceplane
 
+# Test database models
+test-models:
+	docker-compose -f docker-compose.python.yml exec web python test_models.py
+
 # Run tests
 test:
 	docker-compose -f docker-compose.python.yml exec web python -m pytest tests/ -v
