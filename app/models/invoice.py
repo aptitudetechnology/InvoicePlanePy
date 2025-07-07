@@ -1,7 +1,7 @@
-from sqlalchemy import Column, String, Text, Date, Decimal, ForeignKey, Enum, Boolean
+from sqlalchemy import Column, String, Text, Date, Decimal, ForeignKey, Enum, Boolean, Integer
 from sqlalchemy.orm import relationship
 from enum import Enum as PyEnum
-from .base import BaseModel
+from app.models.base import BaseModel
 
 class InvoiceStatus(PyEnum):
     DRAFT = 1

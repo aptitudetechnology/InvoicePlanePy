@@ -3,10 +3,10 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
-from ..database import get_db
-from ..models.user import User
-from ..models.invoice import Invoice
-from ..dependencies import get_current_user
+from app.database import get_db
+from app.models.user import User
+from app.models.invoice import Invoice
+from app.dependencies import get_current_user
 
 router = APIRouter(prefix="/invoices")
 templates = Jinja2Templates(directory="app/templates")

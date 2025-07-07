@@ -1,8 +1,6 @@
 from sqlalchemy import Column, Integer, DateTime, func
-from sqlalchemy.ext.declarative import declarative_base
+from app.database import Base
 from typing import Dict, Any
-
-Base = declarative_base()
 
 class BaseModel(Base):
     __abstract__ = True

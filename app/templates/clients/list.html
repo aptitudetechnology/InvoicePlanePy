@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Clients - InvoicePlane Python{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Clients</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="/clients/create" class="btn btn-primary">
+            <i class="bi bi-plus"></i> Add Client
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if clients %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Company</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client in clients %}
+                    <tr>
+                        <td>{{ client.full_name }}</td>
+                        <td>{{ client.company or '-' }}</td>
+                        <td>{{ client.email or '-' }}</td>
+                        <td>{{ client.phone or '-' }}</td>
+                        <td>
+                            {% if client.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="#" class="btn btn-outline-primary" onclick="event.preventDefault();" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="#" class="btn btn-outline-secondary" onclick="event.preventDefault();" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="#" class="btn btn-outline-danger" onclick="event.preventDefault();" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-people fs-1 text-muted"></i>
+            <h4 class="text-muted mt-3">No clients yet</h4>
+            <p class="text-muted">Get started by adding your first client.</p>
+            <a href="/clients/create" class="btn btn-primary">
+                <i class="bi bi-plus"></i> Add Client
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

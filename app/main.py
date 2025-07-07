@@ -4,11 +4,13 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
-from .database import get_db, engine
-from .models.base import Base
-from .routers import auth, dashboard, clients, invoices
-from .dependencies import get_current_user_optional
-from .models.user import User
+from app.database import get_db, engine, Base
+from app.routers import auth, dashboard, clients, invoices
+from app.dependencies import get_current_user_optional
+from app.models.user import User
+
+# Import all models to ensure they're registered with Base
+from app.models import user, client, invoice
 
 # Create database tables
 Base.metadata.create_all(bind=engine)

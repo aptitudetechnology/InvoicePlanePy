@@ -4,10 +4,10 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from datetime import timedelta
 
-from ..database import get_db
-from ..models.user import User
-from ..core.security import verify_password, create_access_token
-from ..dependencies import get_current_user_optional
+from app.database import get_db
+from app.models.user import User
+from app.core.security import verify_password, create_access_token
+from app.dependencies import get_current_user_optional
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")

@@ -4,11 +4,11 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from ..database import get_db
-from ..models.user import User
-from ..models.client import Client
-from ..models.invoice import Invoice, InvoiceStatus
-from ..dependencies import get_current_user
+from app.database import get_db
+from app.models.user import User
+from app.models.client import Client
+from app.models.invoice import Invoice, InvoiceStatus
+from app.dependencies import get_current_user
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")

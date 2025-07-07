@@ -1,0 +1,107 @@
+.PHONY: help build up down logs shell db-init db-shell test clean
+
+# Default target
+help:
+	@echo "InvoicePlane Python - Development Commands"
+	@echo ""
+	@echo "Available commands:"
+	@echo "  make build     - Build Docker containers"
+	@echo "  make up        - Start the application"
+	@echo "  make down      - Stop the application"
+	@echo "  make logs      - View application logs"
+	@echo "  make shell     - Open shell in web container"
+	@echo "  make db-init   - Initialize database with seed data"
+	@echo "  make db-shell  - Open PostgreSQL shell"
+	@echo "  make test      - Run tests"
+	@echo "  make clean     - Clean up containers and volumes"
+	@echo ""
+
+# Build containers
+build:
+	docker-compose -f docker-compose.python.yml build
+
+# Start application
+up:
+	docker-compose -f docker-compose.python.yml up -d
+	@echo ""
+	@echo "🚀 InvoicePlane Python is starting..."
+	@echo "📱 Web interface: http://localhost:8000"
+	@echo "🗄️  Database: localhost:5432"
+	@echo ""
+	@echo "Demo credentials:"
+	@echo "  Admin: admin / admin123"
+	@echo "  User:  user / user123"
+	@echo ""
+	@echo "Run 'make logs' to see application logs"
+	@echo "Run 'make db-init' to initialize the database"
+
+# Start with logs
+up-logs:
+	docker-compose -f docker-compose.python.yml up
+
+# Stop application
+down:
+	docker-compose -f docker-compose.python.yml down
+
+# View logs
+logs:
+	docker-compose -f docker-compose.python.yml logs -f web
+
+# Open shell in web container
+shell:
+	docker-compose -f docker-compose.python.yml exec web bash
+
+# Initialize database with seed data
+db-init:
+	docker-compose -f docker-compose.python.yml exec web python init_db.py
+
+# Open PostgreSQL shell
+db-shell:
+	docker-compose -f docker-compose.python.yml exec db psql -U invoiceplane -d invoiceplane
+
+# Run tests
+test:
+	docker-compose -f docker-compose.python.yml exec web python -m pytest tests/ -v
+
+# Development setup (build, start, and initialize)
+dev-setup: build up
+	@echo "Waiting for database to be ready..."
+	@sleep 10
+	@make db-init
+	@echo ""
+	@echo "✅ Development environment ready!"
+	@echo "🌐 Open http://localhost:8000 in your browser"
+
+# Clean up everything
+clean:
+	docker-compose -f docker-compose.python.yml down -v
+	docker system prune -f
+
+# Restart application
+restart: down up
+
+# View database logs
+db-logs:
+	docker-compose -f docker-compose.python.yml logs -f db
+
+# Backup database
+db-backup:
+	docker-compose -f docker-compose.python.yml exec db pg_dump -U invoiceplane invoiceplane > backup_$(shell date +%Y%m%d_%H%M%S).sql
+
+# Show running containers
+status:
+	docker-compose -f docker-compose.python.yml ps
+
+# Install Python dependencies locally (for IDE support)
+install-local:
+	pip install -r requirements.txt
+
+# Format code
+format:
+	docker-compose -f docker-compose.python.yml exec web black app/ --line-length 88
+	docker-compose -f docker-compose.python.yml exec web isort app/
+
+# Lint code
+lint:
+	docker-compose -f docker-compose.python.yml exec web flake8 app/
+	docker-compose -f docker-compose.python.yml exec web mypy app/
