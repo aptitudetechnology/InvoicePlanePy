@@ -35,10 +35,10 @@ else:
 templates = Jinja2Templates(directory="app/templates")
 
 # Include routers
-app.include_router(auth.router)
-app.include_router(dashboard.router)
-app.include_router(clients.router)
-app.include_router(invoices.router)
+app.include_router(auth.router, prefix="/auth", tags=["authentication"])
+app.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
+app.include_router(clients.router, prefix="/clients", tags=["clients"])
+app.include_router(invoices.router, prefix="/invoices", tags=["invoices"])
 
 @app.get("/", response_class=HTMLResponse)
 async def root(
@@ -47,7 +47,7 @@ async def root(
     current_user: User = Depends(get_current_user_optional)
 ):
     if not current_user:
-        return RedirectResponse(url="/login", status_code=302)
+        return RedirectResponse(url="/auth/login", status_code=302)
     
     # Redirect to dashboard
     return RedirectResponse(url="/dashboard", status_code=302)

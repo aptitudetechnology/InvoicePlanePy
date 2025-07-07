@@ -25,7 +25,7 @@ up:
 	docker-compose -f docker-compose.python.yml up -d
 	@echo ""
 	@echo "🚀 InvoicePlane Python is starting..."
-	@echo "📱 Web interface: http://localhost:8000"
+	@echo "📱 Web interface: http://localhost:8080"
 	@echo "🗄️  Database: localhost:5432"
 	@echo ""
 	@echo "Demo credentials:"
@@ -74,7 +74,7 @@ dev-setup: build up
 	@make db-init
 	@echo ""
 	@echo "✅ Development environment ready!"
-	@echo "🌐 Open http://localhost:8000 in your browser"
+	@echo "🌐 Open http://localhost:8080 in your browser"
 
 # Clean up everything
 clean:

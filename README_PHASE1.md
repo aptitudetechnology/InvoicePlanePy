@@ -14,7 +14,7 @@ A modern Python rewrite of InvoicePlane using FastAPI, SQLAlchemy, and PostgreSQ
 make dev-setup
 
 # View the application
-open http://localhost:8000
+open http://localhost:8080
 ```
 
 ### Option 2: Manual Docker Commands
@@ -44,9 +44,9 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 ## 📱 Access the Application
 
-- **Web Interface**: http://localhost:8000
+- **Web Interface**: http://localhost:8080
 - **Database**: localhost:5432
-- **API Docs**: http://localhost:8000/docs (FastAPI automatic documentation)
+- **API Docs**: http://localhost:8080/docs (FastAPI automatic documentation)
 
 ## 🔐 Demo Credentials
 
@@ -138,7 +138,7 @@ sudo chown -R $USER:$USER .
 ```
 
 ### Port Conflicts
-If port 8000 or 5432 are already in use, edit `docker-compose.python.yml` to use different ports.
+If port 8080 or 5432 are already in use, edit `docker-compose.python.yml` to use different ports.
 
 ## 📁 Project Structure
 
