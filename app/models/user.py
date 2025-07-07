@@ -47,6 +47,7 @@ class User(BaseModel):
     last_login = Column(DateTime)
     
     # Relationships
+    api_keys = relationship("ApiKey", back_populates="user", cascade="all, delete-orphan")
     invoices = relationship("Invoice", back_populates="user")
     # quotes = relationship("Quote", back_populates="user")  # TODO: Create Quote model
     products = relationship("Product", back_populates="user")

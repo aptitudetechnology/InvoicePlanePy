@@ -4,6 +4,7 @@ from .client import Client
 from .invoice import Invoice, InvoiceItem, InvoiceStatus
 from .product import Product
 from .payment import Payment
+from .api_key import ApiKey
 
 __all__ = [
     "BaseModel",
@@ -13,5 +14,6 @@ __all__ = [
     "InvoiceItem", 
     "InvoiceStatus",
     "Product",
-    "Payment"
+    "Payment",
+    "ApiKey"
 ]

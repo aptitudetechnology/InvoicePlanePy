@@ -84,6 +84,47 @@ def migrate_add_profile_columns():
         logger.error(f"❌ Error adding profile columns: {e}")
         raise
 
+def migrate_create_api_keys_table():
+    """Create the api_keys table if it doesn't exist"""
+    try:
+        with engine.begin() as conn:
+            # Check if api_keys table exists
+            result = conn.execute(text("""
+                SELECT table_name 
+                FROM information_schema.tables 
+                WHERE table_name = 'api_keys'
+            """))
+            
+            if result.fetchone() is None:
+                logger.info("Creating api_keys table...")
+                
+                # Create the api_keys table
+                conn.execute(text("""
+                    CREATE TABLE api_keys (
+                        id SERIAL PRIMARY KEY,
+                        key_hash VARCHAR(255) UNIQUE NOT NULL,
+                        key_prefix VARCHAR(10) NOT NULL,
+                        name VARCHAR(100),
+                        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        is_active BOOLEAN DEFAULT true,
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                        last_used_at TIMESTAMP WITH TIME ZONE,
+                        expires_at TIMESTAMP WITH TIME ZONE
+                    )
+                """))
+                
+                # Create indexes
+                conn.execute(text("CREATE INDEX idx_api_keys_key_hash ON api_keys(key_hash)"))
+                conn.execute(text("CREATE INDEX idx_api_keys_user_id ON api_keys(user_id)"))
+                
+                logger.info("✅ Successfully created api_keys table")
+            else:
+                logger.info("✅ api_keys table already exists")
+                
+    except Exception as e:
+        logger.error(f"❌ Error creating api_keys table: {e}")
+        raise
+
 def run_migrations():
     """Run all database migrations"""
     logger.info("🔄 Running database migrations...")
@@ -91,6 +132,7 @@ def run_migrations():
     try:
         migrate_add_role_column()
         migrate_add_profile_columns()
+        migrate_create_api_keys_table()
         logger.info("✅ All database migrations completed successfully")
     except Exception as e:
         logger.error(f"❌ Database migration failed: {e}")
