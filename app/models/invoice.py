@@ -1,7 +1,8 @@
-from sqlalchemy import Column, String, Text, Date, Decimal, ForeignKey, Enum, Boolean, Integer
+from sqlalchemy import Column, String, Text, Date, ForeignKey, Enum, Boolean, Integer, Numeric
 from sqlalchemy.orm import relationship
 from enum import Enum as PyEnum
 from app.models.base import BaseModel
+
 
 class InvoiceStatus(PyEnum):
     DRAFT = 1
@@ -10,6 +11,7 @@ class InvoiceStatus(PyEnum):
     PAID = 4
     OVERDUE = 5
     CANCELLED = 6
+
 
 class Invoice(BaseModel):
     __tablename__ = "invoices"
@@ -34,11 +36,11 @@ class Invoice(BaseModel):
     url_key = Column(String(32), unique=True)
     
     # Calculated fields
-    subtotal = Column(Decimal(10, 2), default=0)
-    tax_total = Column(Decimal(10, 2), default=0)
-    total = Column(Decimal(10, 2), default=0)
-    paid_amount = Column(Decimal(10, 2), default=0)
-    balance = Column(Decimal(10, 2), default=0)
+    subtotal = Column(Numeric(10, 2), default=0)
+    tax_total = Column(Numeric(10, 2), default=0)
+    total = Column(Numeric(10, 2), default=0)
+    paid_amount = Column(Numeric(10, 2), default=0)
+    balance = Column(Numeric(10, 2), default=0)
     
     # Relationships
     client = relationship("Client", back_populates="invoices")
@@ -50,7 +52,7 @@ class Invoice(BaseModel):
     def is_overdue(self) -> bool:
         """Check if invoice is overdue"""
         from datetime import date
-        return (self.status not in [InvoiceStatus.DRAFT, InvoiceStatus.PAID] 
+        return (self.status not in [InvoiceStatus.DRAFT, InvoiceStatus.PAID]
                 and self.due_date < date.today())
     
     @property
@@ -60,6 +62,7 @@ class Invoice(BaseModel):
             return 0
         from datetime import date
         return (date.today() - self.due_date).days
+
 
 class InvoiceItem(BaseModel):
     __tablename__ = "invoice_items"
@@ -71,14 +74,14 @@ class InvoiceItem(BaseModel):
     # Item details
     name = Column(String(100), nullable=False)
     description = Column(Text)
-    quantity = Column(Decimal(10, 2), nullable=False)
-    price = Column(Decimal(10, 2), nullable=False)
+    quantity = Column(Numeric(10, 2), nullable=False)
+    price = Column(Numeric(10, 2), nullable=False)
     order = Column(Integer, default=0)
     
     # Calculated amounts
-    subtotal = Column(Decimal(10, 2))
-    tax_amount = Column(Decimal(10, 2))
-    total = Column(Decimal(10, 2))
+    subtotal = Column(Numeric(10, 2))
+    tax_amount = Column(Numeric(10, 2))
+    total = Column(Numeric(10, 2))
     
     # Relationships
     invoice = relationship("Invoice", back_populates="items")
