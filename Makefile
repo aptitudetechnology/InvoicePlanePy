@@ -1,19 +1,20 @@
-.PHONY: help build up down logs shell db-init db-shell test clean
+.PHONY: help build up down logs shell db-init db-shell test test-routes clean
 
 # Default target
 help:
 	@echo "InvoicePlane Python - Development Commands"
 	@echo ""
 	@echo "Available commands:"
-	@echo "  make build     - Build Docker containers"
-	@echo "  make up        - Start the application"
-	@echo "  make down      - Stop the application"
-	@echo "  make logs      - View application logs"
-	@echo "  make shell     - Open shell in web container"
-	@echo "  make db-init   - Initialize database with seed data"
-	@echo "  make db-shell  - Open PostgreSQL shell"
-	@echo "  make test      - Run tests"
-	@echo "  make clean     - Clean up containers and volumes"
+	@echo "  make build       - Build Docker containers"
+	@echo "  make up          - Start the application"
+	@echo "  make down        - Stop the application"
+	@echo "  make logs        - View application logs"
+	@echo "  make shell       - Open shell in web container"
+	@echo "  make db-init     - Initialize database with seed data"
+	@echo "  make db-shell    - Open PostgreSQL shell"
+	@echo "  make test        - Run tests"
+	@echo "  make test-routes - Test API routes and authentication"
+	@echo "  make clean       - Clean up containers and volumes"
 	@echo ""
 
 # Build containers
@@ -62,6 +63,11 @@ db-shell:
 # Test database models
 test-models:
 	docker-compose -f docker-compose.python.yml exec web python test_models.py
+
+# Test API routes and authentication
+test-routes:
+	@echo "🔍 Testing FastAPI routes..."
+	python scripts/test_routes.py
 
 # Run tests
 test:

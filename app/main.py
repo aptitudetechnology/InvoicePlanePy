@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request, Depends
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from sqlalchemy.orm import Session
 import os
 from pathlib import Path
@@ -39,6 +39,56 @@ app.include_router(auth.router, prefix="/auth", tags=["authentication"])
 app.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
 app.include_router(clients.router, prefix="/clients", tags=["clients"])
 app.include_router(invoices.router, prefix="/invoices", tags=["invoices"])
+
+# Debug route to show all registered routes
+@app.get("/debug/routes")
+async def debug_routes():
+    """Debug endpoint to show all registered routes"""
+    routes = []
+    for route in app.routes:
+        if hasattr(route, 'methods') and hasattr(route, 'path'):
+            routes.append({
+                "path": route.path,
+                "methods": list(route.methods),
+                "name": getattr(route, 'name', None)
+            })
+    return {"routes": routes}
+
+# Startup event to print routes when app starts
+@app.on_event("startup")
+async def startup_event():
+    print("\n" + "="*50)
+    print("🚀 FastAPI Routes Registered:")
+    print("="*50)
+    for route in app.routes:
+        if hasattr(route, 'methods') and hasattr(route, 'path'):
+            methods = ", ".join(route.methods)
+            print(f"  {methods:<15} {route.path}")
+    print("="*50 + "\n")
+    
+    # Check if login routes are properly configured
+    check_login_routes()
+
+def check_login_routes():
+    """Check if login routes are properly configured"""
+    auth_login_get = False
+    auth_login_post = False
+    
+    for route in app.routes:
+        if hasattr(route, 'methods') and hasattr(route, 'path'):
+            if route.path == '/auth/login':
+                if 'GET' in route.methods:
+                    auth_login_get = True
+                if 'POST' in route.methods:
+                    auth_login_post = True
+    
+    print(f"✅ GET /auth/login exists: {auth_login_get}")
+    print(f"{'✅' if auth_login_post else '❌'} POST /auth/login exists: {auth_login_post}")
+    
+    if not auth_login_post:
+        print("\n❌ MISSING POST /auth/login ROUTE!")
+        print("The authentication router may not be properly configured.")
+        print("Check app/routers/auth.py for POST route definition.\n")
 
 @app.get("/", response_class=HTMLResponse)
 async def root(
