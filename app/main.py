@@ -3,6 +3,8 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
+import os
+from pathlib import Path
 
 from app.database import get_db, engine, Base
 from app.routers import auth, dashboard, clients, invoices
@@ -17,8 +19,17 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="InvoicePlane Python", version="1.0.0")
 
-# Static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Mount static files only if directory exists
+static_dir = Path("static")
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory="static"), name="static")
+else:
+    # Create static directory structure for development
+    static_dir.mkdir(exist_ok=True)
+    (static_dir / "css").mkdir(exist_ok=True)
+    (static_dir / "js").mkdir(exist_ok=True)
+    (static_dir / "images").mkdir(exist_ok=True)
+    app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Templates
 templates = Jinja2Templates(directory="app/templates")
