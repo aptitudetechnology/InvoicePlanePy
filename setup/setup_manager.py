@@ -188,11 +188,17 @@ class SetupManager:
                 # Split by statements and execute each one
                 statements = [stmt.strip() for stmt in sql_content.split(';') if stmt.strip()]
                 
-                with engine.connect() as conn:
-                    for statement in statements:
-                        if statement:
-                            conn.execute(text(statement))
-                    conn.commit()
+                # Execute each statement in its own transaction to avoid rollback issues
+                for i, statement in enumerate(statements):
+                    if statement:
+                        try:
+                            with engine.connect() as conn:
+                                with conn.begin():  # Explicit transaction for each statement
+                                    conn.execute(text(statement))
+                        except Exception as stmt_error:
+                            print(f"❌ Error in statement {i+1}: {stmt_error}")
+                            print(f"Statement: {statement[:100]}...")
+                            raise stmt_error
             
             step.completed = True
             print("✅ Database tables installed successfully")

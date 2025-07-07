@@ -206,6 +206,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
 );
 
 -- Create indexes for better performance
+-- Note: Creating indexes after all tables are created to avoid dependency issues
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_clients_user ON clients(user_id);
