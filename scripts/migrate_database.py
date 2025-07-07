@@ -125,6 +125,57 @@ def migrate_create_api_keys_table():
         logger.error(f"❌ Error creating api_keys table: {e}")
         raise
 
+def migrate_update_clients_table():
+    """Add missing columns to clients table"""
+    try:
+        with engine.begin() as conn:
+            # List of columns to add to clients table
+            columns_to_add = [
+                ("gender", "VARCHAR(20)"),
+                ("birthdate", "DATE"),
+                ("abn", "VARCHAR(50)"),  # Australian Business Number
+                ("language", "VARCHAR(10) DEFAULT 'en'"),
+                ("is_active", "BOOLEAN DEFAULT true")
+            ]
+            
+            for column_name, column_type in columns_to_add:
+                # Check if column exists
+                result = conn.execute(text(f"""
+                    SELECT column_name 
+                    FROM information_schema.columns 
+                    WHERE table_name = 'clients' AND column_name = '{column_name}'
+                """))
+                
+                if result.fetchone() is None:
+                    logger.info(f"Adding missing '{column_name}' column to clients table...")
+                    conn.execute(text(f"ALTER TABLE clients ADD COLUMN {column_name} {column_type}"))
+                    logger.info(f"✅ Successfully added '{column_name}' column to clients table")
+                else:
+                    logger.info(f"✅ '{column_name}' column already exists in clients table")
+                    
+            # Update column types for existing columns to match new requirements
+            column_updates = [
+                ("address_1", "VARCHAR(255)"),  # Increase from 100
+                ("address_2", "VARCHAR(255)"),  # Increase from 100
+                ("city", "VARCHAR(100)"),       # Increase from 45
+                ("state", "VARCHAR(100)"),      # Increase from 35
+                ("zip_code", "VARCHAR(20)"),    # Increase from 15
+                ("country", "VARCHAR(50)"),     # Increase from 35
+                ("website", "VARCHAR(255)")     # Increase from 100
+            ]
+            
+            for column_name, new_type in column_updates:
+                try:
+                    logger.info(f"Updating '{column_name}' column type in clients table...")
+                    conn.execute(text(f"ALTER TABLE clients ALTER COLUMN {column_name} TYPE {new_type}"))
+                    logger.info(f"✅ Successfully updated '{column_name}' column type")
+                except Exception as e:
+                    logger.warning(f"⚠️  Could not update '{column_name}' column type: {e}")
+                    
+    except Exception as e:
+        logger.error(f"❌ Error updating clients table: {e}")
+        raise
+
 def run_migrations():
     """Run all database migrations"""
     logger.info("🔄 Running database migrations...")
@@ -133,6 +184,7 @@ def run_migrations():
         migrate_add_role_column()
         migrate_add_profile_columns()
         migrate_create_api_keys_table()
+        migrate_update_clients_table()
         logger.info("✅ All database migrations completed successfully")
     except Exception as e:
         logger.error(f"❌ Database migration failed: {e}")
