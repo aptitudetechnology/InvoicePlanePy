@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 
 from app.database import get_db, engine, Base
-from app.routers import auth, dashboard, clients, invoices
+from app.routers import auth, dashboard, clients, invoices, quotes, payments, products, tasks, reports, settings, help, notifications, profile
 from app.dependencies import get_current_user_optional
 from app.models.user import User
 
@@ -39,6 +39,15 @@ app.include_router(auth.router, prefix="/auth", tags=["authentication"])
 app.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
 app.include_router(clients.router, prefix="/clients", tags=["clients"])
 app.include_router(invoices.router, prefix="/invoices", tags=["invoices"])
+app.include_router(quotes.router, prefix="/quotes", tags=["quotes"])
+app.include_router(payments.router, prefix="/payments", tags=["payments"])
+app.include_router(products.router, prefix="/products", tags=["products"])
+app.include_router(tasks.router, prefix="/tasks", tags=["tasks"])
+app.include_router(reports.router, prefix="/reports", tags=["reports"])
+app.include_router(settings.router, prefix="/settings", tags=["settings"])
+app.include_router(help.router, prefix="/help", tags=["help"])
+app.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
+app.include_router(profile.router, prefix="/profile", tags=["profile"])
 
 # Debug route to show all registered routes
 @app.get("/debug/routes")

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Create Quote</h2>
+            <a href="/quotes" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Quotes
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form method="post" action="/quotes/create">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="client_id" class="form-label">Client</label>
+                            <select class="form-select" id="client_id" name="client_id" required>
+                                <option value="">Select a client...</option>
+                                <!-- TODO: Populate with clients -->
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="quote_date" class="form-label">Quote Date</label>
+                            <input type="date" class="form-control" id="quote_date" name="quote_date" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="valid_until" class="form-label">Valid Until</label>
+                            <input type="date" class="form-control" id="valid_until" name="valid_until">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="draft">Draft</option>
+                                <option value="sent">Sent</option>
+                                <option value="accepted">Accepted</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <h5>Items</h5>
+                        <p class="text-muted">Item management will be implemented in a future version.</p>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Create Quote
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Help & Documentation</h2>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h4>Welcome to InvoicePlane Python</h4>
+                        <p>This is the Python/FastAPI version of InvoicePlane, a modern invoicing application.</p>
+                        
+                        <h5>Getting Started</h5>
+                        <ul>
+                            <li>Use the <strong>Dashboard</strong> to get an overview of your business</li>
+                            <li>Manage your <strong>Clients</strong> to keep track of customer information</li>
+                            <li>Create <strong>Quotes</strong> to send estimates to potential customers</li>
+                            <li>Generate <strong>Invoices</strong> for completed work</li>
+                            <li>Record <strong>Payments</strong> to track what has been paid</li>
+                            <li>Manage your <strong>Products</strong> catalog for easy invoicing</li>
+                        </ul>
+
+                        <h5>Quick Actions</h5>
+                        <p>Use the Quick Actions bar below the navigation to quickly:</p>
+                        <ul>
+                            <li><strong>Add Client</strong> - Register a new customer</li>
+                            <li><strong>Create Quote</strong> - Send an estimate</li>
+                            <li><strong>Create Invoice</strong> - Bill for completed work</li>
+                            <li><strong>Enter Payment</strong> - Record received payments</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Quick Links</h5>
+                        <div class="list-group list-group-flush">
+                            <a href="/help/faq" class="list-group-item list-group-item-action">
+                                <i class="bi bi-question-circle me-2"></i>Frequently Asked Questions
+                            </a>
+                            <a href="/help/documentation" class="list-group-item list-group-item-action">
+                                <i class="bi bi-book me-2"></i>Documentation
+                            </a>
+                            <a href="/settings" class="list-group-item list-group-item-action">
+                                <i class="bi bi-gear me-2"></i>Settings
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

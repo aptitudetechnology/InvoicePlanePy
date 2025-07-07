@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Settings</h2>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-building fs-1 text-primary mb-3"></i>
+                        <h5>Company Settings</h5>
+                        <p class="text-muted">Configure company information and branding</p>
+                        <a href="/settings/company" class="btn btn-primary">Manage</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-people fs-1 text-success mb-3"></i>
+                        <h5>User Management</h5>
+                        <p class="text-muted">Manage user accounts and permissions</p>
+                        <a href="/settings/users" class="btn btn-success">Manage</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-receipt fs-1 text-info mb-3"></i>
+                        <h5>Invoice Settings</h5>
+                        <p class="text-muted">Configure invoice templates and numbering</p>
+                        <a href="/settings/invoice" class="btn btn-info">Manage</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

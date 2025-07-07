@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Quotes</h2>
+            <a href="/quotes/create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Create Quote
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                {% if quotes %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Quote #</th>
+                                <th>Client</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for quote in quotes %}
+                            <tr>
+                                <td><a href="/quotes/{{ quote.id }}">#{{ quote.id }}</a></td>
+                                <td>{{ quote.client_name }}</td>
+                                <td>{{ quote.date }}</td>
+                                <td>${{ quote.amount }}</td>
+                                <td><span class="badge bg-secondary">{{ quote.status }}</span></td>
+                                <td>
+                                    <a href="/quotes/{{ quote.id }}" class="btn btn-sm btn-outline-primary">View</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-file-text fs-1 text-muted mb-3"></i>
+                    <h4 class="text-muted">No quotes found</h4>
+                    <p class="text-muted">Create your first quote to get started.</p>
+                    <a href="/quotes/create" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Create Quote
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
