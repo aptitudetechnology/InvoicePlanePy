@@ -176,6 +176,86 @@ def migrate_update_clients_table():
         logger.error(f"❌ Error updating clients table: {e}")
         raise
 
+def migrate_create_product_tables():
+    """Create product families and units tables if they don't exist"""
+    try:
+        with engine.begin() as conn:
+            # Check if product_families table exists
+            result = conn.execute(text("""
+                SELECT table_name 
+                FROM information_schema.tables 
+                WHERE table_name = 'product_families'
+            """))
+            
+            if result.fetchone() is None:
+                logger.info("Creating product_families table...")
+                
+                conn.execute(text("""
+                    CREATE TABLE product_families (
+                        id SERIAL PRIMARY KEY,
+                        name VARCHAR(100) NOT NULL,
+                        description TEXT,
+                        is_active BOOLEAN DEFAULT true,
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                    )
+                """))
+                
+                logger.info("✅ Successfully created product_families table")
+            else:
+                logger.info("✅ product_families table already exists")
+
+            # Check if product_units table exists
+            result = conn.execute(text("""
+                SELECT table_name 
+                FROM information_schema.tables 
+                WHERE table_name = 'product_units'
+            """))
+            
+            if result.fetchone() is None:
+                logger.info("Creating product_units table...")
+                
+                conn.execute(text("""
+                    CREATE TABLE product_units (
+                        id SERIAL PRIMARY KEY,
+                        name VARCHAR(50) NOT NULL,
+                        abbreviation VARCHAR(10) NOT NULL,
+                        description TEXT,
+                        is_active BOOLEAN DEFAULT true,
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                    )
+                """))
+                
+                logger.info("✅ Successfully created product_units table")
+            else:
+                logger.info("✅ product_units table already exists")
+                
+            # Add foreign key columns to products table if they don't exist
+            columns_to_add = [
+                ("family_id", "INTEGER REFERENCES product_families(id)"),
+                ("unit_id", "INTEGER REFERENCES product_units(id)")
+            ]
+            
+            for column_name, column_type in columns_to_add:
+                # Check if column exists
+                result = conn.execute(text(f"""
+                    SELECT column_name 
+                    FROM information_schema.columns 
+                    WHERE table_name = 'products' AND column_name = '{column_name}'
+                """))
+                
+                if result.fetchone() is None:
+                    logger.info(f"Adding '{column_name}' column to products table...")
+                    conn.execute(text(f"ALTER TABLE products ADD COLUMN {column_name} {column_type}"))
+                    logger.info(f"✅ Successfully added '{column_name}' column to products table")
+                else:
+                    logger.info(f"✅ '{column_name}' column already exists in products table")
+                    
+    except Exception as e:
+        logger.error(f"❌ Error creating product tables: {e}")
+        raise
+
 def run_migrations():
     """Run all database migrations"""
     logger.info("🔄 Running database migrations...")
@@ -185,6 +265,7 @@ def run_migrations():
         migrate_add_profile_columns()
         migrate_create_api_keys_table()
         migrate_update_clients_table()
+        migrate_create_product_tables()
         logger.info("✅ All database migrations completed successfully")
     except Exception as e:
         logger.error(f"❌ Database migration failed: {e}")

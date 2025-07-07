@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Product Families - InvoicePlane{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Product Families</h1>
+                <a href="/products/families/create" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Product Family
+                </a>
+            </div>
+
+            {% if families %}
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Products Count</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for family in families %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ family.name }}</strong>
+                                    </td>
+                                    <td>{{ family.description or '-' }}</td>
+                                    <td>
+                                        <span class="badge badge-info">{{ family.products|length }}</span>
+                                    </td>
+                                    <td>
+                                        {% if family.is_active %}
+                                            <span class="badge badge-success">Active</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="/products/families/{{ family.id }}" class="btn btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="/products/families/{{ family.id }}/edit" class="btn btn-outline-secondary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-boxes fa-3x text-muted mb-3"></i>
+                    <h3 class="text-muted">No Product Families</h3>
+                    <p class="text-muted">You haven't created any product families yet.</p>
+                    <a href="/products/families/create" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create Your First Product Family
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

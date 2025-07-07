@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Create Product Unit - InvoicePlane{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Create Product Unit</h1>
+                <a href="/products/units" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Units
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" action="/products/units/create">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label for="name">Unit Name *</label>
+                                    <input type="text" class="form-control" id="name" name="name" required>
+                                    <small class="form-text text-muted">e.g., Kilogram, Meter, Piece</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="abbreviation">Abbreviation *</label>
+                                    <input type="text" class="form-control" id="abbreviation" name="abbreviation" maxlength="10" required>
+                                    <small class="form-text text-muted">e.g., kg, m, pcs</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="description">Description</label>
+                                    <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Create Product Unit
+                                    </button>
+                                    <a href="/products/units" class="btn btn-secondary ml-2">
+                                        Cancel
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
