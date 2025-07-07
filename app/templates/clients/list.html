@@ -12,7 +12,6 @@
     </div>
 </div>
 
-<!-- Summary Cards -->
 <div class="row mb-4">
     <div class="col-md-3">
         <div class="card stats-card">
@@ -107,6 +106,9 @@
                                 <a href="/invoices/create?client_id={{ client.id }}" class="btn btn-outline-success" title="Create Invoice">
                                     <i class="bi bi-receipt"></i>
                                 </a>
+                                <a href="#" class="btn btn-outline-danger" onclick="event.preventDefault();" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </a>
                             </div>
                         </td>
                     </tr>
@@ -121,31 +123,6 @@
             <p class="text-muted">Start by adding your first client to begin creating invoices and quotes.</p>
             <a href="/clients/create" class="btn btn-primary">
                 <i class="bi bi-plus"></i> Add First Client
-            </a>
-        </div>
-        {% endif %}
-    </div>
-</div>
-{% endblock %}
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <a href="#" class="btn btn-outline-danger" onclick="event.preventDefault();" title="Delete">
-                                    <i class="bi bi-trash"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div class="text-center py-5">
-            <i class="bi bi-people fs-1 text-muted"></i>
-            <h4 class="text-muted mt-3">No clients yet</h4>
-            <p class="text-muted">Get started by adding your first client.</p>
-            <a href="/clients/create" class="btn btn-primary">
-                <i class="bi bi-plus"></i> Add Client
             </a>
         </div>
         {% endif %}
