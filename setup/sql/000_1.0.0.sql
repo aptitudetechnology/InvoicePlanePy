@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- Clients table
 CREATE TABLE IF NOT EXISTS clients (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(id),
+    user_id INTEGER REFERENCES users(id) NOT NULL,
     name VARCHAR(255) NOT NULL,
     surname VARCHAR(255),
     email VARCHAR(100),
@@ -167,7 +167,7 @@ CREATE TABLE IF NOT EXISTS projects (
     start_date TIMESTAMP WITH TIME ZONE,
     end_date TIMESTAMP WITH TIME ZONE,
     client_id INTEGER REFERENCES clients(id),
-    user_id INTEGER NOT NULL REFERENCES users(id),
+    user_id INTEGER REFERENCES users(id) NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -185,7 +185,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     completed_date TIMESTAMP WITH TIME ZONE,
     project_id INTEGER REFERENCES projects(id),
     client_id INTEGER REFERENCES clients(id),
-    user_id INTEGER NOT NULL REFERENCES users(id),
+    user_id INTEGER REFERENCES users(id) NOT NULL,
     assigned_to_id INTEGER REFERENCES users(id),
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -198,7 +198,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
     key_hash VARCHAR(255) UNIQUE NOT NULL,
     key_prefix VARCHAR(10) NOT NULL,
     name VARCHAR(100),
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id INTEGER REFERENCES users(id) NOT NULL ON DELETE CASCADE,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     last_used_at TIMESTAMP WITH TIME ZONE,
