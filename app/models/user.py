@@ -24,7 +24,7 @@ class User(BaseModel):
     
     # Relationships
     invoices = relationship("Invoice", back_populates="user")
-    quotes = relationship("Quote", back_populates="user")
+    # quotes = relationship("Quote", back_populates="user")  # TODO: Create Quote model
     products = relationship("Product", back_populates="user")
     
     @property
