@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Account Settings</h2>
+            <a href="/profile" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Profile
+            </a>
+        </div>
+
+        <div class="row">
+            <!-- Account Preferences -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-gear me-2"></i>Account Preferences
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="/profile/account">
+                            <div class="mb-3">
+                                <label for="timezone" class="form-label">Timezone</label>
+                                <select class="form-select" id="timezone" name="timezone">
+                                    <option value="UTC">UTC</option>
+                                    <option value="America/New_York">Eastern Time (ET)</option>
+                                    <option value="America/Chicago">Central Time (CT)</option>
+                                    <option value="America/Denver">Mountain Time (MT)</option>
+                                    <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                                    <option value="Europe/London">London (GMT)</option>
+                                    <option value="Europe/Paris">Paris (CET)</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="date_format" class="form-label">Date Format</label>
+                                <select class="form-select" id="date_format" name="date_format">
+                                    <option value="Y-m-d">2024-12-31</option>
+                                    <option value="m/d/Y">12/31/2024</option>
+                                    <option value="d/m/Y">31/12/2024</option>
+                                    <option value="d.m.Y">31.12.2024</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="currency" class="form-label">Default Currency</label>
+                                <select class="form-select" id="currency" name="currency">
+                                    <option value="USD">USD ($)</option>
+                                    <option value="EUR">EUR (€)</option>
+                                    <option value="GBP">GBP (£)</option>
+                                    <option value="CAD">CAD ($)</option>
+                                    <option value="AUD">AUD ($)</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save Preferences</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification Settings -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-bell me-2"></i>Notification Settings
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="/profile/notifications">
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="email_notifications" name="email_notifications" checked>
+                                    <label class="form-check-label" for="email_notifications">
+                                        Email Notifications
+                                    </label>
+                                </div>
+                                <small class="form-text text-muted">Receive notifications via email</small>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="invoice_reminders" name="invoice_reminders" checked>
+                                    <label class="form-check-label" for="invoice_reminders">
+                                        Invoice Reminders
+                                    </label>
+                                </div>
+                                <small class="form-text text-muted">Get reminded about overdue invoices</small>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="payment_notifications" name="payment_notifications" checked>
+                                    <label class="form-check-label" for="payment_notifications">
+                                        Payment Notifications
+                                    </label>
+                                </div>
+                                <small class="form-text text-muted">Notify when payments are received</small>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="weekly_reports" name="weekly_reports">
+                                    <label class="form-check-label" for="weekly_reports">
+                                        Weekly Reports
+                                    </label>
+                                </div>
+                                <small class="form-text text-muted">Receive weekly business summary reports</small>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save Notification Settings</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Actions -->
+            <div class="col-12 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-exclamation-triangle me-2"></i>Account Actions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <h6>Export Data</h6>
+                                <p class="text-muted">Download all your account data in CSV format.</p>
+                                <button class="btn btn-outline-info" onclick="alert('Export functionality coming soon!')">
+                                    <i class="bi bi-download me-2"></i>Export Account Data
+                                </button>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <h6>Deactivate Account</h6>
+                                <p class="text-muted">Temporarily disable your account access.</p>
+                                <button class="btn btn-outline-warning" onclick="alert('Please contact support to deactivate your account.')">
+                                    <i class="bi bi-pause-circle me-2"></i>Deactivate Account
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

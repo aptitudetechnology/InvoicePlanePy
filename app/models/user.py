@@ -14,6 +14,30 @@ class User(BaseModel):
     first_name = Column(String(50))
     last_name = Column(String(50))
     company = Column(String(100))
+    role = Column(String(20), default="user")  # user, admin, manager
+    language = Column(String(10), default="en")
+    
+    # Address fields
+    street_address = Column(String(255))
+    street_address_2 = Column(String(255))
+    city = Column(String(100))
+    state = Column(String(100))
+    zip_code = Column(String(20))
+    country = Column(String(10))  # ISO country code
+    
+    # Tax information fields
+    vat_id = Column(String(50))
+    tax_code = Column(String(50))
+    iban = Column(String(50))
+    acn = Column(String(50))  # Australian Company Number
+    abn = Column(String(50))  # Australian Business Number
+    subscriber_number = Column(String(50))
+    
+    # Contact information fields
+    phone_number = Column(String(20))
+    fax_number = Column(String(20))
+    mobile_number = Column(String(20))
+    web_address = Column(String(255))
     
     # Status fields
     is_active = Column(Boolean, default=True)
