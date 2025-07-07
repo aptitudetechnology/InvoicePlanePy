@@ -18,8 +18,10 @@ COPY . .
 # Create static directory structure
 RUN mkdir -p /app/static/css /app/static/js /app/static/images
 
-# Make startup script executable
-RUN chmod +x startup.sh
+# Make startup script executable (multiple approaches for reliability)
+RUN chmod +x startup.sh && \
+    chmod +x scripts/*.py && \
+    ls -la startup.sh  # Verify permissions are set
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app

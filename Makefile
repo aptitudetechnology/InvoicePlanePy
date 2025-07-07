@@ -1,4 +1,4 @@
-.PHONY: help build up down logs shell db-init db-shell test test-routes test-sqlalchemy clean
+.PHONY: help build up down logs shell db-init db-shell test test-routes test-sqlalchemy clean reset-db fix-permissions
 
 # Default target
 help:
@@ -17,6 +17,8 @@ help:
 	@echo "  make test          - Run tests"
 	@echo "  make test-routes   - Test API routes and authentication"
 	@echo "  make test-sqlalchemy - Test SQLAlchemy models for issues"
+	@echo "  make reset-db      - Reset database completely (removes all data)"
+	@echo "  make fix-permissions - Fix file permissions for startup script"
 	@echo "  make clean         - Clean up containers and volumes"
 	@echo ""
 
@@ -108,6 +110,21 @@ dev-setup: build up
 clean:
 	docker-compose -f docker-compose.python.yml down -v
 	docker system prune -f
+
+# Reset database completely (remove volumes and restart)
+reset-db:
+	@echo "⚠️  This will completely delete all database data!"
+	@read -p "Are you sure? (y/N): " confirm && [ "$$confirm" = "y" ] || exit 1
+	docker-compose -f docker-compose.python.yml down -v
+	docker volume rm invoiceplanepy_postgres_data 2>/dev/null || true
+	@echo "✅ Database reset complete. Run 'make up' to start fresh."
+
+# Fix file permissions (for local development)
+fix-permissions:
+	@echo "🔧 Setting execute permissions..."
+	chmod +x startup.sh
+	chmod +x scripts/*.py
+	@echo "✅ Permissions fixed"
 
 # Restart application
 restart: down up
