@@ -82,7 +82,7 @@ make clean         # Clean up containers and volumes
 - [x] Working dashboard with statistics
 - [x] Invoice overview cards
 - [x] Recent invoices list
-- [x] Financial summary
+- [ ] Financial summary
 
 ### ✅ Navigation & UI
 - [x] Bootstrap-based responsive UI
