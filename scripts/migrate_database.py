@@ -335,6 +335,50 @@ def migrate_create_tasks_and_projects_tables():
         logger.error(f"❌ Error creating tasks and projects tables: {e}")
         raise
 
+def migrate_add_user_id_to_clients():
+    """Add user_id foreign key column to clients table"""
+    try:
+        with engine.begin() as conn:
+            # Check if user_id column exists in clients table
+            result = conn.execute(text("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'clients' AND column_name = 'user_id'
+            """))
+            
+            if result.fetchone() is None:
+                logger.info("Adding missing 'user_id' column to clients table...")
+                
+                # Add the user_id column with a foreign key constraint
+                conn.execute(text("ALTER TABLE clients ADD COLUMN user_id INTEGER"))
+                
+                # Set a default user_id for existing clients (assuming admin user with id=1 exists)
+                # First check if there are any users
+                user_result = conn.execute(text("SELECT id FROM users LIMIT 1"))
+                first_user = user_result.fetchone()
+                
+                if first_user:
+                    first_user_id = first_user[0]
+                    conn.execute(text(f"UPDATE clients SET user_id = {first_user_id} WHERE user_id IS NULL"))
+                    logger.info(f"Set user_id to {first_user_id} for existing clients")
+                else:
+                    logger.warning("No users found - cannot set default user_id for existing clients")
+                
+                # Add NOT NULL constraint and foreign key
+                conn.execute(text("ALTER TABLE clients ALTER COLUMN user_id SET NOT NULL"))
+                conn.execute(text("ALTER TABLE clients ADD CONSTRAINT fk_clients_user_id FOREIGN KEY (user_id) REFERENCES users(id)"))
+                
+                # Add index for performance
+                conn.execute(text("CREATE INDEX idx_clients_user_id ON clients(user_id)"))
+                
+                logger.info("✅ Successfully added 'user_id' column to clients table")
+            else:
+                logger.info("✅ 'user_id' column already exists in clients table")
+                
+    except Exception as e:
+        logger.error(f"❌ Error adding user_id to clients table: {e}")
+        raise
+
 def run_migrations():
     """Run all database migrations"""
     logger.info("🔄 Running database migrations...")
@@ -343,6 +387,7 @@ def run_migrations():
         migrate_add_role_column()
         migrate_add_profile_columns()
         migrate_create_api_keys_table()
+        migrate_add_user_id_to_clients()
         migrate_update_clients_table()
         migrate_create_product_tables()
         migrate_create_tasks_and_projects_tables()

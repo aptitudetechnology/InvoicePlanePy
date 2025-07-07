@@ -19,7 +19,12 @@ async def clients_list(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    clients = db.query(Client).filter(Client.is_active == True).all()
+    # Filter clients based on user role
+    query = db.query(Client).filter(Client.is_active == True)
+    if not current_user.role == 'admin':
+        query = query.filter(Client.user_id == current_user.id)
+    
+    clients = query.all()
     
     return templates.TemplateResponse(
         "clients/list.html", 
@@ -86,6 +91,8 @@ async def client_create_post(
         
         # Create new client
         client = Client(
+            # Owner
+            user_id=current_user.id,
             # Personal Information
             is_active=is_active,
             name=name.strip(),
@@ -141,6 +148,10 @@ async def client_view(
     if not client:
         return RedirectResponse(url="/clients", status_code=302)
     
+    # Check permissions
+    if not current_user.role == 'admin' and client.user_id != current_user.id:
+        return RedirectResponse(url="/clients", status_code=302)
+    
     return templates.TemplateResponse(
         "clients/view.html", 
         {
@@ -160,6 +171,10 @@ async def client_edit(
     """Edit a specific client"""
     client = db.query(Client).filter(Client.id == client_id).first()
     if not client:
+        return RedirectResponse(url="/clients", status_code=302)
+    
+    # Check permissions
+    if not current_user.role == 'admin' and client.user_id != current_user.id:
         return RedirectResponse(url="/clients", status_code=302)
     
     return templates.TemplateResponse(

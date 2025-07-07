@@ -1,9 +1,12 @@
-from sqlalchemy import Column, String, Boolean, Text, Date
+from sqlalchemy import Column, String, Boolean, Text, Date, ForeignKey
 from sqlalchemy.orm import relationship
 from app.models.base import BaseModel
 
 class Client(BaseModel):
     __tablename__ = "clients"
+    
+    # Foreign key to user who owns this client
+    user_id = Column(ForeignKey("users.id"), nullable=False)
     
     # Personal Information
     is_active = Column(Boolean, default=True)
