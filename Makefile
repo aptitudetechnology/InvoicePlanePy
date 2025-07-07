@@ -17,6 +17,7 @@ help:
 	@echo "  make test          - Run tests"
 	@echo "  make test-routes   - Test API routes and authentication"
 	@echo "  make test-sqlalchemy - Test SQLAlchemy models for issues"
+	@echo "  make fix-db        - Fix database schema issues (missing columns)"
 	@echo "  make reset-db      - Reset database completely (removes all data)"
 	@echo "  make fix-permissions - Fix file permissions for startup script"
 	@echo "  make clean         - Clean up containers and volumes"
@@ -158,3 +159,8 @@ format:
 lint:
 	docker-compose -f docker-compose.python.yml exec web flake8 app/
 	docker-compose -f docker-compose.python.yml exec web mypy app/
+
+# Fix database schema issues
+fix-db:
+	@echo "🔧 Fixing database schema issues..."
+	docker-compose -f docker-compose.python.yml exec web python fix_database.py

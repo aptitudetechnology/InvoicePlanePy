@@ -21,6 +21,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from app.config import settings
 from app.core.security import get_password_hash
 
+# Import database migration functions
+try:
+    from scripts.migrate_database import run_migrations
+except ImportError:
+    run_migrations = None
+
 
 @dataclass
 class SetupStep:
@@ -326,6 +332,27 @@ class SetupManager:
             
         return step
     
+    def run_database_migrations(self) -> SetupStep:
+        """Run database migrations to add missing columns"""
+        step = SetupStep("database_migrations", "Running database migrations")
+        
+        try:
+            print("🔄 Running database migrations...")
+            
+            if run_migrations is not None:
+                run_migrations()
+                print("✅ Database migrations completed successfully")
+            else:
+                print("⚠️  Migration function not available, skipping...")
+            
+            step.completed = True
+            
+        except Exception as e:
+            step.error = str(e)
+            print(f"❌ Database migrations failed: {e}")
+            
+        return step
+    
     def run_full_setup(self, max_retries: int = 5, retry_delay: int = 3) -> bool:
         """Run the complete setup process with retries"""
         print("🚀 Starting InvoicePlane Python Setup...")
@@ -352,13 +379,19 @@ class SetupManager:
                 if not step.completed:
                     return False
                 
-                # Step 4: Create admin user
+                # Step 4: Run database migrations
+                step = self.run_database_migrations()
+                self.steps.append(step)
+                if not step.completed:
+                    return False
+                
+                # Step 5: Create admin user
                 step = self.create_admin_user()
                 self.steps.append(step)
                 if not step.completed:
                     return False
                 
-                # Step 5: Create sample data
+                # Step 6: Create sample data
                 step = self.create_sample_data()
                 self.steps.append(step)
                 # Sample data is optional, don't fail if it doesn't work
