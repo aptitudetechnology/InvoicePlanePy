@@ -6,6 +6,7 @@ Similar to the PHP version's setup module
 
 import os
 import re
+import sys
 import time
 import psycopg2
 from pathlib import Path
@@ -13,6 +14,10 @@ from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
+
+# Add the parent directory to Python path so we can import app modules
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from app.config import settings
 from app.core.security import get_password_hash
 

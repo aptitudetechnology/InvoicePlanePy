@@ -1,7 +1,13 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Starting InvoicePlane Python application..."
+echo "# # Run the comprehensive setup process
+echo "🔧 Running database setup..."
+export PYTHONPATH=/app
+cd /app
+python setup/setup_manager.py the comprehensive setup process
+echo "� Running database setup..."
+PYTHONPATH=/app python setup/setup_manager.pyStarting InvoicePlane Python application..."
 
 # Wait for database to be ready
 echo "⏳ Waiting for database to be ready..."

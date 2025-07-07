@@ -67,7 +67,7 @@ db-init:
 
 # Run complete database setup (like PHP InvoicePlane installer)
 setup:
-	docker-compose -f docker-compose.python.yml exec web python setup/setup_manager.py
+	docker-compose -f docker-compose.python.yml exec web env PYTHONPATH=/app python setup/setup_manager.py
 
 # Create admin user
 create-admin:
@@ -85,6 +85,10 @@ test-models:
 test-sqlalchemy:
 	@echo "🔍 Testing SQLAlchemy models for relationship issues..."
 	python scripts/test-SQLAlchemy-models.py
+
+# Test Python imports in Docker container
+test-imports:
+	docker-compose -f docker-compose.python.yml exec web python scripts/test_imports.py
 
 # Test API routes and authentication
 test-routes:
