@@ -63,3 +63,107 @@ async def invoice_settings(
         "user": current_user,
         "title": "Invoice Settings"
     })
+
+@router.get("/custom-fields", response_class=HTMLResponse)
+async def custom_fields(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Show custom fields management"""
+    return templates.TemplateResponse("settings/custom_fields.html", {
+        "request": request,
+        "user": current_user,
+        "title": "Custom Fields"
+    })
+
+@router.get("/email-templates", response_class=HTMLResponse)
+async def email_templates(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Show email templates management"""
+    return templates.TemplateResponse("settings/email_templates.html", {
+        "request": request,
+        "user": current_user,
+        "title": "Email Templates"
+    })
+
+@router.get("/invoice-groups", response_class=HTMLResponse)
+async def invoice_groups(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Show invoice groups management"""
+    return templates.TemplateResponse("settings/invoice_groups.html", {
+        "request": request,
+        "user": current_user,
+        "title": "Invoice Groups"
+    })
+
+@router.get("/invoice-archive", response_class=HTMLResponse)
+async def invoice_archive(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Show invoice archive settings"""
+    return templates.TemplateResponse("settings/invoice_archive.html", {
+        "request": request,
+        "user": current_user,
+        "title": "Invoice Archive"
+    })
+
+@router.get("/payment-methods", response_class=HTMLResponse)
+async def payment_methods(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Show payment methods management"""
+    return templates.TemplateResponse("settings/payment_methods.html", {
+        "request": request,
+        "user": current_user,
+        "title": "Payment Methods"
+    })
+
+@router.get("/tax-rates", response_class=HTMLResponse)
+async def tax_rates(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Show tax rates management"""
+    return templates.TemplateResponse("settings/tax_rates.html", {
+        "request": request,
+        "user": current_user,
+        "title": "Tax Rates"
+    })
+
+@router.get("/system", response_class=HTMLResponse)
+async def system_settings(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Show system settings"""
+    return templates.TemplateResponse("settings/system.html", {
+        "request": request,
+        "user": current_user,
+        "title": "System Settings"
+    })
+
+@router.get("/import", response_class=HTMLResponse)
+async def import_data(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Show data import functionality"""
+    return templates.TemplateResponse("settings/import.html", {
+        "request": request,
+        "user": current_user,
+        "title": "Import Data"
+    })

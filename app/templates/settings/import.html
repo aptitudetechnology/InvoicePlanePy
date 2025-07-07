@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Import Data</h2>
+            <a href="/settings" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Settings
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Important:</strong> Always backup your data before importing. Large imports may take several minutes to complete.
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-people fs-1 text-primary mb-3"></i>
+                                <h5>Import Clients</h5>
+                                <p class="text-muted">Import client data from CSV file</p>
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importClientsModal">
+                                    <i class="bi bi-upload"></i> Choose File
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-box fs-1 text-success mb-3"></i>
+                                <h5>Import Products</h5>
+                                <p class="text-muted">Import product catalog from CSV file</p>
+                                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importProductsModal">
+                                    <i class="bi bi-upload"></i> Choose File
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-receipt fs-1 text-info mb-3"></i>
+                                <h5>Import Invoices</h5>
+                                <p class="text-muted">Import historical invoice data</p>
+                                <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#importInvoicesModal">
+                                    <i class="bi bi-upload"></i> Choose File
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h6>CSV Format Requirements</h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="bg-light p-3 rounded">
+                                <strong>Clients CSV Format:</strong><br>
+                                <small>
+                                    name, email, address, city, state, zip, phone, country
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-light p-3 rounded">
+                                <strong>Products CSV Format:</strong><br>
+                                <small>
+                                    name, description, price, sku, category
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-light p-3 rounded">
+                                <strong>Invoices CSV Format:</strong><br>
+                                <small>
+                                    client_email, date, due_date, total, status
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h6>Sample Files</h6>
+                    <p class="text-muted">Download sample CSV files to see the expected format:</p>
+                    <div class="d-flex gap-2">
+                        <a href="#" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-download"></i> Clients Sample
+                        </a>
+                        <a href="#" class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-download"></i> Products Sample
+                        </a>
+                        <a href="#" class="btn btn-outline-info btn-sm">
+                            <i class="bi bi-download"></i> Invoices Sample
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import Modals would be added here -->
+{% endblock %}

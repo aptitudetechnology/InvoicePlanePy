@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Custom Fields</h2>
+            <a href="/settings" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Settings
+            </a>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Custom Fields</h5>
+                        <button class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus"></i> Add Custom Field
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Custom fields allow you to add additional data fields to clients, invoices, quotes, and other entities.
+                        </div>
+
+                        <!-- Custom Fields List -->
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Field Name</th>
+                                        <th>Type</th>
+                                        <th>Entity</th>
+                                        <th>Required</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">
+                                            No custom fields configured yet.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">Field Types</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <strong>Text</strong>
+                            <div class="text-muted small">Single line text input</div>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Textarea</strong>
+                            <div class="text-muted small">Multi-line text input</div>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Number</strong>
+                            <div class="text-muted small">Numeric input field</div>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Date</strong>
+                            <div class="text-muted small">Date picker input</div>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Select</strong>
+                            <div class="text-muted small">Dropdown selection</div>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Checkbox</strong>
+                            <div class="text-muted small">Boolean true/false</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

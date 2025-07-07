@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Tax Rates</h2>
+            <div>
+                <button class="btn btn-primary me-2">
+                    <i class="bi bi-plus"></i> Add Tax Rate
+                </button>
+                <a href="/settings" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Settings
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Configure tax rates that can be applied to invoice and quote line items.
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Tax Name</th>
+                                <th>Rate (%)</th>
+                                <th>Default</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>VAT</strong></td>
+                                <td>20.00%</td>
+                                <td><span class="badge bg-success">Yes</span></td>
+                                <td><span class="badge bg-success">Active</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Sales Tax</strong></td>
+                                <td>8.25%</td>
+                                <td><span class="badge bg-secondary">No</span></td>
+                                <td><span class="badge bg-success">Active</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>GST</strong></td>
+                                <td>10.00%</td>
+                                <td><span class="badge bg-secondary">No</span></td>
+                                <td><span class="badge bg-warning">Inactive</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-4">
+                    <h6>Tax Rate Information</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="bg-light p-3 rounded">
+                                <strong>Default Tax Rate:</strong><br>
+                                The default tax rate is automatically applied to new invoice and quote line items. Only one tax rate can be set as default.
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bg-light p-3 rounded">
+                                <strong>Tax Calculations:</strong><br>
+                                Tax rates are applied to the line item total before any discounts. Multiple tax rates can be applied to a single line item.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

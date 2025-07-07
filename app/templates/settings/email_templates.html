@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Email Templates</h2>
+            <a href="/settings" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Settings
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Configure email templates used for automatic notifications when invoices, quotes, and payments are sent.
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-receipt fs-1 text-primary mb-3"></i>
+                                <h5>Invoice Email</h5>
+                                <p class="text-muted">Template sent when invoices are emailed to clients</p>
+                                <button class="btn btn-primary">Edit Template</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-file-text fs-1 text-success mb-3"></i>
+                                <h5>Quote Email</h5>
+                                <p class="text-muted">Template sent when quotes are emailed to clients</p>
+                                <button class="btn btn-success">Edit Template</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-bell fs-1 text-warning mb-3"></i>
+                                <h5>Payment Reminder</h5>
+                                <p class="text-muted">Template for overdue payment reminders</p>
+                                <button class="btn btn-warning">Edit Template</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-check-circle fs-1 text-info mb-3"></i>
+                                <h5>Payment Confirmation</h5>
+                                <p class="text-muted">Template sent when payments are received</p>
+                                <button class="btn btn-info">Edit Template</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-person-plus fs-1 text-secondary mb-3"></i>
+                                <h5>Welcome Email</h5>
+                                <p class="text-muted">Template sent to new client registrations</p>
+                                <button class="btn btn-secondary">Edit Template</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h6>Available Variables</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="bg-light p-3 rounded">
+                                <strong>Client Variables:</strong><br>
+                                <code>{{client_name}}</code><br>
+                                <code>{{client_email}}</code><br>
+                                <code>{{client_address}}</code>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bg-light p-3 rounded">
+                                <strong>Invoice/Quote Variables:</strong><br>
+                                <code>{{invoice_number}}</code><br>
+                                <code>{{invoice_date}}</code><br>
+                                <code>{{invoice_total}}</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
