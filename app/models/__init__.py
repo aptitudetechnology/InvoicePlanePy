@@ -5,6 +5,7 @@ from .invoice import Invoice, InvoiceItem, InvoiceStatus
 from .product import Product, ProductFamily, ProductUnit
 from .payment import Payment
 from .api_key import ApiKey
+from .task import Task, Project, TaskStatus, TaskPriority
 
 __all__ = [
     "BaseModel",
@@ -17,5 +18,9 @@ __all__ = [
     "ProductFamily",
     "ProductUnit",
     "Payment",
-    "ApiKey"
+    "ApiKey",
+    "Task",
+    "Project",
+    "TaskStatus",
+    "TaskPriority"
 ]

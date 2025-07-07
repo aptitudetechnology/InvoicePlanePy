@@ -43,9 +43,11 @@ class Client(BaseModel):
     notes = Column(Text)
     
     # Relationships
+    user = relationship("User", back_populates="clients")
     invoices = relationship("Invoice", back_populates="client")
     # quotes = relationship("Quote", back_populates="client")  # TODO: Create Quote model
-    # projects = relationship("Project", back_populates="client")  # TODO: Create Project model
+    projects = relationship("Project", back_populates="client")
+    tasks = relationship("Task", back_populates="client")
     
     @property
     def full_name(self) -> str:

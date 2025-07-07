@@ -47,10 +47,13 @@ class User(BaseModel):
     last_login = Column(DateTime)
     
     # Relationships
+    clients = relationship("Client", back_populates="user")
     api_keys = relationship("ApiKey", back_populates="user", cascade="all, delete-orphan")
     invoices = relationship("Invoice", back_populates="user")
     # quotes = relationship("Quote", back_populates="user")  # TODO: Create Quote model
     products = relationship("Product", back_populates="user")
+    projects = relationship("Project", back_populates="user", foreign_keys="Project.user_id")
+    tasks = relationship("Task", back_populates="user", foreign_keys="Task.user_id")
     
     @property
     def full_name(self) -> str:

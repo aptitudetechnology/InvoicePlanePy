@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Tasks - InvoicePlane{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Tasks</h1>
+                <div>
+                    <a href="/tasks/projects" class="btn btn-outline-info mr-2">
+                        <i class="fas fa-project-diagram"></i> Projects
+                    </a>
+                    <a href="/tasks/projects/create" class="btn btn-outline-primary mr-2">
+                        <i class="fas fa-plus"></i> New Project
+                    </a>
+                    <a href="/tasks/create" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> New Task
+                    </a>
+                </div>
+            </div>
+
+            {% if tasks %}
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Task</th>
+                                    <th>Project</th>
+                                    <th>Client</th>
+                                    <th>Assigned To</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Due Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for task in tasks %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ task.name }}</strong>
+                                        {% if task.description %}
+                                        <br><small class="text-muted">{{ task.description[:50] }}{% if task.description|length > 50 %}...{% endif %}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if task.project %}
+                                            <a href="/tasks/projects/{{ task.project.id }}" class="badge badge-info">{{ task.project.name }}</a>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if task.client %}
+                                            <a href="/clients/{{ task.client.id }}">{{ task.client.display_name }}</a>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if task.assigned_to %}
+                                            {{ task.assigned_to.full_name }}
+                                        {% else %}
+                                            <span class="text-muted">Unassigned</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if task.priority.value == 'urgent' %}
+                                            <span class="badge badge-danger">{{ task.priority.value.title() }}</span>
+                                        {% elif task.priority.value == 'high' %}
+                                            <span class="badge badge-warning">{{ task.priority.value.title() }}</span>
+                                        {% elif task.priority.value == 'normal' %}
+                                            <span class="badge badge-info">{{ task.priority.value.title() }}</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">{{ task.priority.value.title() }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if task.status.value == 'completed' %}
+                                            <span class="badge badge-success">{{ task.status.value.replace('_', ' ').title() }}</span>
+                                        {% elif task.status.value == 'in_progress' %}
+                                            <span class="badge badge-primary">{{ task.status.value.replace('_', ' ').title() }}</span>
+                                        {% elif task.status.value == 'on_hold' %}
+                                            <span class="badge badge-warning">{{ task.status.value.replace('_', ' ').title() }}</span>
+                                        {% elif task.status.value == 'cancelled' %}
+                                            <span class="badge badge-danger">{{ task.status.value.replace('_', ' ').title() }}</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">{{ task.status.value.replace('_', ' ').title() }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if task.due_date %}
+                                            {% set days_left = (task.due_date - task.created_at).days %}
+                                            {% if days_left < 0 %}
+                                                <span class="text-danger">{{ task.due_date.strftime('%Y-%m-%d') }} (Overdue)</span>
+                                            {% elif days_left <= 1 %}
+                                                <span class="text-warning">{{ task.due_date.strftime('%Y-%m-%d') }} (Due Soon)</span>
+                                            {% else %}
+                                                {{ task.due_date.strftime('%Y-%m-%d') }}
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">No due date</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="/tasks/{{ task.id }}" class="btn btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="/tasks/{{ task.id }}/edit" class="btn btn-outline-secondary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+                    <h3 class="text-muted">No Tasks</h3>
+                    <p class="text-muted">You haven't created any tasks yet.</p>
+                    <a href="/tasks/create" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create Your First Task
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

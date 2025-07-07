@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Create Task - InvoicePlane{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Create Task</h1>
+                <a href="/tasks" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Tasks
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" action="/tasks/create">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label for="name">Task Name *</label>
+                                    <input type="text" class="form-control" id="name" name="name" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="description">Description</label>
+                                    <textarea class="form-control" id="description" name="description" rows="4"></textarea>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="status">Status</label>
+                                            <select class="form-control" id="status" name="status">
+                                                {% for status in task_statuses %}
+                                                <option value="{{ status.value }}" {% if status.value == 'not_started' %}selected{% endif %}>
+                                                    {{ status.value.replace('_', ' ').title() }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="priority">Priority</label>
+                                            <select class="form-control" id="priority" name="priority">
+                                                {% for priority in task_priorities %}
+                                                <option value="{{ priority.value }}" {% if priority.value == 'normal' %}selected{% endif %}>
+                                                    {{ priority.value.title() }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="project_id">Project</label>
+                                            <select class="form-control" id="project_id" name="project_id">
+                                                <option value="">Select a project...</option>
+                                                {% for project in projects %}
+                                                <option value="{{ project.id }}">{{ project.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="client_id">Client</label>
+                                            <select class="form-control" id="client_id" name="client_id">
+                                                <option value="">Select a client...</option>
+                                                {% for client in clients %}
+                                                <option value="{{ client.id }}">{{ client.display_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="assigned_to_id">Assign To</label>
+                                    <select class="form-control" id="assigned_to_id" name="assigned_to_id">
+                                        <option value="">Select a user...</option>
+                                        {% for user_option in users %}
+                                        <option value="{{ user_option.id }}" {% if user_option.id == user.id %}selected{% endif %}>
+                                            {{ user_option.full_name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="start_date">Start Date</label>
+                                            <input type="date" class="form-control" id="start_date" name="start_date">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="due_date">Due Date</label>
+                                            <input type="date" class="form-control" id="due_date" name="due_date">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Create Task
+                                    </button>
+                                    <a href="/tasks" class="btn btn-secondary ml-2">
+                                        Cancel
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

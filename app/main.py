@@ -12,7 +12,7 @@ from app.dependencies import get_current_user_optional
 from app.models.user import User
 
 # Import all models to ensure they're registered with Base
-from app.models import user, client, invoice, product, payment, api_key
+from app.models import user, client, invoice, product, payment, api_key, task
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
