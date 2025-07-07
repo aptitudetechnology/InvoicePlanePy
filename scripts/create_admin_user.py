@@ -58,9 +58,6 @@ def create_admin_user():
         return False
     finally:
         db.close()
-    db.commit()
-    db.close()
-    print("✅ Admin user created.")
 
 if __name__ == "__main__":
     success = create_admin_user()
