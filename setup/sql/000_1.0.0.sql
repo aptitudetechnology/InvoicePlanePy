@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- Clients table
 CREATE TABLE IF NOT EXISTS clients (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) NOT NULL,
+    user_id INTEGER NOT NULL REFERENCES users(id),
     name VARCHAR(255) NOT NULL,
     surname VARCHAR(255),
     email VARCHAR(100),
