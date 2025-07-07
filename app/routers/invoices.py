@@ -6,9 +6,10 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User
 from app.models.invoice import Invoice
+from app.models.client import Client
 from app.dependencies import get_current_user
 
-router = APIRouter(prefix="/invoices")
+router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/", response_class=HTMLResponse)
