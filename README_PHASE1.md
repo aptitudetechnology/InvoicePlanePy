@@ -75,7 +75,7 @@ make clean         # Clean up containers and volumes
 - [x] FastAPI application setup
 - [x] PostgreSQL database with SQLAlchemy
 - [x] Docker containerization
-- [x] User authentication with JWT
+- [ ] User authentication with JWT
 - [x] Basic routing structure
 
 ### ✅ Dashboard
