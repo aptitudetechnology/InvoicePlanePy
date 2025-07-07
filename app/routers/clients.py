@@ -10,7 +10,7 @@ from app.models.user import User
 from app.models.client import Client
 from app.dependencies import get_current_user
 
-router = APIRouter(prefix="/clients")
+router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/", response_class=HTMLResponse)
@@ -128,3 +128,45 @@ async def client_create_post(
         # In a real application, you'd want to show this error to the user
         # For now, we'll just redirect back to the form
         return RedirectResponse(url="/clients/create", status_code=302)
+
+@router.get("/{client_id}", response_class=HTMLResponse)
+async def client_view(
+    client_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """View a specific client"""
+    client = db.query(Client).filter(Client.id == client_id).first()
+    if not client:
+        return RedirectResponse(url="/clients", status_code=302)
+    
+    return templates.TemplateResponse(
+        "clients/view.html", 
+        {
+            "request": request, 
+            "user": current_user,
+            "client": client
+        }
+    )
+
+@router.get("/{client_id}/edit", response_class=HTMLResponse)
+async def client_edit(
+    client_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Edit a specific client"""
+    client = db.query(Client).filter(Client.id == client_id).first()
+    if not client:
+        return RedirectResponse(url="/clients", status_code=302)
+    
+    return templates.TemplateResponse(
+        "clients/edit.html", 
+        {
+            "request": request, 
+            "user": current_user,
+            "client": client
+        }
+    )
