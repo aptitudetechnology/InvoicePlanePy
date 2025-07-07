@@ -11,6 +11,8 @@ help:
 	@echo "  make logs          - View application logs"
 	@echo "  make shell         - Open shell in web container"
 	@echo "  make db-init       - Initialize database with seed data"
+	@echo "  make setup         - Run complete database setup (like PHP installer)"
+	@echo "  make create-admin  - Create admin user"
 	@echo "  make db-shell      - Open PostgreSQL shell"
 	@echo "  make test          - Run tests"
 	@echo "  make test-routes   - Test API routes and authentication"
@@ -30,12 +32,16 @@ up:
 	@echo "📱 Web interface: http://localhost:8080"
 	@echo "🗄️  Database: localhost:5432"
 	@echo ""
+	@echo "⏳ The application will automatically:"
+	@echo "   • Initialize the database"
+	@echo "   • Create tables"
+	@echo "   • Create admin user"
+	@echo ""
 	@echo "Demo credentials:"
 	@echo "  Admin: admin / admin123"
 	@echo "  User:  user / user123"
 	@echo ""
-	@echo "Run 'make logs' to see application logs"
-	@echo "Run 'make db-init' to initialize the database"
+	@echo "Run 'make logs' to see startup progress"
 
 # Start with logs
 up-logs:
@@ -56,6 +62,14 @@ shell:
 # Initialize database with seed data
 db-init:
 	docker-compose -f docker-compose.python.yml exec web python init_db.py
+
+# Run complete database setup (like PHP InvoicePlane installer)
+setup:
+	docker-compose -f docker-compose.python.yml exec web python setup/setup_manager.py
+
+# Create admin user
+create-admin:
+	docker-compose -f docker-compose.python.yml exec web python scripts/create_admin_user.py
 
 # Open PostgreSQL shell
 db-shell:
@@ -81,12 +95,14 @@ test:
 
 # Development setup (build, start, and initialize)
 dev-setup: build up
-	@echo "Waiting for database to be ready..."
-	@sleep 10
-	@make db-init
+	@echo "⏳ Waiting for containers to start and database to initialize..."
+	@sleep 15
+	@echo "📊 Checking application status..."
+	@make status
 	@echo ""
 	@echo "✅ Development environment ready!"
 	@echo "🌐 Open http://localhost:8080 in your browser"
+	@echo "🔑 Admin credentials: admin / admin123"
 
 # Clean up everything
 clean:

@@ -18,6 +18,9 @@ COPY . .
 # Create static directory structure
 RUN mkdir -p /app/static/css /app/static/js /app/static/images
 
+# Make startup script executable
+RUN chmod +x startup.sh
+
 # Create non-root user
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
@@ -25,5 +28,5 @@ USER appuser
 # Expose port
 EXPOSE 8000
 
-# Run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Use startup script instead of direct uvicorn
+CMD ["./startup.sh"]

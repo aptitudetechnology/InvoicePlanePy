@@ -110,6 +110,8 @@ make clean         # Clean up containers and volumes
 - [x] Docker development setup
 - [x] Route testing script for debugging
 - [x] Authentication debugging tools
+- [x] PHP-style setup manager with SQL migrations
+- [x] Automatic database initialization
 
 ## 🔄 Next: Phase 2 (Weeks 3-4)
 
@@ -123,7 +125,19 @@ The next phase will focus on making the forms functional:
 
 ## 🐛 Troubleshooting
 
-### Authentication Issues
+### Database Setup Issues
+```bash
+# Run the complete setup process manually
+make setup
+
+# Test setup components
+python scripts/test_setup.py
+
+# Check database status
+make db-shell
+\dt  # List tables
+\q   # Quit
+```
 ```bash
 # Test authentication routes
 make test-routes
