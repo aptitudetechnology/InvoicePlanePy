@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- Clients table
 CREATE TABLE IF NOT EXISTS clients (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) NOT NULL,
+    user_id INTEGER NOT NULL REFERENCES users(id),
     name VARCHAR(255) NOT NULL,
     surname VARCHAR(255),
     email VARCHAR(100),
@@ -111,8 +111,8 @@ CREATE TABLE IF NOT EXISTS products (
 -- Invoices table
 CREATE TABLE IF NOT EXISTS invoices (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) NOT NULL,
-    client_id INTEGER REFERENCES clients(id) NOT NULL,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    client_id INTEGER NOT NULL REFERENCES clients(id),
     invoice_number VARCHAR(20) UNIQUE NOT NULL,
     status INTEGER DEFAULT 1, -- 1=DRAFT, 2=SENT, 3=VIEWED, 4=PAID, 5=OVERDUE, 6=CANCELLED
     issue_date DATE NOT NULL,
@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS invoices (
 -- Invoice items table
 CREATE TABLE IF NOT EXISTS invoice_items (
     id SERIAL PRIMARY KEY,
-    invoice_id INTEGER REFERENCES invoices(id) NOT NULL,
+    invoice_id INTEGER NOT NULL REFERENCES invoices(id),
     product_id INTEGER REFERENCES products(id),
     name VARCHAR(100) NOT NULL,
     description TEXT,
@@ -149,7 +149,7 @@ CREATE TABLE IF NOT EXISTS invoice_items (
 -- Payments table
 CREATE TABLE IF NOT EXISTS payments (
     id SERIAL PRIMARY KEY,
-    invoice_id INTEGER REFERENCES invoices(id) NOT NULL,
+    invoice_id INTEGER NOT NULL REFERENCES invoices(id),
     amount NUMERIC(10, 2) NOT NULL,
     payment_date DATE NOT NULL,
     payment_method VARCHAR(50),
@@ -167,7 +167,7 @@ CREATE TABLE IF NOT EXISTS projects (
     start_date TIMESTAMP WITH TIME ZONE,
     end_date TIMESTAMP WITH TIME ZONE,
     client_id INTEGER REFERENCES clients(id),
-    user_id INTEGER REFERENCES users(id) NOT NULL,
+    user_id INTEGER NOT NULL REFERENCES users(id),
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -185,7 +185,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     completed_date TIMESTAMP WITH TIME ZONE,
     project_id INTEGER REFERENCES projects(id),
     client_id INTEGER REFERENCES clients(id),
-    user_id INTEGER REFERENCES users(id) NOT NULL,
+    user_id INTEGER NOT NULL REFERENCES users(id),
     assigned_to_id INTEGER REFERENCES users(id),
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -198,7 +198,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
     key_hash VARCHAR(255) UNIQUE NOT NULL,
     key_prefix VARCHAR(10) NOT NULL,
     name VARCHAR(100),
-    user_id INTEGER REFERENCES users(id) NOT NULL ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     last_used_at TIMESTAMP WITH TIME ZONE,
