@@ -1,12 +1,9 @@
-from sqlalchemy import Column, String, Boolean, Text, Date, ForeignKey
+from sqlalchemy import Column, String, Boolean, Text, Date
 from sqlalchemy.orm import relationship
 from app.models.base import BaseModel
 
 class Client(BaseModel):
     __tablename__ = "clients"
-    
-    # Foreign key to user who owns this client
-    user_id = Column(ForeignKey("users.id"), nullable=False)
     
     # Personal Information
     is_active = Column(Boolean, default=True)
@@ -46,11 +43,9 @@ class Client(BaseModel):
     notes = Column(Text)
     
     # Relationships
-    user = relationship("User", back_populates="clients")
     invoices = relationship("Invoice", back_populates="client")
     # quotes = relationship("Quote", back_populates="client")  # TODO: Create Quote model
-    projects = relationship("Project", back_populates="client")
-    tasks = relationship("Task", back_populates="client")
+    # projects = relationship("Project", back_populates="client")  # TODO: Create Project model
     
     @property
     def full_name(self) -> str:
