@@ -1,165 +1,81 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="row">
-    <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Custom Field Form</h2>
-            <div>
-                <button type="submit" class="btn btn-success me-2">
-                    <i class="bi bi-check"></i> Save
-                </button>
-                <a href="/settings/custom-fields" class="btn btn-danger">
-                    <i class="bi bi-x"></i> Cancel
-                </a>
-            </div>
-        </div>
-
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-body">
-                        <form method="POST">
-                            {% csrf_token %}
-                            
-                            <div class="mb-3">
-                                <label for="table" class="form-label">Table</label>
-                                <select class="form-select" id="table" name="table" required>
-                                    <option value="">Select a table...</option>
-                                    <option value="client" selected>Client</option>
-                                    <option value="invoice">Invoice</option>
-                                    <option value="quote">Quote</option>
-                                    <option value="project">Project</option>
-                                    <option value="task">Task</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="label" class="form-label">Label</label>
-                                <input type="text" class="form-control" id="label" name="label" placeholder="Enter field label" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="type" class="form-label">Type</label>
-                                <select class="form-select" id="type" name="type" required>
-                                    <option value="">Select field type...</option>
-                                    <option value="text" selected>Text</option>
-                                    <option value="date">Date</option>
-                                    <option value="boolean">Boolean</option>
-                                    <option value="single_choice">Single Choice</option>
-                                    <option value="multiple_choice">Multiple Choice</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="order" class="form-label">Order</label>
-                                <input type="number" class="form-control" id="order" name="order" placeholder="Enter display order" min="0">
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="position" class="form-label">Position</label>
-                                <select class="form-select" id="position" name="position" required>
-                                    <option value="">Select position...</option>
-                                    <option value="custom_fields" selected>Custom Fields</option>
-                                    <option value="main_form">Main Form</option>
-                                    <option value="additional_info">Additional Info</option>
-                                    <option value="sidebar">Sidebar</option>
-                                </select>
-                            </div>
-
-                            <!-- Field Options Section -->
-                            <div class="mb-3">
-                                <div class="collapse" id="fieldOptions">
-                                    <div class="card card-body bg-light">
-                                        <!-- Additional options for choice fields -->
-                                        <div id="choice-options" class="mb-3" style="display: none;">
-                                            <label class="form-label">Options</label>
-                                            <div id="options-container">
-                                                <div class="input-group mb-2">
-                                                    <input type="text" class="form-control" name="options[]" placeholder="Option 1">
-                                                    <button class="btn btn-outline-danger" type="button" onclick="removeOption(this)">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="addOption()">
-                                                <i class="bi bi-plus"></i> Add Option
-                                            </button>
-                                        </div>
-
-                                        <div class="mb-3">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="required" name="required">
-                                                <label class="form-check-label" for="required">
-                                                    Required field
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <div class="mb-3">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="show_on_list" name="show_on_list">
-                                                <label class="form-check-label" for="show_on_list">
-                                                    Show on list view
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <div class="mb-3">
-                                            <label for="placeholder" class="form-label">Placeholder Text</label>
-                                            <input type="text" class="form-control" id="placeholder" name="placeholder" placeholder="Enter placeholder text">
-                                        </div>
-
-                                        <div class="mb-3">
-                                            <label for="help_text" class="form-label">Help Text</label>
-                                            <textarea class="form-control" id="help_text" name="help_text" rows="2" placeholder="Enter help text for users"></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="d-flex justify-content-center">
-                                    <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#fieldOptions">
-                                        <i class="bi bi-gear me-1"></i>Field Options
-                                    </button>
-                                </div>
-                            </div>
-
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="col-12">
+<div class="d-flex justify-content-between align-items-center mb-4">
+<h2>Custom Fields</h2>
+<a href="/settings" class="btn btn-secondary">
+<i class="bi bi-arrow-left"></i> Back to Settings
+</a>
 </div>
-
-<script>
-document.getElementById('type').addEventListener('change', function() {
-    const choiceOptions = document.getElementById('choice-options');
-    const selectedType = this.value;
-    
-    if (selectedType === 'single_choice' || selectedType === 'multiple_choice') {
-        choiceOptions.style.display = 'block';
-    } else {
-        choiceOptions.style.display = 'none';
-    }
-});
-
-function addOption() {
-    const container = document.getElementById('options-container');
-    const optionCount = container.children.length + 1;
-    
-    const optionDiv = document.createElement('div');
-    optionDiv.className = 'input-group mb-2';
-    optionDiv.innerHTML = `
-        <input type="text" class="form-control" name="options[]" placeholder="Option ${optionCount}">
-        <button class="btn btn-outline-danger" type="button" onclick="removeOption(this)">
-            <i class="bi bi-trash"></i>
-        </button>
-    `;
-    
-    container.appendChild(optionDiv);
-}
-
-function removeOption(button) {
-    button.parentElement.remove();
-}
-</script>
+<div class="row">
+<div class="col-md-8">
+<div class="card">
+<div class="card-header d-flex justify-content-between align-items-center">
+<h5 class="mb-0">Custom Fields</h5>
+<button class="btn btn-primary btn-sm">
+<i class="bi bi-plus"></i> Add Custom Field
+</button>
+</div>
+<div class="card-body">
+<div class="alert alert-info">
+<i class="bi bi-info-circle me-2"></i>
+ Custom fields allow you to add additional data fields to clients, invoices, quotes, and other entities.
+</div>
+<!-- Custom Fields List -->
+<div class="table-responsive">
+<table class="table table-hover">
+<thead>
+<tr>
+<th>Field Name</th>
+<th>Type</th>
+<th>Entity</th>
+<th>Required</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td colspan="5" class="text-center text-muted py-4">
+ No custom fields configured yet.
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="col-md-4">
+<div class="card">
+<div class="card-header">
+<h6 class="mb-0">Field Types</h6>
+</div>
+<div class="card-body">
+<div class="mb-3">
+<strong>Text</strong>
+<div class="text-muted small">Single line text input</div>
+</div>
+<div class="mb-3">
+<strong>Date</strong>
+<div class="text-muted small">Date picker input</div>
+</div>
+<div class="mb-3">
+<strong>Boolean</strong>
+<div class="text-muted small">True/false checkbox</div>
+</div>
+<div class="mb-3">
+<strong>Single Choice</strong>
+<div class="text-muted small">Dropdown with one selection</div>
+</div>
+<div class="mb-3">
+<strong>Multiple Choice</strong>
+<div class="text-muted small">Checkboxes for multiple selections</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 {% endblock %}
