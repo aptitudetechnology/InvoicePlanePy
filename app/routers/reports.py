@@ -31,7 +31,7 @@ async def reports_dashboard(
     # Calculate revenue statistics
     total_revenue = db.query(func.sum(Payment.amount)).scalar() or 0
     #pending_invoices = db.query(func.count(Invoice.id)).filter(Invoice.status == 'DRAFT').scalar()
-    ending_invoices = db.query(func.count(Invoice.id)).filter(Invoice.status == InvoiceStatus.DRAFT).scalar()
+    pending_invoices = db.query(func.count(Invoice.id)).filter(Invoice.status == InvoiceStatus.DRAFT).scalar()
     stats = {
         'total_clients': total_clients,
         'total_invoices': total_invoices,
