@@ -85,3 +85,16 @@ async def client_reports(
         "user": current_user,
         "title": "Client Reports"
     })
+
+@router.get("/invoice-aging", response_class=HTMLResponse)
+async def invoice_aging_report(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Show invoice aging report (placeholder)"""
+    return templates.TemplateResponse("reports/invoice_aging.html", {
+        "request": request,
+        "user": current_user,
+        "title": "Invoice Aging Report"
+    })

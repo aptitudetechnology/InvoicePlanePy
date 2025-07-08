@@ -353,3 +353,48 @@ async def delete_api_key(
     db.commit()
     
     return JSONResponse({"success": True, "message": "API key deleted"})
+
+@router.get("/quote-settings", response_class=HTMLResponse)
+async def quote_settings(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Show quote settings page (placeholder)"""
+    return templates.TemplateResponse("settings/quote_settings.html", {
+        "request": request,
+        "user": current_user,
+        "title": "Quote Settings"
+    })
+
+@router.get("/email", response_class=HTMLResponse)
+async def email_settings(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Show email settings page (placeholder)"""
+    return templates.TemplateResponse("settings/email.html", {
+        "request": request,
+        "user": current_user,
+        "title": "Email Settings"
+    })
+
+@router.get("/online-payment", response_class=HTMLResponse)
+async def online_payment_settings(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Show online payment settings page (placeholder)"""
+    return templates.TemplateResponse("settings/online_payment.html", {
+        "request": request,
+        "user": current_user,
+        "title": "Online Payment Settings"
+    })
+
+@router.get("/projects", response_class=HTMLResponse)
+async def projects_settings(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Show projects settings page (placeholder)"""
+    return templates.TemplateResponse("settings/projects.html", {
+        "request": request,
+        "user": current_user,
+        "title": "Projects Settings"
+    })
+
+@router.get("/updates", response_class=HTMLResponse)
+async def updates_settings(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Show updates page (placeholder)"""
+    return templates.TemplateResponse("settings/updates.html", {
+        "request": request,
+        "user": current_user,
+        "title": "Updates"
+    })

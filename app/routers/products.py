@@ -187,3 +187,22 @@ async def view_product(
         "product": product,
         "title": f"Product: {product.name}"
     })
+
+@router.get("/{product_id}/edit", response_class=HTMLResponse)
+async def edit_product(
+    product_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Edit a specific product (placeholder)"""
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    # For now, just show a placeholder page
+    return templates.TemplateResponse("products/edit.html", {
+        "request": request,
+        "user": current_user,
+        "product": product,
+        "title": f"Edit Product: {product.name}"
+    })
