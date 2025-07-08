@@ -31,10 +31,18 @@ async def company_settings(
     current_user: User = Depends(get_current_user)
 ):
     """Show company settings"""
+    # Add default settings for the template
+    settings = {
+        "language": "english",
+        "company_name": "",
+        "company_address": "",
+        # Add other fields that company.html expects
+    }
+    
     return templates.TemplateResponse("settings/company.html", {
         "request": request,
         "user": current_user,
-        "settings": {"language": "english"},  # This is what's missing!
+        "settings": settings,  # This is what was missing!
         "title": "Company Settings"
     })
 
