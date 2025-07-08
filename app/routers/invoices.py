@@ -33,7 +33,7 @@ async def invoices_list(
             "invoices": invoices
         }
     )
-
+"""
 @router.get("/create", response_class=HTMLResponse)
 async def invoice_create(
     request: Request,
@@ -43,6 +43,7 @@ async def invoice_create(
         "invoices/create.html", 
         {"request": request, "user": current_user}
     )
+"""    
 @router.get("/invoices/create", response_class=HTMLResponse)
 async def create_invoice(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     clients = db.query(Client).all()  # Adjust Client import as needed
@@ -51,3 +52,5 @@ async def create_invoice(request: Request, db: Session = Depends(get_db), curren
         "user": current_user,
         "clients": clients
     })
+
+    
