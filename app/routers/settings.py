@@ -34,6 +34,7 @@ async def company_settings(
     return templates.TemplateResponse("settings/company.html", {
         "request": request,
         "user": current_user,
+        "settings": {"language": "english"},  # This is what's missing!
         "title": "Company Settings"
     })
 
