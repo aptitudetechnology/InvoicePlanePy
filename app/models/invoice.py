@@ -3,15 +3,13 @@ from sqlalchemy.orm import relationship
 from enum import Enum as PyEnum
 from app.models.base import BaseModel
 
-
 class InvoiceStatus(PyEnum):
-    DRAFT = 1
-    SENT = 2
-    VIEWED = 3
-    PAID = 4
-    OVERDUE = 5
-    CANCELLED = 6
-
+    DRAFT = 'DRAFT'
+    SENT = 'SENT'
+    VIEWED = 'VIEWED'
+    PAID = 'PAID'
+    OVERDUE = 'OVERDUE'
+    CANCELLED = 'CANCELLED'
 
 class Invoice(BaseModel):
     __tablename__ = "invoices"
@@ -62,7 +60,6 @@ class Invoice(BaseModel):
             return 0
         from datetime import date
         return (date.today() - self.due_date).days
-
 
 class InvoiceItem(BaseModel):
     __tablename__ = "invoice_items"

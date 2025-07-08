@@ -1,3 +1,4 @@
+from app.models.invoice import InvoiceStatus
 from fastapi import APIRouter, Request, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -29,8 +30,8 @@ async def reports_dashboard(
     
     # Calculate revenue statistics
     total_revenue = db.query(func.sum(Payment.amount)).scalar() or 0
-    pending_invoices = db.query(func.count(Invoice.id)).filter(Invoice.status == 'draft').scalar()
-    
+    #pending_invoices = db.query(func.count(Invoice.id)).filter(Invoice.status == 'DRAFT').scalar()
+    ending_invoices = db.query(func.count(Invoice.id)).filter(Invoice.status == InvoiceStatus.DRAFT).scalar()
     stats = {
         'total_clients': total_clients,
         'total_invoices': total_invoices,
