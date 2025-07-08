@@ -43,3 +43,11 @@ async def invoice_create(
         "invoices/create.html", 
         {"request": request, "user": current_user}
     )
+@router.get("/invoices/create", response_class=HTMLResponse)
+async def create_invoice(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    clients = db.query(Client).all()  # Adjust Client import as needed
+    return templates.TemplateResponse("invoices/create.html", {
+        "request": request,
+        "user": current_user,
+        "clients": clients
+    })
