@@ -44,13 +44,41 @@ async def invoice_create(
         {"request": request, "user": current_user}
     )
 """    
+
 @router.get("/create", response_class=HTMLResponse)
 async def create_invoice(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    clients = db.query(Client).all()  # Adjust Client import as needed
+    clients = db.query(Client).all()
     return templates.TemplateResponse("invoices/create.html", {
         "request": request,
         "user": current_user,
         "clients": clients
+    })
+
+# POST /invoices/ - handle invoice details form submission
+from fastapi import Form
+
+@router.post("/", response_class=HTMLResponse)
+async def invoice_create_post(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    client_id: int = Form(...),
+    invoice_number: str = Form(None),
+    status: str = Form(None),
+    invoice_date: str = Form(None),
+    due_date: str = Form(None),
+    payment_method: str = Form(None),
+    pdf_password: str = Form(None),
+    invoice_terms: str = Form(None)
+    # Add other fields as needed
+):
+    client = db.query(Client).filter(Client.id == client_id).first()
+    # Here you would process and save the invoice, for now just show a confirmation
+    return templates.TemplateResponse("invoices/details.html", {
+        "request": request,
+        "user": current_user,
+        "client": client,
+        "message": "Invoice POST received"
     })
 
     
