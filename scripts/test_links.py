@@ -1,12 +1,17 @@
+
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
-import sys
 
 BASE_URL = "http://localhost:8080"  # Change to your running app's base URL
+LOGIN_URL = BASE_URL + "/login"     # Change to your login endpoint
+USERNAME = "admin"                  # Change to your username
+PASSWORD = "admin123"               # Change to your password
 
 visited = set()
 broken_links = []
+
+session = requests.Session()
 
 def is_internal(url):
     return url.startswith(BASE_URL) or url.startswith("/")
@@ -17,7 +22,7 @@ def crawl(url):
     full_url = urljoin(BASE_URL, url)
     visited.add(full_url)
     try:
-        resp = requests.get(full_url, timeout=10)
+        resp = session.get(full_url, timeout=10)
     except Exception as e:
         broken_links.append((full_url, f"Request error: {e}"))
         return
@@ -34,6 +39,26 @@ def crawl(url):
         # Only crawl internal links
         if urlparse(next_url).netloc == urlparse(BASE_URL).netloc:
             crawl(next_url)
+
+if __name__ == "__main__":
+    # 1. Log in first
+    login_data = {"username": USERNAME, "password": PASSWORD}
+    try:
+        login_resp = session.post(LOGIN_URL, data=login_data, timeout=10)
+        if login_resp.status_code != 200 or "login" in login_resp.url.lower():
+            print(f"Login failed! Status: {login_resp.status_code}")
+            print(login_resp.text)
+            exit(1)
+        print("Login successful. Starting crawl...")
+    except Exception as e:
+        print(f"Login request failed: {e}")
+        exit(1)
+
+    crawl(BASE_URL)
+    print("\nBroken links found:")
+    for url, reason in broken_links:
+        print(f"{url} -> {reason}")
+    print(f"\nChecked {len(visited)} pages, found {len(broken_links)} broken links.")
 
 if __name__ == "__main__":
     print(f"Starting crawl at {BASE_URL}")
