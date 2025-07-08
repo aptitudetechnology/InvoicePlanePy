@@ -68,12 +68,27 @@ async def invoice_settings(
     current_user: User = Depends(get_current_user)
 ):
     """Show invoice settings"""
+    # Define default settings for the invoice template, or fetch from DB if applicable
+    invoice_settings_data = {
+        "language": "english", # Example: Default language setting
+        "invoice_prefix": "INV-",
+        "invoice_start_number": 1,
+        "due_days": 30,
+        # Add any other settings your invoice.html template expects
+    }
+
+    # If you have actual invoice settings stored in your database (e.g., in a SystemSettings table or UserSettings related to invoices), you would fetch them here
+    # For example:
+    # invoice_db_settings = db.query(InvoiceSettingsModel).filter(...).first()
+    # if invoice_db_settings:
+    #     invoice_settings_data.update(invoice_db_settings.__dict__) # Or map relevant fields
+
     return templates.TemplateResponse("settings/invoice.html", {
         "request": request,
         "user": current_user,
+        "settings": invoice_settings_data, # <--- THIS IS THE FIX
         "title": "Invoice Settings"
     })
-
 @router.get("/custom-fields", response_class=HTMLResponse)
 async def custom_fields(
     request: Request,
