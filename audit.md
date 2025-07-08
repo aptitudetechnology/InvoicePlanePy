@@ -80,20 +80,11 @@ These indicate a generic server-side issue, meaning something went wrong when th
         4. For resource detail/edit pages, ensure the resource exists in the database and the backend handles missing resources gracefully (return 404, not 500).
         5. Fix the code or data issues, then re-run the link audit.
 
-
-        Broken links found:
-http://simple.local:8080/auth/logout -> Status 405
+Broken links found:
 http://simple.local:8080/profile/security -> Status 500
-http://simple.local:8080/settings/users -> Status 500
-http://simple.local:8080/settings/invoice-groups -> Status 500
-http://simple.local:8080/settings/invoice-archive -> Status 500
-http://simple.local:8080/help/faq -> Status 500
-http://simple.local:8080/help/documentation -> Status 500
-http://simple.local:8080/reports/invoice-aging -> Request error: ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))
 http://simple.local:8080/products/1 -> Status 500
 http://simple.local:8080/products/2 -> Status 500
 http://simple.local:8080/products/3 -> Status 500
 http://simple.local:8080/clients/2 -> Status 500
 http://simple.local:8080/clients/3 -> Status 500
 
-Checked 63 pages, found 13 broken links.
