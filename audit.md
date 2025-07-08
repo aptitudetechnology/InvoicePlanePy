@@ -82,9 +82,14 @@ These indicate a generic server-side issue, meaning something went wrong when th
 
 Broken links found:
 http://simple.local:8080/profile/security -> Status 500
+http://simple.local:8080/products/families/1 -> Status 404 (fixed: placeholder route and template added)
+http://simple.local:8080/products/families/1/edit -> Status 404 (fixed: placeholder route and template added)
+http://simple.local:8080/products/units/1 -> Status 404 (fixed: placeholder route and template added)
+http://simple.local:8080/products/units/1/edit -> Status 404 (fixed: placeholder route and template added)
 http://simple.local:8080/products/1 -> Status 500
 http://simple.local:8080/products/2 -> Status 500
 http://simple.local:8080/products/3 -> Status 500
 http://simple.local:8080/clients/2 -> Status 500
 http://simple.local:8080/clients/3 -> Status 500
 
+- The 404 errors for product families and units are now resolved with placeholder routes and templates. Remaining 500 errors are likely due to missing database records or unhandled exceptions. Next step: check for existence of products/clients with the given IDs and improve error handling to return 404 if not found.

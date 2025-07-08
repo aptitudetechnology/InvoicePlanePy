@@ -206,3 +206,91 @@ async def edit_product(
         "product": product,
         "title": f"Edit Product: {product.name}"
     })
+
+@router.get("/families/{family_id}", response_class=HTMLResponse)
+async def view_product_family(
+    family_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """View a specific product family"""
+    family = db.query(ProductFamily).filter(ProductFamily.id == family_id).first()
+    if not family:
+        return templates.TemplateResponse("errors/not_found.html", {
+            "request": request,
+            "message": f"Product family with ID {family_id} not found."
+        }, status_code=404)
+    
+    return templates.TemplateResponse("products/family_view.html", {
+        "request": request,
+        "user": current_user,
+        "family": family,
+        "title": f"Product Family: {family.name}"
+    })
+
+@router.get("/families/{family_id}/edit", response_class=HTMLResponse)
+async def edit_product_family(
+    family_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Edit a specific product family (placeholder)"""
+    family = db.query(ProductFamily).filter(ProductFamily.id == family_id).first()
+    if not family:
+        return templates.TemplateResponse("errors/not_found.html", {
+            "request": request,
+            "message": f"Product family with ID {family_id} not found."
+        }, status_code=404)
+    
+    return templates.TemplateResponse("products/family_edit.html", {
+        "request": request,
+        "user": current_user,
+        "family": family,
+        "title": f"Edit Product Family: {family.name}"
+    })
+
+@router.get("/units/{unit_id}", response_class=HTMLResponse)
+async def view_product_unit(
+    unit_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """View a specific product unit"""
+    unit = db.query(ProductUnit).filter(ProductUnit.id == unit_id).first()
+    if not unit:
+        return templates.TemplateResponse("errors/not_found.html", {
+            "request": request,
+            "message": f"Product unit with ID {unit_id} not found."
+        }, status_code=404)
+    
+    return templates.TemplateResponse("products/unit_view.html", {
+        "request": request,
+        "user": current_user,
+        "unit": unit,
+        "title": f"Product Unit: {unit.name}"
+    })
+
+@router.get("/units/{unit_id}/edit", response_class=HTMLResponse)
+async def edit_product_unit(
+    unit_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Edit a specific product unit (placeholder)"""
+    unit = db.query(ProductUnit).filter(ProductUnit.id == unit_id).first()
+    if not unit:
+        return templates.TemplateResponse("errors/not_found.html", {
+            "request": request,
+            "message": f"Product unit with ID {unit_id} not found."
+        }, status_code=404)
+    
+    return templates.TemplateResponse("products/unit_edit.html", {
+        "request": request,
+        "user": current_user,
+        "unit": unit,
+        "title": f"Edit Product Unit: {unit.name}"
+    })
