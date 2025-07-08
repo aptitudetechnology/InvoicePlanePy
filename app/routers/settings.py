@@ -72,7 +72,7 @@ async def custom_fields(
     current_user: User = Depends(get_current_user)
 ):
     """Show custom fields management"""
-    return templates.TemplateResponse("settings/custom_fields.html", {
+    return templates.TemplateResponse("settings/new_custom_field.html", {
         "request": request,
         "user": current_user,
         "title": "Custom Fields"
