@@ -14,6 +14,9 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
 # In app/routers/dashboard.py
+@router.get("/settings/custom-fields/new")
+async def new_custom_field(request: Request):
+    return templates.TemplateResponse("settings/new_custom_field.html", {"request": request})
 @router.get("/keepalive")
 async def keepalive():
     return {"status": "ok"}
