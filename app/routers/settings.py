@@ -1,3 +1,41 @@
+from fastapi import Form
+@router.post("/invoices", response_class=HTMLResponse)
+async def save_invoice_settings(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    default_invoice_group: str = Form(None),
+    default_payment_method: str = Form(None),
+    default_terms: str = Form(None),
+    invoices_due_after: int = Form(None),
+    generate_invoice_number_draft: str = Form(None),
+    mark_invoices_sent_pdf: str = Form(None),
+    enable_pdf_watermarks: str = Form(None),
+    invoice_pdf_password: str = Form(None),
+    include_zugferd: str = Form(None),
+    default_pdf_template: str = Form(None)
+    # Add other fields as needed
+):
+    # TODO: Save settings to the database or config file
+    # For now, just reload the page with a success message
+    settings = {
+        "default_invoice_group": default_invoice_group,
+        "default_payment_method": default_payment_method,
+        "default_terms": default_terms,
+        "invoices_due_after": invoices_due_after,
+        "generate_invoice_number_draft": generate_invoice_number_draft,
+        "mark_invoices_sent_pdf": mark_invoices_sent_pdf,
+        "enable_pdf_watermarks": enable_pdf_watermarks,
+        "invoice_pdf_password": invoice_pdf_password,
+        "include_zugferd": include_zugferd,
+        "default_pdf_template": default_pdf_template
+    }
+    return templates.TemplateResponse("settings/invoice.html", {
+        "request": request,
+        "user": current_user,
+        "settings": settings,
+        "success_message": "Settings saved successfully. (Not yet persisted)"
+    })
 from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
