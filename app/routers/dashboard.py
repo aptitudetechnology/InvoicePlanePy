@@ -13,6 +13,10 @@ from app.dependencies import get_current_user
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
+# In app/routers/dashboard.py
+@router.get("/keepalive")
+async def keepalive():
+    return {"status": "ok"}
 @router.get("/", response_class=HTMLResponse)
 @router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(
