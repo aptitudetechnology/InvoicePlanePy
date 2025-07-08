@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Invoice - InvoicePlane Python{% endblock %}
+
+{% block content %}
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    Record successfully created
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Edit Invoice</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="/invoices" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Invoices
+        </a>
+    </div>
+</div>
+
+<form method="post" action="/invoices/save"> {# Assuming a save endpoint #}
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Client Details</h5>
+                </div>
+                <div class="card-body">
+                    <h3>Joe Bloggs Business name Pty Ltd <a href="#" class="text-decoration-none"><i class="bi bi-link"></i></a></h3>
+                    <address>
+                        123 Evergreen Terrace<br>
+                        Leederville<br>
+                        Perth WA 6007<br>
+                        Australia
+                    </address>
+                    <p>Email: <a href="mailto:joe@bloggs.com.au">joe@bloggs.com.au</a></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Invoice Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="invoice_number" class="form-label">Invoice #</label>
+                            <input type="text" class="form-control" id="invoice_number" name="invoice_number" value="Not set yet">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="status" class="form-label">Status (Can be changed)</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="draft" selected>Draft</option>
+                                <option value="sent">Sent</option>
+                                <option value="paid">Paid</option>
+                                <option value="viewed">Viewed</option>
+                                <option value="overdue">Overdue</option>
+                                <option value="canceled">Canceled</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="invoice_date" class="form-label">Date</label>
+                            <div class="input-group">
+                                <input type="date" class="form-control" id="invoice_date" name="invoice_date" value="2025-07-08">
+                                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="payment_method" class="form-label">Payment Method</label>
+                            <select class="form-select" id="payment_method" name="payment_method">
+                                <option value="">Select the Payment Method</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                                <option value="credit_card">Credit Card</option>
+                                <option value="paypal">PayPal</option>
+                                <option value="cash">Cash</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="due_date" class="form-label">Due Date</label>
+                            <div class="input-group">
+                                <input type="date" class="form-control" id="due_date" name="due_date" value="2025-07-22">
+                                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="pdf_password" class="form-label">PDF password (optional)</label>
+                            <input type="text" class="form-control" id="pdf_password" name="pdf_password">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Invoice Items</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="invoice-items">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 30%;">Item</th>
+                            <th style="width: 10%;">Quantity</th>
+                            <th style="width: 10%;">Price</th>
+                            <th style="width: 15%;">Item Discount</th>
+                            <th style="width: 15%;">Tax Rate</th>
+                            <th style="width: 10%;">Total</th>
+                            <th style="width: 5%;"></th> {# Actions #}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="item-row">
+                            <td>
+                                <input type="text" class="form-control mb-1 item-name" name="item_name[]" placeholder="Item name">
+                                <textarea class="form-control mb-1 item-description" name="item_description[]" rows="1" placeholder="Description"></textarea>
+                                <select class="form-select product-unit" name="product_unit[]">
+                                    <option value="">Product Unit</option>
+                                    <option value="hr">hr</option>
+                                    <option value="item">item</option>
+                                    <option value="unit">unit</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="number" class="form-control quantity" name="item_quantity[]" 
+                                       value="1" min="0" step="0.01">
+                            </td>
+                            <td>
+                                <input type="number" class="form-control price" name="item_price[]" 
+                                       value="0.00" min="0" step="0.01">
+                            </td>
+                            <td>
+                                <div class="input-group">
+                                    <input type="number" class="form-control item-discount" name="item_discount[]" 
+                                           value="0.00" min="0" step="0.01">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </td>
+                            <td>
+                                <select class="form-select tax-rate" name="item_tax_rate[]">
+                                    <option value="0">None</option>
+                                    <option value="5">5%</option>
+                                    <option value="10">10%</option>
+                                    <option value="15">15%</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="number" class="form-control item-total" name="item_total[]" 
+                                       value="0.00" readonly>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-danger remove-item">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="d-flex gap-2 mb-3">
+                <button type="button" class="btn btn-sm btn-outline-primary" id="add-new-row">
+                    <i class="bi bi-plus"></i> Add new row
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-info" id="add-product">
+                    <i class="bi bi-box"></i> Add product
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="add-task">
+                    <i class="bi bi-list-task"></i> Add task
+                </button>
+            </div>
+
+            <div class="row justify-content-end mt-4">
+                <div class="col-md-5">
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>Subtotal</strong></td>
+                            <td class="text-end" id="invoice-subtotal">$0.00</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Item Tax</strong></td>
+                            <td class="text-end" id="invoice-item-tax">$0.00</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Discount</strong></td>
+                            <td class="text-end">
+                                <div class="input-group input-group-sm justify-content-end">
+                                    <input type="number" class="form-control form-control-sm text-end" id="invoice-discount-amount" name="invoice_discount_amount" value="0.00" min="0" step="0.01" style="max-width: 80px;">
+                                    <select class="form-select form-select-sm" id="invoice-discount-type" name="invoice_discount_type" style="max-width: 60px;">
+                                        <option value="percent">%</option>
+                                        <option value="fixed">$</option>
+                                    </select>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="table-primary">
+                            <td><strong>Total</strong></td>
+                            <td class="text-end" id="invoice-grand-total"><strong>$0.00</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Paid</strong></td>
+                            <td class="text-end">
+                                <input type="number" class="form-control form-control-sm text-end" id="invoice-paid" name="invoice_paid" value="0.00" min="0" step="0.01">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Balance</strong></td>
+                            <td class="text-end" id="invoice-balance"><strong>$0.00</strong></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Invoice Terms</h5>
+                </div>
+                <div class="card-body">
+                    <textarea class="form-control" id="invoice-terms" name="invoice_terms" rows="5">Please pay within 14 days.
+Make payment to:
+TYPE (W) Pty Ltd
+BSB: 000-000
+ACC: 000000000</textarea>
+                </div>
+            </div>
+        </div>
