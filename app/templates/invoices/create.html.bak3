@@ -1,163 +1,207 @@
 {% extends "base.html" %}
 
-{% block title %}Create Invoice - InvoicePlane Python{% endblock %}
+{% block title %}Create Invoice{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Create Invoice</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <a href="/invoices" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Back to Invoices
-        </a>
-    </div>
-</div>
+<style>
+    /* Custom styles to mimic the modal-like appearance from the screenshot */
+    body {
+        background-color: #f0f2f5; /* Light background similar to the screenshot */
+    }
+    .modal-dialog-centered-custom { /* Custom class to avoid conflict with Bootstrap's true modal */
+        display: flex;
+        align-items: center;
+        min-height: calc(100vh - 1rem); /* Use vh for full viewport height */
+        justify-content: center; /* Center horizontally */
+        padding: 1rem; /* Add some padding around the content */
+    }
+    .modal-content-custom { /* Custom class */
+        background-color: #fff;
+        border-radius: 0.3rem;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        max-width: 600px; /* Max width as seen in the screenshot */
+        width: 100%; /* Ensure it takes full width up to max-width */
+        margin: auto; /* Center the card itself within the dialog-centered */
+    }
+    .modal-header-custom { /* Custom class */
+        border-bottom: 1px solid #dee2e6;
+        padding: 1rem 1.5rem;
+        background-color: #fff; /* White header background as per screenshot */
+        border-top-left-radius: 0.3rem;
+        border-top-right-radius: 0.3rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .modal-title-custom { /* Custom class */
+        margin-bottom: 0;
+        line-height: 1.5;
+        font-size: 1.25rem;
+        font-weight: 500; /* Slightly bolder, common for titles */
+    }
+    .modal-body-custom { /* Custom class */
+        padding: 1.5rem;
+    }
+    .modal-footer-custom { /* Custom class */
+        border-top: 1px solid #dee2e6;
+        padding: 0.75rem 1.5rem;
+        display: flex;
+        justify-content: flex-end; /* Align buttons to the right */
+        background-color: #f8f9fa; /* Light footer background */
+        border-bottom-left-radius: 0.3rem;
+        border-bottom-right-radius: 0.3rem;
+    }
+    .form-group-custom { /* Custom class for consistent spacing */
+        margin-bottom: 1rem;
+    }
+    .form-control {
+        height: calc(2.25rem + 2px); /* Standard Bootstrap height for inputs */
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        color: #495057;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    .form-select {
+        height: calc(2.25rem + 2px); /* Standard Bootstrap height for selects */
+        padding: 0.375rem 2.25rem 0.375rem 0.75rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        color: #495057;
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        appearance: none; /* Remove default arrow */
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 16px 12px;
+    }
+    /* Specific styles for date input with calendar icon */
+    .input-group-date-custom { /* Custom class */
+        position: relative;
+        display: flex; /* To align input and icon */
+        width: 100%;
+    }
+    .input-group-date-custom .form-control {
+        flex: 1 1 auto; /* Allow input to grow */
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+    .input-group-date-custom .input-group-text-custom { /* Custom class */
+        display: flex;
+        align-items: center;
+        padding: 0.375rem 0.75rem;
+        margin-bottom: 0;
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #495057;
+        text-align: center;
+        white-space: nowrap;
+        background-color: #e9ecef; /* Match screenshot background for icon */
+        border: 1px solid #ced4da;
+        border-left: 0; /* No left border */
+        border-radius: 0.25rem;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        cursor: pointer;
+    }
+    /* Button styling to match screenshot */
+    .btn-success-custom {
+        color: #fff;
+        background-color: #28a745;
+        border-color: #28a745;
+        display: inline-flex; /* Allow icon and text to align */
+        align-items: center;
+        gap: 0.25rem; /* Space between icon and text */
+        padding: 0.375rem 0.75rem; /* Standard btn padding */
+        font-size: 1rem;
+        line-height: 1.5;
+        border-radius: 0.25rem;
+    }
+    .btn-danger-custom {
+        color: #fff;
+        background-color: #dc3545;
+        border-color: #dc3545;
+        display: inline-flex; /* Allow icon and text to align */
+        align-items: center;
+        gap: 0.25rem; /* Space between icon and text */
+        padding: 0.375rem 0.75rem; /* Standard btn padding */
+        font-size: 1rem;
+        line-height: 1.5;
+        border-radius: 0.25rem;
+    }
+    .btn-close-custom { /* Custom close button */
+        padding: 0.5rem;
+        margin: -0.5rem -0.5rem -0.5rem auto;
+        background-color: transparent;
+        border: 0;
+        opacity: .5;
+        font-size: 1.5rem; /* Larger 'x' icon */
+        line-height: 1;
+        color: #000;
+        text-shadow: 0 1px 0 #fff;
+        cursor: pointer;
+    }
+    .btn-close-custom:hover {
+        opacity: .75;
+    }
+</style>
 
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Invoice Details</h5>
-            </div>
-            <div class="card-body">
-                <form method="post" action="/invoices">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="client_id" class="form-label">Client *</label>
-                            <select class="form-select" id="client_id" name="client_id" required>
-                                <option value="">Select a client...</option>
-                                <option value="1">Sample Client</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="invoice_number" class="form-label">Invoice Number</label>
-                            <input type="text" class="form-control" id="invoice_number" name="invoice_number" 
-                                   placeholder="Auto-generated" readonly>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="invoice_date" class="form-label">Invoice Date *</label>
-                            <input type="date" class="form-control" id="invoice_date" name="invoice_date" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="due_date" class="form-label">Due Date *</label>
-                            <input type="date" class="form-control" id="due_date" name="due_date" required>
-                        </div>
-                    </div>
+<div class="modal-dialog-centered-custom">
+    <div class="modal-content-custom">
+        <div class="modal-header-custom">
+            <h5 class="modal-title-custom" id="createInvoiceModalLabel">Create Invoice</h5>
+            <button type="button" class="btn-close-custom" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body-custom">
+            <form method="post" action="/invoices" id="createInvoiceForm">
+                <div class="form-group-custom">
+                    <label for="client_id" class="form-label">Client</label>
+                    <select class="form-select" id="client_id" name="client_id">
+                    <option value="">Select Client</option>
+                    {% for client in clients %}
+                    <option value="{{ client.id }}">{{ client.name }}</option>
+                    {% endfor %}
+                    </select>
+                </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="payment_method" class="form-label">Payment Method</label>
-                            <select class="form-select" id="payment_method" name="payment_method">
-                                <option value="">Select payment method...</option>
-                                <option value="bank_transfer">Bank Transfer</option>
-                                <option value="credit_card">Credit Card</option>
-                                <option value="paypal">PayPal</option>
-                                <option value="cash">Cash</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="status" class="form-label">Status</label>
-                            <select class="form-select" id="status" name="status">
-                                <option value="draft">Draft</option>
-                                <option value="sent">Sent</option>
-                                <option value="paid">Paid</option>
-                                <option value="canceled">Canceled</option>
-                            </select>
-                        </div>
+                <div class="form-group-custom">
+                    <label for="invoice_date" class="form-label">Invoice Date</label>
+                    <div class="input-group-date-custom">
+                        <input type="text" class="form-control" id="invoice_date" name="invoice_date" value="08/07/2025" readonly>
+                        <span class="input-group-text-custom"><i class="bi bi-calendar"></i></span>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="terms" class="form-label">Terms</label>
-                        <textarea class="form-control" id="terms" name="terms" rows="3"></textarea>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="notes" class="form-label">Notes</label>
-                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
-                    </div>
-                    
-                    <div class="border-top pt-4 mt-4">
-                        <h5>Invoice Items</h5>
-                        <div class="table-responsive">
-                            <table class="table table-bordered" id="invoice-items">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th style="width: 40%;">Item/Description</th>
-                                        <th style="width: 10%;">Quantity</th>
-                                        <th style="width: 15%;">Price</th>
-                                        <th style="width: 15%;">Tax Rate</th>
-                                        <th style="width: 15%;">Total</th>
-                                        <th style="width: 5%;">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr class="item-row">
-                                        <td>
-                                            <input type="text" class="form-control" name="item_name[]" placeholder="Item name">
-                                            <textarea class="form-control mt-1" name="item_description[]" rows="2" placeholder="Description"></textarea>
-                                        </td>
-                                        <td>
-                                            <input type="number" class="form-control quantity" name="item_quantity[]" 
-                                                   value="1" min="0" step="0.01">
-                                        </td>
-                                        <td>
-                                            <input type="number" class="form-control price" name="item_price[]" 
-                                                   value="0.00" min="0" step="0.01">
-                                        </td>
-                                        <td>
-                                            <div class="input-group">
-                                                <input type="number" class="form-control tax-rate" name="item_tax_rate[]" 
-                                                       value="0.00" min="0" step="0.01">
-                                                <span class="input-group-text">%</span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <input type="number" class="form-control item-total" name="item_total[]" 
-                                                   value="0.00" readonly>
-                                        </td>
-                                        <td>
-                                            <button type="button" class="btn btn-sm btn-outline-danger remove-item">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <button type="button" class="btn btn-sm btn-outline-primary" id="add-item">
-                            <i class="bi bi-plus"></i> Add Item
-                        </button>
-                    </div>
-                    
-                    <div class="row justify-content-end mt-4">
-                        <div class="col-md-4">
-                            <table class="table table-sm">
-                                <tr>
-                                    <td><strong>Subtotal:</strong></td>
-                                    <td class="text-end" id="invoice-subtotal">$0.00</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Tax:</strong></td>
-                                    <td class="text-end" id="invoice-tax">$0.00</td>
-                                </tr>
-                                <tr class="table-primary">
-                                    <td><strong>Total:</strong></td>
-                                    <td class="text-end" id="invoice-grand-total"><strong>$0.00</strong></td>
-                                </tr>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    <div class="d-flex gap-2 mt-4">
-                        <button type="submit" class="btn btn-primary">Save Draft</button>
-                        <button type="submit" name="action" value="send" class="btn btn-success">Save & Send</button>
-                        <a href="/invoices" class="btn btn-secondary">Cancel</a>
-                    </div>
-                </form>
-            </div>
+                </div>
+
+                <div class="form-group-custom">
+                    <label for="pdf_password" class="form-label">PDF password (optional)</label>
+                    <input type="password" class="form-control" id="pdf_password" name="pdf_password">
+                </div>
+
+                <div class="form-group-custom">
+                    <label for="invoice_group" class="form-label">Invoice Group</label>
+                    <select class="form-select" id="invoice_group" name="invoice_group">
+                        <option value="default">Invoice Default</option>
+                        <option value="other">Other Group</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer-custom">
+            <button type="submit" class="btn-success-custom me-2" form="createInvoiceForm">
+                <i class="bi bi-check-lg"></i> Submit
+            </button>
+            <button type="button" class="btn-danger-custom" id="cancelButton">
+                <i class="bi bi-x-lg"></i> Cancel
+            </button>
         </div>
     </div>
 </div>
@@ -165,94 +209,42 @@
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Set default dates
-    const today = new Date().toISOString().split('T')[0];
-    const dueDate = new Date();
-    dueDate.setDate(dueDate.getDate() + 30); // 30 days from now
+    document.addEventListener('DOMContentLoaded', function() {
+        const invoiceDateInput = document.getElementById('invoice_date');
+        const calendarIcon = document.querySelector('.input-group-date-custom .input-group-text-custom');
+        const closeButton = document.querySelector('.btn-close-custom');
+        const cancelButton = document.getElementById('cancelButton');
 
-    document.getElementById('invoice_date').value = today;
-    document.getElementById('due_date').value = dueDate.toISOString().split('T')[0];
-    
-    // Add item functionality
-    document.getElementById('add-item').addEventListener('click', function() {
-        const tbody = document.querySelector('#invoice-items tbody');
-        const newRow = tbody.querySelector('.item-row').cloneNode(true);
-        
-        // Clear inputs and set defaults for new row
-        newRow.querySelectorAll('input, textarea').forEach(input => {
-            if (input.classList.contains('quantity')) {
-                input.value = '1';
-            } else if (input.classList.contains('price') || input.classList.contains('item-total')) {
-                input.value = '0.00';
-            } else if (input.classList.contains('tax-rate')) {
-                input.value = '0.00';
-            }
-            else {
-                input.value = '';
-            }
+        // Set the current date in the specified format (DD/MM/YYYY)
+        const today = new Date();
+        const day = String(today.getDate()).padStart(2, '0');
+        const month = String(today.getMonth() + 1).padStart(2, '0'); // January is 0!
+        const year = today.getFullYear();
+        invoiceDateInput.value = `${day}/${month}/${year}`;
+        invoiceDateInput.setAttribute('readonly', true); // Make it truly read-only as in screenshot
+
+        // Basic calendar icon functionality (for display purposes, a full datepicker library would be better)
+        // In a real Jinja2 app, you might integrate a JavaScript datepicker here (e.g., Bootstrap-datepicker, flatpickr)
+        calendarIcon.addEventListener('click', function() {
+            // For now, it just logs a message. A real implementation would open a date picker.
+            console.log("Calendar icon clicked. A date picker would normally appear here.");
         });
-        
-        tbody.appendChild(newRow);
-        updateCalculations();
-    });
-    
-    // Remove item functionality
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.remove-item')) {
-            const rows = document.querySelectorAll('.item-row');
-            if (rows.length > 1) { // Ensure at least one row remains
-                e.target.closest('.item-row').remove();
-                updateCalculations();
-            }
-        }
-    });
-    
-    // Update calculations when quantity, price, or tax rate changes
-    document.addEventListener('input', function(e) {
-        if (e.target.classList.contains('quantity') || 
-            e.target.classList.contains('price') || 
-            e.target.classList.contains('tax-rate')) {
-            
-            const row = e.target.closest('.item-row');
-            const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
-            const price = parseFloat(row.querySelector('.price').value) || 0;
-            const taxRate = parseFloat(row.querySelector('.tax-rate').value) || 0;
-            
-            const itemSubtotal = quantity * price;
-            const itemTax = itemSubtotal * (taxRate / 100);
-            const itemTotal = itemSubtotal + itemTax;
-            
-            row.querySelector('.item-total').value = itemTotal.toFixed(2);
-            updateCalculations();
-        }
-    });
-    
-    function updateCalculations() {
-        let subtotal = 0;
-        let totalTax = 0;
 
-        document.querySelectorAll('.item-row').forEach(row => {
-            const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
-            const price = parseFloat(row.querySelector('.price').value) || 0;
-            const taxRate = parseFloat(row.querySelector('.tax-rate').value) || 0;
-
-            const itemSubtotal = quantity * price;
-            const itemTax = itemSubtotal * (taxRate / 100);
-            
-            subtotal += itemSubtotal;
-            totalTax += itemTax;
+        // Close button functionality (the 'X' in the top right)
+        closeButton.addEventListener('click', function() {
+            // In a real application, this would typically close a modal or navigate away.
+            console.log("Close button clicked.");
+            // Example for redirecting if it's not a true modal:
+            // window.location.href = '/invoices';
         });
-        
-        const grandTotal = subtotal + totalTax;
-        
-        document.getElementById('invoice-subtotal').textContent = '$' + subtotal.toFixed(2);
-        document.getElementById('invoice-tax').textContent = '$' + totalTax.toFixed(2);
-        document.getElementById('invoice-grand-total').innerHTML = '<strong>$' + grandTotal.toFixed(2) + '</strong>';
-    }
-    
-    // Initial calculation when the page loads
-    updateCalculations();
-});
+
+        // Cancel button functionality
+        cancelButton.addEventListener('click', function() {
+            // In a real application, this would typically close a modal or navigate away.
+            console.log("Cancel button clicked.");
+            // Example for redirecting if it's not a true modal:
+            // window.location.href = '/invoices';
+        });
+    });
 </script>
 {% endblock %}

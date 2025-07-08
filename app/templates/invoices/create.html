@@ -3,205 +3,51 @@
 {% block title %}Create Invoice{% endblock %}
 
 {% block content %}
-<style>
-    /* Custom styles to mimic the modal-like appearance from the screenshot */
-    body {
-        background-color: #f0f2f5; /* Light background similar to the screenshot */
-    }
-    .modal-dialog-centered-custom { /* Custom class to avoid conflict with Bootstrap's true modal */
-        display: flex;
-        align-items: center;
-        min-height: calc(100vh - 1rem); /* Use vh for full viewport height */
-        justify-content: center; /* Center horizontally */
-        padding: 1rem; /* Add some padding around the content */
-    }
-    .modal-content-custom { /* Custom class */
-        background-color: #fff;
-        border-radius: 0.3rem;
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-        max-width: 600px; /* Max width as seen in the screenshot */
-        width: 100%; /* Ensure it takes full width up to max-width */
-        margin: auto; /* Center the card itself within the dialog-centered */
-    }
-    .modal-header-custom { /* Custom class */
-        border-bottom: 1px solid #dee2e6;
-        padding: 1rem 1.5rem;
-        background-color: #fff; /* White header background as per screenshot */
-        border-top-left-radius: 0.3rem;
-        border-top-right-radius: 0.3rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .modal-title-custom { /* Custom class */
-        margin-bottom: 0;
-        line-height: 1.5;
-        font-size: 1.25rem;
-        font-weight: 500; /* Slightly bolder, common for titles */
-    }
-    .modal-body-custom { /* Custom class */
-        padding: 1.5rem;
-    }
-    .modal-footer-custom { /* Custom class */
-        border-top: 1px solid #dee2e6;
-        padding: 0.75rem 1.5rem;
-        display: flex;
-        justify-content: flex-end; /* Align buttons to the right */
-        background-color: #f8f9fa; /* Light footer background */
-        border-bottom-left-radius: 0.3rem;
-        border-bottom-right-radius: 0.3rem;
-    }
-    .form-group-custom { /* Custom class for consistent spacing */
-        margin-bottom: 1rem;
-    }
-    .form-control {
-        height: calc(2.25rem + 2px); /* Standard Bootstrap height for inputs */
-        padding: 0.375rem 0.75rem;
-        font-size: 1rem;
-        line-height: 1.5;
-        color: #495057;
-        background-color: #fff;
-        background-clip: padding-box;
-        border: 1px solid #ced4da;
-        border-radius: 0.25rem;
-        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-    }
-    .form-select {
-        height: calc(2.25rem + 2px); /* Standard Bootstrap height for selects */
-        padding: 0.375rem 2.25rem 0.375rem 0.75rem;
-        font-size: 1rem;
-        line-height: 1.5;
-        color: #495057;
-        background-color: #fff;
-        border: 1px solid #ced4da;
-        border-radius: 0.25rem;
-        appearance: none; /* Remove default arrow */
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
-        background-repeat: no-repeat;
-        background-position: right 0.75rem center;
-        background-size: 16px 12px;
-    }
-    /* Specific styles for date input with calendar icon */
-    .input-group-date-custom { /* Custom class */
-        position: relative;
-        display: flex; /* To align input and icon */
-        width: 100%;
-    }
-    .input-group-date-custom .form-control {
-        flex: 1 1 auto; /* Allow input to grow */
-        border-top-right-radius: 0;
-        border-bottom-right-radius: 0;
-    }
-    .input-group-date-custom .input-group-text-custom { /* Custom class */
-        display: flex;
-        align-items: center;
-        padding: 0.375rem 0.75rem;
-        margin-bottom: 0;
-        font-size: 1rem;
-        font-weight: 400;
-        line-height: 1.5;
-        color: #495057;
-        text-align: center;
-        white-space: nowrap;
-        background-color: #e9ecef; /* Match screenshot background for icon */
-        border: 1px solid #ced4da;
-        border-left: 0; /* No left border */
-        border-radius: 0.25rem;
-        border-top-left-radius: 0;
-        border-bottom-left-radius: 0;
-        cursor: pointer;
-    }
-    /* Button styling to match screenshot */
-    .btn-success-custom {
-        color: #fff;
-        background-color: #28a745;
-        border-color: #28a745;
-        display: inline-flex; /* Allow icon and text to align */
-        align-items: center;
-        gap: 0.25rem; /* Space between icon and text */
-        padding: 0.375rem 0.75rem; /* Standard btn padding */
-        font-size: 1rem;
-        line-height: 1.5;
-        border-radius: 0.25rem;
-    }
-    .btn-danger-custom {
-        color: #fff;
-        background-color: #dc3545;
-        border-color: #dc3545;
-        display: inline-flex; /* Allow icon and text to align */
-        align-items: center;
-        gap: 0.25rem; /* Space between icon and text */
-        padding: 0.375rem 0.75rem; /* Standard btn padding */
-        font-size: 1rem;
-        line-height: 1.5;
-        border-radius: 0.25rem;
-    }
-    .btn-close-custom { /* Custom close button */
-        padding: 0.5rem;
-        margin: -0.5rem -0.5rem -0.5rem auto;
-        background-color: transparent;
-        border: 0;
-        opacity: .5;
-        font-size: 1.5rem; /* Larger 'x' icon */
-        line-height: 1;
-        color: #000;
-        text-shadow: 0 1px 0 #fff;
-        cursor: pointer;
-    }
-    .btn-close-custom:hover {
-        opacity: .75;
-    }
-</style>
-
-<div class="modal-dialog-centered-custom">
-    <div class="modal-content-custom">
-        <div class="modal-header-custom">
-            <h5 class="modal-title-custom" id="createInvoiceModalLabel">Create Invoice</h5>
-            <button type="button" class="btn-close-custom" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-        <div class="modal-body-custom">
-            <form method="post" action="/invoices" id="createInvoiceForm">
-                <div class="form-group-custom">
-                    <label for="client_id" class="form-label">Client</label>
-                    <select class="form-select" id="client_id" name="client_id">
-                    <option value="">Select Client</option>
-                    {% for client in clients %}
-                    <option value="{{ client.id }}">{{ client.name }}</option>
-                    {% endfor %}
-                    </select>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Create Invoice</h5>
+                    <a href="/invoices" class="btn-close" aria-label="Close"></a>
                 </div>
-
-                <div class="form-group-custom">
-                    <label for="invoice_date" class="form-label">Invoice Date</label>
-                    <div class="input-group-date-custom">
-                        <input type="text" class="form-control" id="invoice_date" name="invoice_date" value="08/07/2025" readonly>
-                        <span class="input-group-text-custom"><i class="bi bi-calendar"></i></span>
+                <form method="post" action="/invoices" id="createInvoiceForm">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="client_id" class="form-label">Client</label>
+                            <select class="form-select" id="client_id" name="client_id" required>
+                                <option value="">Select Client</option>
+                                {% for client in clients %}
+                                <option value="{{ client.id }}">{{ client.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="invoice_date" class="form-label">Invoice Date</label>
+                            <input type="text" class="form-control" id="invoice_date" name="invoice_date" value="{{ current_date or '' }}" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="pdf_password" class="form-label">PDF password (optional)</label>
+                            <input type="password" class="form-control" id="pdf_password" name="pdf_password">
+                        </div>
+                        <div class="mb-3">
+                            <label for="invoice_group" class="form-label">Invoice Group</label>
+                            <select class="form-select" id="invoice_group" name="invoice_group">
+                                <option value="default">Invoice Default</option>
+                                <option value="other">Other Group</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-
-                <div class="form-group-custom">
-                    <label for="pdf_password" class="form-label">PDF password (optional)</label>
-                    <input type="password" class="form-control" id="pdf_password" name="pdf_password">
-                </div>
-
-                <div class="form-group-custom">
-                    <label for="invoice_group" class="form-label">Invoice Group</label>
-                    <select class="form-select" id="invoice_group" name="invoice_group">
-                        <option value="default">Invoice Default</option>
-                        <option value="other">Other Group</option>
-                    </select>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer-custom">
-            <button type="submit" class="btn-success-custom me-2" form="createInvoiceForm">
-                <i class="bi bi-check-lg"></i> Submit
-            </button>
-            <button type="button" class="btn-danger-custom" id="cancelButton">
-                <i class="bi bi-x-lg"></i> Cancel
-            </button>
+                    <div class="card-footer d-flex justify-content-end gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-lg"></i> Submit
+                        </button>
+                        <a href="/invoices" class="btn btn-secondary">
+                            <i class="bi bi-x-lg"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -211,40 +57,13 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const invoiceDateInput = document.getElementById('invoice_date');
-        const calendarIcon = document.querySelector('.input-group-date-custom .input-group-text-custom');
-        const closeButton = document.querySelector('.btn-close-custom');
-        const cancelButton = document.getElementById('cancelButton');
-
         // Set the current date in the specified format (DD/MM/YYYY)
         const today = new Date();
         const day = String(today.getDate()).padStart(2, '0');
-        const month = String(today.getMonth() + 1).padStart(2, '0'); // January is 0!
+        const month = String(today.getMonth() + 1).padStart(2, '0');
         const year = today.getFullYear();
         invoiceDateInput.value = `${day}/${month}/${year}`;
-        invoiceDateInput.setAttribute('readonly', true); // Make it truly read-only as in screenshot
-
-        // Basic calendar icon functionality (for display purposes, a full datepicker library would be better)
-        // In a real Jinja2 app, you might integrate a JavaScript datepicker here (e.g., Bootstrap-datepicker, flatpickr)
-        calendarIcon.addEventListener('click', function() {
-            // For now, it just logs a message. A real implementation would open a date picker.
-            console.log("Calendar icon clicked. A date picker would normally appear here.");
-        });
-
-        // Close button functionality (the 'X' in the top right)
-        closeButton.addEventListener('click', function() {
-            // In a real application, this would typically close a modal or navigate away.
-            console.log("Close button clicked.");
-            // Example for redirecting if it's not a true modal:
-            // window.location.href = '/invoices';
-        });
-
-        // Cancel button functionality
-        cancelButton.addEventListener('click', function() {
-            // In a real application, this would typically close a modal or navigate away.
-            console.log("Cancel button clicked.");
-            // Example for redirecting if it's not a true modal:
-            // window.location.href = '/invoices';
-        });
+        invoiceDateInput.setAttribute('readonly', true);
     });
 </script>
 {% endblock %}
