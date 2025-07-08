@@ -445,4 +445,347 @@
                                         <label for="paid-email-template" class="form-label">Paid Email Template</label>
                                         <select id="paid-email-template" name="paid_email_template" class="form-select">
                                             <option value="none" {% if settings.paid_email_template == 'none' %}selected{% endif %}>None</option>
-                                            <option value="payment-confirmation" {% if settings.paid_email_
+                                           
+
+                                                <option value="payment-confirmation" {% if settings.paid_email_template == 'payment-confirmation' %}selected{% endif %}>Payment Confirmation</option>
+                                            <option value="thank-you" {% if settings.paid_email_template == 'thank-you' %}selected{% endif %}>Thank You</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="overdue-pdf-template" class="form-label">Overdue PDF Template</label>
+                                        <select id="overdue-pdf-template" name="overdue_pdf_template" class="form-select">
+                                            <option value="invoiceplane-overdue" {% if settings.overdue_pdf_template == 'invoiceplane-overdue' %}selected{% endif %}>InvoicePlane - overdue</option>
+                                            <option value="invoiceplane-overdue-gst" {% if settings.overdue_pdf_template == 'invoiceplane-overdue-gst' %}selected{% endif %}>InvoicePlane Overdue GST</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="overdue-email-template" class="form-label">Overdue Email Template</label>
+                                        <select id="overdue-email-template" name="overdue_email_template" class="form-select">
+                                            <option value="none" {% if settings.overdue_email_template == 'none' %}selected{% endif %}>None</option>
+                                            <option value="reminder" {% if settings.overdue_email_template == 'reminder' %}selected{% endif %}>Reminder</option>
+                                            <option value="urgent" {% if settings.overdue_email_template == 'urgent' %}selected{% endif %}>Urgent</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="default-public-template" class="form-label">Default Public Template</label>
+                                        <select id="default-public-template" name="default_public_template" class="form-select">
+                                            <option value="invoiceplane-web" {% if settings.default_public_template == 'invoiceplane-web' %}selected{% endif %}>InvoicePlane_Web</option>
+                                            <option value="modern-web" {% if settings.default_public_template == 'modern-web' %}selected{% endif %}>Modern Web</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="pdf-footer" class="form-label">PDF Footer</label>
+                                        <textarea id="pdf-footer" name="pdf_footer" class="form-control" rows="3" placeholder="Enter PDF footer text...">{{ settings.pdf_footer or 'On behalf of the team at Aptitude Technology we thank you for your business.\nE-mail: support@aptitudetech.com.au' }}</textarea>
+                                        <small class="form-text text-muted">You can enter any HTML here which will be displayed on the bottom of your PDF invoices and your PDF quotes.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Email Settings -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-envelope me-2"></i>
+                                Email Settings
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="automatically-email-recurring" class="form-label">Automatically email recurring invoices</label>
+                                        <select id="automatically-email-recurring" name="automatically_email_recurring" class="form-select">
+                                            <option value="no" {% if settings.automatically_email_recurring == 'no' %}selected{% endif %}>No</option>
+                                            <option value="yes" {% if settings.automatically_email_recurring == 'yes' %}selected{% endif %}>Yes</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Other Settings -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-sliders me-2"></i>
+                                Other Settings
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="set-invoice-readonly" class="form-label">Set the Invoice to read-only on</label>
+                                        <select id="set-invoice-readonly" name="set_invoice_readonly" class="form-select">
+                                            <option value="paid" {% if settings.set_invoice_readonly == 'paid' %}selected{% endif %}>Paid</option>
+                                            <option value="sent" {% if settings.set_invoice_readonly == 'sent' %}selected{% endif %}>Sent</option>
+                                            <option value="never" {% if settings.set_invoice_readonly == 'never' %}selected{% endif %}>Never</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sumex Settings -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-file-medical me-2"></i>
+                                Sumex Settings
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="sumex" class="form-label">Sumex</label>
+                                        <select id="sumex" name="sumex" class="form-select">
+                                            <option value="no" {% if settings.sumex == 'no' %}selected{% endif %}>No</option>
+                                            <option value="yes" {% if settings.sumex == 'yes' %}selected{% endif %}>Yes</option>
+                                        </select>
+                                        <small class="form-text text-muted">This options adds a menu entry in invoices to generate a TARMED / SUMEX1 semi compatible invoice. TARMED / SUMEX1 is a swiss standard for healthcares. <a href="#" class="text-primary">More info</a></small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="sumex-role" class="form-label">Sumex Role</label>
+                                        <select id="sumex-role" name="sumex_role" class="form-select">
+                                            <option value="physician" {% if settings.sumex_role == 'physician' %}selected{% endif %}>Physician</option>
+                                            <option value="therapist" {% if settings.sumex_role == 'therapist' %}selected{% endif %}>Therapist</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="sumex-slip-type" class="form-label">Sumex Slip Type</label>
+                                        <select id="sumex-slip-type" name="sumex_slip_type" class="form-select">
+                                            <option value="red-slip" {% if settings.sumex_slip_type == 'red-slip' %}selected{% endif %}>Red Slip</option>
+                                            <option value="orange-slip" {% if settings.sumex_slip_type == 'orange-slip' %}selected{% endif %}>Orange Slip</option>
+                                        </select>
+                                        <small class="form-text text-muted">This option will change the slip type in Sumex. Please note that if you select the Orange slip you need a subscriber number that starts with "01-"</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="sumex-place" class="form-label">Sumex Place</label>
+                                        <select id="sumex-place" name="sumex_place" class="form-select">
+                                            <option value="practice" {% if settings.sumex_place == 'practice' %}selected{% endif %}>Practice</option>
+                                            <option value="hospital" {% if settings.sumex_place == 'hospital' %}selected{% endif %}>Hospital</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="canton" class="form-label">Canton</label>
+                                        <select id="canton" name="canton" class="form-select">
+                                            <option value="ag" {% if settings.canton == 'ag' %}selected{% endif %}>AG</option>
+                                            <option value="zh" {% if settings.canton == 'zh' %}selected{% endif %}>ZH</option>
+                                            <option value="be" {% if settings.canton == 'be' %}selected{% endif %}>BE</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quotes Tab -->
+                <div class="tab-pane fade" id="quotes" role="tabpanel">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-file-earmark-text me-2"></i>
+                                Quotes Settings
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="default-quote-group" class="form-label">Default Quote Group</label>
+                                        <select id="default-quote-group" name="default_quote_group" class="form-select">
+                                            <option value="quote-default" {% if settings.default_quote_group == 'quote-default' %}selected{% endif %}>Quote Default</option>
+                                            <option value="monthly" {% if settings.default_quote_group == 'monthly' %}selected{% endif %}>Monthly</option>
+                                            <option value="quarterly" {% if settings.default_quote_group == 'quarterly' %}selected{% endif %}>Quarterly</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="quotes-expire-after" class="form-label">Quotes Expire After (Days)</label>
+                                        <input type="number" id="quotes-expire-after" name="quotes_expire_after" 
+                                               class="form-control" value="{{ settings.quotes_expire_after or 30 }}" 
+                                               min="1" max="365">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Taxes Tab -->
+                <div class="tab-pane fade" id="taxes" role="tabpanel">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-percent me-2"></i>
+                                Tax Configuration
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="tax-rate-1" class="form-label">Tax Rate 1</label>
+                                        <input type="number" id="tax-rate-1" name="tax_rate_1" 
+                                               class="form-control" value="{{ settings.tax_rate_1 or 10 }}" 
+                                               min="0" max="100" step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="tax-rate-2" class="form-label">Tax Rate 2</label>
+                                        <input type="number" id="tax-rate-2" name="tax_rate_2" 
+                                               class="form-control" value="{{ settings.tax_rate_2 or 20 }}" 
+                                               min="0" max="100" step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Email Tab -->
+                <div class="tab-pane fade" id="email" role="tabpanel">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-envelope me-2"></i>
+                                Email Configuration
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="smtp-host" class="form-label">SMTP Host</label>
+                                        <input type="text" id="smtp-host" name="smtp_host" 
+                                               class="form-control" value="{{ settings.smtp_host or '' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="smtp-port" class="form-label">SMTP Port</label>
+                                        <input type="number" id="smtp-port" name="smtp_port" 
+                                               class="form-control" value="{{ settings.smtp_port or 587 }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Online Payment Tab -->
+                <div class="tab-pane fade" id="online-payment" role="tabpanel">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-credit-card me-2"></i>
+                                Online Payment Settings
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="enable-online-payments" class="form-label">Enable Online Payments</label>
+                                        <select id="enable-online-payments" name="enable_online_payments" class="form-select">
+                                            <option value="no" {% if settings.enable_online_payments == 'no' %}selected{% endif %}>No</option>
+                                            <option value="yes" {% if settings.enable_online_payments == 'yes' %}selected{% endif %}>Yes</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Projects Tab -->
+                <div class="tab-pane fade" id="projects" role="tabpanel">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-folder me-2"></i>
+                                Project Settings
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="enable-projects" class="form-label">Enable Projects</label>
+                                        <select id="enable-projects" name="enable_projects" class="form-select">
+                                            <option value="no" {% if settings.enable_projects == 'no' %}selected{% endif %}>No</option>
+                                            <option value="yes" {% if settings.enable_projects == 'yes' %}selected{% endif %}>Yes</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Updates Tab -->
+                <div class="tab-pane fade" id="updates" role="tabpanel">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-arrow-clockwise me-2"></i>
+                                Update Settings
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="auto-update-check" class="form-label">Automatic Update Check</label>
+                                        <select id="auto-update-check" name="auto_update_check" class="form-select">
+                                            <option value="no" {% if settings.auto_update_check == 'no' %}selected{% endif %}>No</option>
+                                            <option value="yes" {% if settings.auto_update_check == 'yes' %}selected{% endif %}>Yes</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
