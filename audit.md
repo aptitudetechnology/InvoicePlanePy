@@ -52,25 +52,11 @@ These indicate a generic server-side issue, meaning something went wrong when th
 
 - **http://simple.local:8080/auth/logout**
     - **Reason:** Status 405 (Method Not Allowed)
-    - **Proposed Fix:**
-        - This is likely a POST-only endpoint for security. Ensure the UI uses a POST (form or AJAX) for logout, not a GET link. Update the crawler to ignore this link or handle POST if you want to test it.
+    - **Fix Applied:**
+        - The logout link in the UI was replaced with a POST form to /auth/logout, following security best practices. This should resolve the 405 error for logout.
+        - If the crawler still reports a 405, update it to ignore this known POST-only endpoint.
 
-### Status 404: Not Found
 
-- **http://simple.local:8080/settings/quote-settings**
-- **http://simple.local:8080/settings/email**
-- **http://simple.local:8080/settings/online-payment**
-- **http://simple.local:8080/settings/projects**
-- **http://simple.local:8080/settings/updates**
-- **http://simple.local:8080/reports/invoice-aging**
-- **http://simple.local:8080/products/1/edit**
-- **http://simple.local:8080/products/2/edit**
-- **http://simple.local:8080/products/3/edit**
-- **http://simple.local:8080/clients/4/edit**
-    - **Proposed Fix:**
-        1. Check if these routes are missing in your FastAPI router or backend. If so, implement the missing endpoints and templates.
-        2. If these features are not yet implemented, consider hiding or disabling the links in the UI until they are ready.
-        3. For edit/detail pages (e.g., `/products/1/edit`), ensure the resource exists in the database before generating the link.
 
 ### Status 500: Internal Server Error
 
@@ -93,3 +79,21 @@ These indicate a generic server-side issue, meaning something went wrong when th
         3. Common causes: missing database records, unhandled exceptions, missing templates, or permission errors.
         4. For resource detail/edit pages, ensure the resource exists in the database and the backend handles missing resources gracefully (return 404, not 500).
         5. Fix the code or data issues, then re-run the link audit.
+
+
+        Broken links found:
+http://simple.local:8080/auth/logout -> Status 405
+http://simple.local:8080/profile/security -> Status 500
+http://simple.local:8080/settings/users -> Status 500
+http://simple.local:8080/settings/invoice-groups -> Status 500
+http://simple.local:8080/settings/invoice-archive -> Status 500
+http://simple.local:8080/help/faq -> Status 500
+http://simple.local:8080/help/documentation -> Status 500
+http://simple.local:8080/reports/invoice-aging -> Request error: ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))
+http://simple.local:8080/products/1 -> Status 500
+http://simple.local:8080/products/2 -> Status 500
+http://simple.local:8080/products/3 -> Status 500
+http://simple.local:8080/clients/2 -> Status 500
+http://simple.local:8080/clients/3 -> Status 500
+
+Checked 63 pages, found 13 broken links.
