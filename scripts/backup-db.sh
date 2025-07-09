@@ -4,7 +4,7 @@
 DB_NAME="invoiceplanepy"         # Change to your database name
 DB_USER="postgres"               # Change to your DB user
 BACKUP_DIR="./backups"           # Where to store backups
-GPG_RECIPIENT="your@email.com"   # GPG key or email to encrypt for
+GPG_RECIPIENT="chris@caston.id.au"   # GPG key or email to encrypt for
 
 # === SCRIPT ===
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")

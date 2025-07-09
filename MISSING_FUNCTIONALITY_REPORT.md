@@ -995,7 +995,7 @@ mypy>=1.4.0             # Type checking
 - Add rate limiting
 - Enhance password security
 - Add audit logging
-- Implement CSRF protection
+
 
 ### 5. Testing Strategy
 - Unit tests for all business logic
@@ -1004,3 +1004,82 @@ mypy>=1.4.0             # Type checking
 - Performance testing for large datasets
 
 This migration plan provides a comprehensive roadmap for converting InvoicePlane from PHP to Python while maintaining all existing functionality and improving the overall architecture.
+
+#### 6. DB updates for quotes provided by claude
+-- Create quotes table (matching invoice structure)
+CREATE TABLE quotes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    
+    -- Foreign keys
+    user_id INTEGER NOT NULL,
+    client_id INTEGER NOT NULL,
+    
+    -- Quote details
+    quote_number VARCHAR(20) UNIQUE NOT NULL,
+    status VARCHAR(20) DEFAULT 'DRAFT',
+    
+    -- Dates
+    issue_date DATE NOT NULL,
+    valid_until DATE,
+    
+    -- Content
+    terms TEXT,
+    notes TEXT,
+    
+    -- Security
+    url_key VARCHAR(32) UNIQUE,
+    
+    -- Calculated fields
+    subtotal DECIMAL(10, 2) DEFAULT 0,
+    tax_total DECIMAL(10, 2) DEFAULT 0,
+    total DECIMAL(10, 2) DEFAULT 0,
+    
+    -- Timestamps (from BaseModel)
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Foreign key constraints
+    FOREIGN KEY (client_id) REFERENCES clients (id),
+    FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+-- Create quote_items table (matching invoice_items structure)
+CREATE TABLE quote_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    
+    -- Foreign keys
+    quote_id INTEGER NOT NULL,
+    product_id INTEGER,
+    
+    -- Item details
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    quantity DECIMAL(10, 2) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    order_index INTEGER DEFAULT 0,
+    
+    -- Calculated amounts
+    subtotal DECIMAL(10, 2),
+    tax_amount DECIMAL(10, 2),
+    total DECIMAL(10, 2),
+    
+    -- Timestamps (from BaseModel)
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Foreign key constraints
+    FOREIGN KEY (quote_id) REFERENCES quotes (id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products (id)
+);
+
+-- Create indexes for better performance
+CREATE INDEX idx_quotes_client_id ON quotes(client_id);
+CREATE INDEX idx_quotes_user_id ON quotes(user_id);
+CREATE INDEX idx_quotes_quote_number ON quotes(quote_number);
+CREATE INDEX idx_quotes_status ON quotes(status);
+CREATE INDEX idx_quotes_created_at ON quotes(created_at);
+CREATE INDEX idx_quotes_url_key ON quotes(url_key);
+
+CREATE INDEX idx_quote_items_quote_id ON quote_items(quote_id);
+CREATE INDEX idx_quote_items_product_id ON quote_items(product_id);
+CREATE INDEX idx_quote_items_order ON quote_items(order_index);
