@@ -4,7 +4,23 @@
 DB_NAME="invoiceplanepy"         # Change to your database name
 DB_USER="postgres"               # Change to your DB user
 BACKUP_DIR="./backups"           # Where to store backups
-GPG_RECIPIENT="chris@caston.id.au"   # GPG key or email to encrypt for
+
+# --- Load .env file ---
+# Check if .env file exists and source it
+if [ -f ./.env ]; then
+    echo "Loading environment variables from ./.env"
+    source ./.env
+else
+    echo "Warning: ./.env file not found. GPG_RECIPIENT might not be set."
+    # Fallback or exit if GPG_RECIPIENT is critical and not in .env
+    # GPG_RECIPIENT="test@test" # Uncomment for a hardcoded fallback if desired
+fi
+
+# Ensure GPG_RECIPIENT is set (either from .env or a fallback)
+if [ -z "$GPG_RECIPIENT" ]; then
+    echo "Error: GPG_RECIPIENT is not set. Please set it in ./.env or directly in the script."
+    exit 1
+fi
 
 # === SCRIPT ===
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
