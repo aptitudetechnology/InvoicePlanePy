@@ -258,7 +258,7 @@ async def convert_quote_to_invoice(
 ):
 """
 
-@router.get("/quotes/{quote_id}/convert-to-invoice")
+@router.get("/{quote_id}/convert-to-invoice")
 async def convert_quote_to_invoice(
     quote_id: int,
     db: Session = Depends(get_db),
@@ -364,7 +364,7 @@ async def convert_quote_to_invoice(
 
 
 # Alternative POST version if you prefer form submission
-@router.post("/quotes/{quote_id}/convert-to-invoice")
+@router.post("/{quote_id}/convert-to-invoice")
 async def convert_quote_to_invoice_post(
     quote_id: int,
     request: Request,
