@@ -201,7 +201,7 @@
 <div class="card-body">
 <div class="mb-3">
 <label for="notes" class="form-label"><strong>Notes</strong></label>
-                    <textarea class="form-control" id="notes" name="notes" rows="4">{{ quote.notes or '' }}</textarea>
+<textarea class="form-control" id="notes" name="notes" rows="4">{{ quote.notes }}</textarea>
 </div>
 </div>
 </div>
@@ -257,7 +257,7 @@
 </div>
 
 <script>
-let itemCounter = {{ (quote.items|length) if quote.items else 0 }};
+let itemCounter = {{ quote.items|length }};
 
 function addNewRow() {
     const tbody = document.getElementById('quote-items');
