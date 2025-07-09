@@ -215,7 +215,7 @@
 </div>
 <div class="row mb-2">
 <div class="col-6"><strong>Item Tax:</strong></div>
-<div class="col-6 text-end" id="quote-item-tax">${{ "{:.2f}".format(quote.item_tax) }}</div>
+<div class="col-6 text-end" id="quote-item-tax">${{ (quote.item_tax | default(0.00)) | format("%.2f") }}</div>
 </div>
 <div class="row mb-2">
 <div class="col-6"><strong>Quote Tax:</strong></div>
