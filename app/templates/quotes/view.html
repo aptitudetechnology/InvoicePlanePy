@@ -1,240 +1,122 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="row">
-<div class="col-12">
-<div class="d-flex justify-content-between align-items-center mb-4">
-<h2>Create Quote</h2>
-<a href="/quotes" class="btn btn-secondary">
-<i class="bi bi-arrow-left"></i> Back to Quotes
-</a>
-</div>
-<div class="card">
-<div class="card-body">
-<form method="post" action="/quotes/create">
-<!-- Client Information Section -->
-<div class="row mb-4">
-<div class="col-md-6">
-<h5>Client Information</h5>
-<div class="mb-3">
-<label for="client_id" class="form-label">Client</label>
-<select class="form-select" id="client_id" name="client_id" required>
-<option value="">Select a client...</option>
-<!-- TODO: Populate with clients -->
-</select>
-</div>
-<!-- Client details will be populated via JavaScript when client is selected -->
-<div id="client_details" class="border p-3 bg-light" style="display: none;">
-<div id="client_name"></div>
-<div id="client_address"></div>
-<div id="client_email"></div>
-</div>
-</div>
-<div class="col-md-6">
-<h5>Quote Details</h5>
-<div class="row">
-<div class="col-md-6 mb-3">
-<label for="quote_number" class="form-label">Quote #</label>
-<input type="text" class="form-control" id="quote_number" name="quote_number" placeholder="Not set yet">
-</div>
-<div class="col-md-6 mb-3">
-<label for="status" class="form-label">Status</label>
-<select class="form-select" id="status" name="status">
-<option value="draft">Draft</option>
-<option value="sent">Sent</option>
-<option value="viewed">Viewed</option>
-<option value="approved">Approved</option>
-<option value="rejected">Rejected</option>
-<option value="canceled">Canceled</option>
-</select>
-</div>
-</div>
-<div class="row">
-<div class="col-md-6 mb-3">
-<label for="quote_date" class="form-label">Date</label>
-<input type="date" class="form-control" id="quote_date" name="quote_date" required>
-</div>
-<div class="col-md-6 mb-3">
-<label for="valid_until" class="form-label">Expires</label>
-<input type="date" class="form-control" id="valid_until" name="valid_until">
-</div>
-</div>
-<div class="mb-3">
-<label for="quote_pdf_password" class="form-label">Quote PDF password (optional)</label>
-<input type="password" class="form-control" id="quote_pdf_password" name="quote_pdf_password">
-<small class="form-text text-muted">not-implemented yet</small>
-</div>
-</div>
-</div>
+  <div class="col-12">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2>Quote #{{ quote.quote_number }}</h2>
+      <a href="/quotes" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Quotes
+      </a>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <!-- Client Information Section -->
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <h5>Client Information</h5>
+            <div class="mb-3">
+              <strong>{{ quote.client.name }}</strong><br>
+              {{ quote.client.address }}<br>
+              {{ quote.client.email }}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <h5>Quote Details</h5>
+            <div class="mb-3">
+              <strong>Quote #:</strong> {{ quote.quote_number }}<br>
+              <strong>Status:</strong> {{ quote.status.value|capitalize }}<br>
+              <strong>Date:</strong> {{ quote.issue_date }}<br>
+              <strong>Expires:</strong> {{ quote.valid_until }}
+            </div>
+          </div>
+        </div>
 
-<!-- Line Items Section -->
-<div class="mb-4">
-<h5>Items</h5>
-<div class="table-responsive">
-<table class="table table-bordered" id="items_table">
-<thead>
-<tr>
-<th>Item</th>
-<th>Quantity</th>
-<th>Price</th>
-<th>Item Discount</th>
-<th>Tax Rate</th>
-<th>Actions</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<input type="text" class="form-control" name="item_name[]" placeholder="Item name">
-<textarea class="form-control mt-2" name="item_description[]" rows="2" placeholder="Description"></textarea>
-</td>
-<td>
-<input type="number" class="form-control" name="item_quantity[]" min="1" value="1">
-<select class="form-select mt-2" name="item_unit[]">
-<option value="none">None</option>
-<option value="piece">Piece</option>
-<option value="hour">Hour</option>
-<option value="day">Day</option>
-<option value="month">Month</option>
-</select>
-</td>
-<td>
-<input type="number" class="form-control" name="item_price[]" min="0" step="0.01" placeholder="0.00">
-</td>
-<td>
-<input type="number" class="form-control" name="item_discount[]" min="0" step="0.01" placeholder="0.00">
-</td>
-<td>
-<select class="form-select" name="item_tax_rate[]">
-<option value="none">None</option>
-<option value="10">10% GST</option>
-<option value="15">15%</option>
-<option value="20">20%</option>
-</select>
-</td>
-<td>
-<button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)">
-<i class="bi bi-trash"></i>
-</button>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="mb-3">
-<button type="button" class="btn btn-outline-primary me-2" onclick="addNewRow()">
-<i class="bi bi-plus"></i> Add new row
-</button>
-<button type="button" class="btn btn-outline-secondary">
-<i class="bi bi-plus"></i> Add product
-</button>
-</div>
-</div>
+        <!-- Items Section -->
+        <div class="mb-4">
+          <h5>Items</h5>
+          <div class="table-responsive">
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Description</th>
+                  <th>Quantity</th>
+                  <th>Unit</th>
+                  <th>Price</th>
+                  <th>Discount</th>
+                  <th>Tax Rate</th>
+                  <th>Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in quote.items %}
+                <tr>
+                  <td>{{ item.name }}</td>
+                  <td>{{ item.description }}</td>
+                  <td>{{ item.quantity }}</td>
+                  <td>{{ item.unit or '' }}</td>
+                  <td>{{ item.price }}</td>
+                  <td>{{ item.discount or '' }}</td>
+                  <td>{{ item.tax_rate or '' }}</td>
+                  <td>{{ item.subtotal }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-<!-- Totals Section -->
-<div class="row mb-4">
-<div class="col-md-6">
-<!-- Left side - could be used for additional info -->
-</div>
-<div class="col-md-6">
-<div class="card">
-<div class="card-body">
-<div class="row mb-2">
-<div class="col-6"><strong>Subtotal:</strong></div>
-<div class="col-6 text-end" id="subtotal">$0.00</div>
-</div>
-<div class="row mb-2">
-<div class="col-6"><strong>Item Tax:</strong></div>
-<div class="col-6 text-end" id="item_tax">$0.00</div>
-</div>
-<div class="row mb-2">
-<div class="col-6"><strong>Quote Tax:</strong></div>
-<div class="col-6 text-end" id="quote_tax">$0.00</div>
-</div>
-<div class="row mb-2">
-<div class="col-6">
-<strong>Discount:</strong>
-<div class="input-group input-group-sm mt-1">
-<input type="number" class="form-control" id="discount_percentage" min="0" max="100" step="0.01" placeholder="0">
-<span class="input-group-text">%</span>
-</div>
-</div>
-<div class="col-6 text-end" id="discount_amount">$0.00</div>
-</div>
-<hr>
-<div class="row">
-<div class="col-6"><strong>Total:</strong></div>
-<div class="col-6 text-end"><strong id="total">$0.00</strong></div>
-</div>
-</div>
-</div>
-</div>
-</div>
+        <!-- Totals Section -->
+        <div class="row mb-4">
+          <div class="col-md-6"></div>
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-body">
+                <div class="row mb-2">
+                  <div class="col-6"><strong>Subtotal:</strong></div>
+                  <div class="col-6 text-end">{{ quote.subtotal or "$0.00" }}</div>
+                </div>
+                <div class="row mb-2">
+                  <div class="col-6"><strong>Item Tax:</strong></div>
+                  <div class="col-6 text-end">{{ quote.item_tax or "$0.00" }}</div>
+                </div>
+                <div class="row mb-2">
+                  <div class="col-6"><strong>Quote Tax:</strong></div>
+                  <div class="col-6 text-end">{{ quote.quote_tax or "$0.00" }}</div>
+                </div>
+                <div class="row mb-2">
+                  <div class="col-6"><strong>Discount:</strong></div>
+                  <div class="col-6 text-end">{{ quote.discount or "$0.00" }}</div>
+                </div>
+                <hr>
+                <div class="row">
+                  <div class="col-6"><strong>Total:</strong></div>
+                  <div class="col-6 text-end"><strong>{{ quote.total or "$0.00" }}</strong></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-<!-- Notes Section -->
-<div class="row mb-4">
-<div class="col-md-6">
-<div class="mb-3">
-<label for="notes" class="form-label"><strong>Notes</strong></label>
-<textarea class="form-control" id="notes" name="notes" rows="5"></textarea>
+        <!-- Notes Section -->
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label"><strong>Notes</strong></label>
+              <div class="border p-3 bg-light">{{ quote.notes }}</div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label"><strong>Attachments</strong></label>
+              <div class="border p-3 bg-light">
+                <small class="form-text text-muted d-block mt-2">File attachments not-implemented yet</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-</div>
-<div class="col-md-6">
-<div class="mb-3">
-<label class="form-label"><strong>Attachments</strong></label>
-<div class="border p-3 bg-light">
-<button type="button" class="btn btn-outline-primary">
-<i class="bi bi-plus"></i> Add Files...
-</button>
-<small class="form-text text-muted d-block mt-2">File attachments not-implemented yet</small>
-</div>
-</div>
-</div>
-</div>
-
-<!-- Form Actions -->
-<div class="d-flex justify-content-end">
-<button type="submit" class="btn btn-success">
-<i class="bi bi-check-circle"></i> Save
-</button>
-</div>
-</form>
-</div>
-</div>
-</div>
-</div>
-
-<script>
-function addNewRow() {
-    const tbody = document.querySelector('#items_table tbody');
-    const newRow = tbody.rows[0].cloneNode(true);
-    // Clear the input values
-    newRow.querySelectorAll('input, textarea, select').forEach(input => {
-        if (input.type === 'number') {
-            input.value = input.name.includes('quantity') ? '1' : '';
-        } else if (input.tagName === 'SELECT') {
-            input.selectedIndex = 0;
-        } else {
-            input.value = '';
-        }
-    });
-    tbody.appendChild(newRow);
-}
-
-function removeRow(button) {
-    const tbody = document.querySelector('#items_table tbody');
-    if (tbody.rows.length > 1) {
-        button.closest('tr').remove();
-    } else {
-        alert('Cannot remove the last row');
-    }
-}
-
-// Set default date to today
-document.getElementById('quote_date').valueAsDate = new Date();
-
-// Set default expiry date to 2 weeks from today
-const expiryDate = new Date();
-expiryDate.setDate(expiryDate.getDate() + 14);
-document.getElementById('valid_until').valueAsDate = expiryDate;
-</script>
-{% endblock %}
+{% endblock
