@@ -13,7 +13,7 @@ class QuoteStatus(PyEnum):
     EXPIRED = 'EXPIRED'
     CONVERTED = 'CONVERTED'  # When quote becomes an invoice
 
-class Quote(BaseModel):
+class Quotes(BaseModel):  # Changed from Quote to Quotes
     __tablename__ = "quotes"
     
     # Foreign keys
@@ -85,5 +85,5 @@ class QuoteItem(BaseModel):
     total = Column(Numeric(10, 2))
     
     # Relationships
-    quote = relationship("Quote", back_populates="items")
+    quote = relationship("Quotes", back_populates="items")  # Changed from Quote to Quotes
     product = relationship("Product")
