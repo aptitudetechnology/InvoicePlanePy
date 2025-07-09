@@ -11,8 +11,9 @@ RUN apk update \
 # ...existing Dockerfile content...
 
 RUN apk add --no-cache gnupg
-
+RUN apk add --pg_dump
 RUN apk add --no-cache curl
+
 
 RUN set -x ; \
     addgroup -g 82 -S www-data ; \
