@@ -107,7 +107,8 @@ async def quote_create_post(
         db.commit()
         db.refresh(quote)
         
-        return RedirectResponse(url=f"/quotes/{quote.id}", status_code=302)
+        #return RedirectResponse(url=f"/quotes/{quote.id}", status_code=302)
+        return RedirectResponse(url=f"/quotes/{quote.id}/edit", status_code=302)
         
     except Exception as e:
         db.rollback()
