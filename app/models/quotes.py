@@ -2,6 +2,7 @@ from sqlalchemy import Column, String, Text, Date, ForeignKey, Enum, Boolean, In
 from sqlalchemy.orm import relationship
 from enum import Enum as PyEnum
 from app.models.base import BaseModel
+
 from datetime import date
 
 class QuoteStatus(PyEnum):
