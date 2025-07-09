@@ -8,6 +8,10 @@ from app.models.user import User
 from app.models.client import Client
 from app.models.quotes import Quote, QuoteStatus
 from datetime import date, datetime
+from sqlalchemy.orm import joinedload
+from datetime import timedelta
+from app.models.invoice import Invoice, InvoiceItem, InvoiceStatus
+import secrets
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -244,6 +248,7 @@ async def delete_quote(
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error deleting quote: {str(e)}")
 
+"""
 @router.post("/{quote_id}/convert")
 async def convert_quote_to_invoice(
     quote_id: int,
@@ -251,6 +256,161 @@ async def convert_quote_to_invoice(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+"""
+
+@router.get("/quotes/{quote_id}/convert-to-invoice")
+async def convert_quote_to_invoice(
+    quote_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # Get the quote with all related data
+    quote = db.query(Quote).options(
+        joinedload(Quote.client),
+        joinedload(Quote.items)
+    ).filter(Quote.id == quote_id).first()
+    
+    if not quote:
+        raise HTTPException(status_code=404, detail="Quote not found")
+    
+    # Check if quote belongs to current user or user has permission
+    if quote.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to convert this quote")
+    
+    # Check if quote is in a valid state to convert
+    if quote.status not in ["approved", "accepted", "sent"]:
+        raise HTTPException(
+            status_code=400, 
+            detail="Quote must be approved, accepted, or sent before converting to invoice"
+        )
+    
+    try:
+        # Generate invoice number (you may want to implement a proper numbering system)
+        latest_invoice = db.query(Invoice).order_by(Invoice.id.desc()).first()
+        if latest_invoice and latest_invoice.invoice_number:
+            # Extract number from last invoice and increment
+            last_num = int(latest_invoice.invoice_number.split('-')[-1]) if '-' in latest_invoice.invoice_number else int(latest_invoice.invoice_number)
+            invoice_number = f"INV-{last_num + 1:04d}"
+        else:
+            invoice_number = "INV-0001"
+        
+        # Create new invoice from quote
+        invoice = Invoice(
+            client_id=quote.client_id,
+            user_id=current_user.id,
+            invoice_number=invoice_number,
+            issue_date=date.today(),
+            due_date=date.today() + timedelta(days=30),  # Default 30 days payment terms
+            status="draft",
+            terms=quote.terms,
+            notes=quote.notes,
+            subtotal=quote.subtotal or 0,
+            tax_amount=quote.tax_amount or 0,
+            discount_amount=quote.discount_amount or 0,
+            total=quote.total or 0,
+            discount_percentage=quote.discount_percentage or 0,
+            tax_rate=quote.tax_rate or 0,
+            currency=quote.currency or "USD",
+            reference_quote_id=quote.id,  # Keep reference to original quote
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
+        )
+        
+        db.add(invoice)
+        db.flush()  # Flush to get the invoice ID
+        
+        # Copy items from quote to invoice
+        for item in quote.items:
+            invoice_item = InvoiceItem(
+                invoice_id=invoice.id,
+                name=item.name,
+                description=item.description,
+                quantity=item.quantity or 1,
+                price=item.price or 0,
+                discount=item.discount or 0,
+                tax_rate=item.tax_rate or 0,
+                subtotal=item.subtotal or 0,
+                discount_amount=item.discount_amount or 0,
+                tax_amount=item.tax_amount or 0,
+                total=item.total or 0,
+                unit=item.unit if hasattr(item, 'unit') else None,
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow()
+            )
+            db.add(invoice_item)
+        
+        # Update quote status to indicate it's been converted
+        quote.status = "converted"
+        quote.converted_to_invoice_id = invoice.id
+        quote.updated_at = datetime.utcnow()
+        
+        # Commit all changes
+        db.commit()
+        db.refresh(invoice)
+        
+        # Add success message (if using flash messages)
+        # flash(f"Quote #{quote.quote_number} successfully converted to Invoice #{invoice.invoice_number}", "success")
+        
+        return RedirectResponse(url=f"/invoices/{invoice.id}", status_code=302)
+        
+    except Exception as e:
+        db.rollback()
+        # Log the error
+        print(f"Error converting quote to invoice: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail="An error occurred while converting the quote to invoice"
+        )
+
+
+# Alternative POST version if you prefer form submission
+@router.post("/quotes/{quote_id}/convert-to-invoice")
+async def convert_quote_to_invoice_post(
+    quote_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """POST version for form submission with confirmation"""
+    try:
+        # Call the main conversion function
+        return await convert_quote_to_invoice(quote_id, db, current_user)
+    except HTTPException as e:
+        # Handle errors and redirect back to quote with error message
+        return RedirectResponse(
+            url=f"/quotes/{quote_id}?error={e.detail}", 
+            status_code=302
+        )
+
+
+# Helper function to validate quote conversion eligibility
+def can_convert_quote_to_invoice(quote: Quote) -> tuple[bool, str]:
+    """
+    Check if a quote can be converted to an invoice
+    Returns (can_convert, reason)
+    """
+    if not quote:
+        return False, "Quote not found"
+    
+    if quote.status == "converted":
+        return False, "Quote has already been converted to an invoice"
+    
+    if quote.status not in ["approved", "accepted", "sent"]:
+        return False, "Quote must be approved, accepted, or sent before converting"
+    
+    if not quote.items:
+        return False, "Quote must have at least one item"
+    
+    if not quote.client_id:
+        return False, "Quote must have a client assigned"
+    
+    # Check if quote is expired
+    if quote.valid_until and quote.valid_until < date.today():
+        return False, "Quote has expired and cannot be converted"
+    
+    return True, "Quote can be converted"
+
+
     """Convert accepted quote to invoice"""
     quote = db.query(Quote).filter(Quote.id == quote_id).first()
     
