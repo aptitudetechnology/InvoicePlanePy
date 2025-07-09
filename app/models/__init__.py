@@ -5,6 +5,7 @@ from .invoice import Invoice, InvoiceItem, InvoiceStatus
 from .product import Product, ProductFamily, ProductUnit
 from .payment import Payment
 from .api_key import ApiKey
+from .quotes import Quotes, QuoteStatus
 
 __all__ = [
     "BaseModel",
