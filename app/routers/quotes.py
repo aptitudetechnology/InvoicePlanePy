@@ -46,7 +46,7 @@ async def create_quote(
         "clients": clients
     })
 
-@router.post("/", response_class=HTMLResponse)
+@router.post("/create", response_class=HTMLResponse)
 async def quote_create_post(
     request: Request,
     db: Session = Depends(get_db),
