@@ -1,83 +1,319 @@
 {% extends "base.html" %}
 
+{% block title %}Quote 15 - InvoicePlane Python{% endblock %}
+
 {% block content %}
-<div class="row">
-  <div class="col-12">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2>Edit Quote #{{ quote.quote_number }}</h2>
-      <a href="/quotes" class="btn btn-secondary">
-        <i class="bi bi-arrow-left"></i> Back to Quotes
-      </a>
-    </div>
-    <div class="card">
-      <div class="card-body">
-        <form method="post" action="/quotes/{{ quote.id }}/edit">
-          <div class="row mb-4">
-            <div class="col-md-6">
-              <h5>Client Information</h5>
-              <div class="mb-3">
-              <label class="form-label">Client</label>
-              <div class="form-control-plaintext">
-             <strong>{{ quote.client.name }}</strong><br>
-            {{ quote.client.address }}<br>
-            {{ quote.client.email }}
-           </div>
-  <input type="hidden" name="client_id" value="{{ quote.client_id }}">
-</div>
-            <div class="col-md-6">
-              <h5>Quote Details</h5>
-              <div class="mb-3">
-                <label for="quote_number" class="form-label">Quote #</label>
-                <input type="text" class="form-control" id="quote_number" name="quote_number" value="{{ quote.quote_number }}" required>
-              </div>
-              <div class="mb-3">
-                <label for="status" class="form-label">Status</label>
-                <select class="form-select" id="status" name="status">
-                  {% for status in quote_statuses %}
-                  <option value="{{ status.value }}" {% if status == quote.status %}selected{% endif %}>
-                    {{ status.value|capitalize }}
-                  </option>
-                  {% endfor %}
-                </select>
-              </div>
-              <div class="mb-3">
-                <label for="issue_date" class="form-label">Date</label>
-                <input type="date" class="form-control" id="issue_date" name="issue_date" value="{{ quote.issue_date }}">
-              </div>
-              <div class="mb-3">
-                <label for="valid_until" class="form-label">Expires</label>
-                <input type="date" class="form-control" id="valid_until" name="valid_until" value="{{ quote.valid_until }}">
-              </div>
-            </div>
-          </div>
+<style>
+    /* Specific styles for the quote page to match screenshot */
+    .quote-header-bar {
+        background-color: #f8f9fa; /* Should be consistent with body background */
+        padding: 0 15px; /* Adjust padding to align with .main-content's container-fluid */
+        margin-bottom: 20px;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 60px; /* To match visual height of typical header bars */
+    }
 
-          <!-- Items section would go here if you want to allow editing items -->
+    .quote-header-bar h5 {
+        margin-bottom: 0;
+        font-weight: 500;
+        color: #343a40;
+    }
 
-          <div class="row mb-4">
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label"><strong>Notes</strong></label>
-                <textarea class="form-control" name="notes" rows="4">{{ quote.notes }}</textarea>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label"><strong>Attachments</strong></label>
-                <div class="border p-3 bg-light">
-                  <small class="form-text text-muted d-block mt-2">File attachments not-implemented yet</small>
-                </div>
-              </div>
-            </div>
-          </div>
+    .alert-success-custom {
+        background-color: #d4edda; /* Light green */
+        border-color: #c3e6cb;     /* Slightly darker green border */
+        color: #155724;            /* Dark green text */
+        padding: 12px 20px;
+        border-radius: 0.25rem;
+        margin-bottom: 20px;
+    }
 
-          <div class="d-flex justify-content-end">
-            <button type="submit" class="btn btn-success">
-              <i class="bi bi-check-lg"></i> Save Changes
+    .form-label-small {
+        font-size: 0.85em; /* Smaller label text */
+        margin-bottom: 0.25rem; /* Reduced margin */
+        color: #6c757d;
+    }
+
+    .form-control-sm, .form-select-sm, .input-group-sm > .form-control, .input-group-sm > .form-select, .input-group-sm > .input-group-text, .input-group-sm > .btn {
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
+        font-size: 0.875rem;
+        border-radius: 0.2rem;
+    }
+
+    .table-sm th, .table-sm td {
+        padding: 0.4rem; /* Smaller padding for table cells */
+    }
+
+    /* Adjust table header background */
+    .table thead th {
+        background-color: #f8f9fa; /* Light background for table headers */
+        border-bottom: 1px solid #dee2e6; /* Ensure border exists */
+        border-top: none; /* Remove top border if present from default table styles */
+    }
+
+    .table-bordered th, .table-bordered td {
+        border: 1px solid #dee2e6; /* Consistent border color */
+    }
+
+    .item-table-row td {
+        vertical-align: middle; /* Align content vertically in middle */
+    }
+
+    .total-summary-card .card-body {
+        padding-top: 15px;
+        padding-bottom: 15px;
+    }
+
+    .total-summary-card .input-group {
+        max-width: 150px; /* Constrain width of discount input */
+    }
+
+    .total-summary-card hr {
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+
+    .total-summary-card .total-line {
+        font-size: 1.25rem; /* Larger font for total */
+        font-weight: bold;
+    }
+</style>
+
+<div class="quote-header-bar">
+    <h5 class="mb-0">Quote 15</h5>
+    <div>
+        <div class="dropdown d-inline-block">
+            <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="optionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                Options
             </button>
-          </div>
-        </form>
-      </div>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="optionsDropdown">
+                <li><a class="dropdown-item" href="#">Action 1</a></li>
+                <li><a class="dropdown-item" href="#">Action 2</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#">Another action</a></li>
+            </ul>
+        </div>
+        <button class="btn btn-success btn-sm ms-2">
+            <i class="bi bi-check-lg me-1"></i>Save
+        </button>
     </div>
-  </div>
 </div>
+
+<div class="container-fluid"> {# This container-fluid is already provided by your base.html .main-content #}
+    <div class="alert alert-success alert-success-custom d-flex align-items-center" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <div>
+            Record successfully created
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-5">
+            <div class="card h-100"> {# h-100 to make cards same height #}
+                <div class="card-body">
+                    <h5 class="card-title d-flex align-items-center mb-3">
+                        Joe Bloggs Business name Pty Ltd
+                        <a href="#" class="ms-2 text-secondary" style="font-size: 0.9em;">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                    </h5>
+                    <p class="card-text mb-0">123 Evergreen Terrace</p>
+                    <p class="card-text mb-0">Leederville</p>
+                    <p class="card-text mb-0">Perth WA 4007</p>
+                    <p class="card-text mb-2">Australia</p>
+                    <p class="card-text text-primary" style="font-size: 0.9em;">Email: <a href="mailto:joe@jbloggs.com.au">joe@jbloggs.com.au</a></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="card h-100"> {# h-100 to make cards same height #}
+                <div class="card-body">
+                    <form>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="quoteNumber" class="form-label form-label-small">Quote #</label>
+                                <input type="text" class="form-control form-control-sm" id="quoteNumber" value="Not yet set yet" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="status" class="form-label form-label-small">Status</label>
+                                <select class="form-select form-select-sm" id="status">
+                                    <option selected>Draft</option>
+                                    <option>Sent</option>
+                                    <option>Accepted</option>
+                                    <option>Rejected</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="date" class="form-label form-label-small">Date</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control" id="date" value="09/07/2025" placeholder="DD/MM/YYYY">
+                                    <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="quotePassword" class="form-label form-label-small">Quote PDF password (optional)</label>
+                                <input type="password" class="form-control form-control-sm" id="quotePassword">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="expires" class="form-label form-label-small">Expires</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control" id="expires" value="25/07/2025" placeholder="DD/MM/YYYY">
+                                    <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;"></th> {# For the plus button #}
+                            <th style="width: 25%;">Item</th>
+                            <th style="width: 10%;">Quantity</th>
+                            <th style="width: 15%;">Price</th>
+                            <th style="width: 15%;">Item Discount</th>
+                            <th style="width: 15%;">Tax Rate</th>
+                            <th style="width: 10%;"></th> {# For the delete button #}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="item-table-row">
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-secondary py-0 px-1"><i class="bi bi-plus"></i></button>
+                            </td>
+                            <td>
+                                <input type="text" class="form-control form-control-sm" placeholder="Description">
+                            </td>
+                            <td>
+                                <input type="number" class="form-control form-control-sm text-end" value="1" min="0">
+                            </td>
+                            <td>
+                                <input type="number" class="form-control form-control-sm text-end" value="0.00" step="0.01">
+                            </td>
+                            <td>
+                                <input type="number" class="form-control form-control-sm text-end" value="0.00" step="0.01">
+                            </td>
+                            <td>
+                                <select class="form-select form-select-sm">
+                                    <option selected>None</option>
+                                    <option>GST 10%</option>
+                                    <option>VAT 20%</option>
+                                </select>
+                            </td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-danger py-0 px-1"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                        <tr class="item-table-row">
+                            <td></td> {# Empty cell for alignment #}
+                            <td>
+                                <input type="text" class="form-control form-control-sm" placeholder="Product Unit">
+                            </td>
+                            <td colspan="4" class="text-end fw-bold pe-3 pt-2">Subtotal</td>
+                            <td class="text-end pt-2">$0.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-start mb-4">
+        <button class="btn btn-outline-secondary btn-sm me-2">
+            <i class="bi bi-plus me-1"></i>Add new row
+        </button>
+        <button class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-plus me-1"></i>Add product
+        </button>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-7"></div> {# Empty column to push the totals card to the right #}
+        <div class="col-md-5">
+            <div class="card total-summary-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal</span>
+                        <span>$0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Item Tax</span>
+                        <span>$0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Quote Tax</span>
+                        <span>$0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Discount</span>
+                        <div class="input-group input-group-sm">
+                            <input type="number" class="form-control text-end" value="0" min="0" max="100">
+                            <span class="input-group-text">%</span>
+                            <input type="number" class="form-control text-end" value="0.00" step="0.01">
+                            <span class="input-group-text">$</span>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between total-line">
+                        <span>Total</span>
+                        <span>$0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-title mb-3">Notes</h6>
+                    <textarea class="form-control" rows="4" placeholder="Enter notes here..."></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-title mb-3">Attachments</h6>
+                    <button class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-plus me-1"></i>Add Files...
+                    </button>
+                    {# Optional: display list of attached files here #}
+                    <ul class="list-group list-group-flush mt-3">
+                        {# Example:
+                        <li class="list-group-item d-flex justify-content-between align-items-center py-1">
+                            document.pdf
+                            <a href="#" class="text-danger"><i class="bi bi-x-circle-fill"></i></a>
+                        </li>
+                        #}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+    {# You might add specific JavaScript for date pickers or dynamic item rows here #}
+    <script>
+        // Example for date picker (requires a library like Flatpickr or jQuery UI Datepicker)
+        // If you're using Flatpickr:
+        // flatpickr("#date", { dateFormat: "d/m/Y" });
+        // flatpickr("#expires", { dateFormat: "d/m/Y" });
+    </script>
 {% endblock %}
