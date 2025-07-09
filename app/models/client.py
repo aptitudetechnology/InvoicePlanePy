@@ -48,7 +48,7 @@ class Client(BaseModel):
     invoices = relationship("Invoice", back_populates="client")
     # quotes = relationship("Quote", back_populates="client")  # TODO: Create Quote model
     # Change this line:
-q   quotes = relationship("Quote", back_populates="client")  # Change from Quotes to Quote
+    quotes = relationship("Quote", back_populates="client")  # Change from Quotes to Quote
     # projects = relationship("Project", back_populates="client")  # TODO: Create Project model
     
     @property
