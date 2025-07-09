@@ -16,16 +16,14 @@
             <div class="col-md-6">
               <h5>Client Information</h5>
               <div class="mb-3">
-                <label for="client_id" class="form-label">Client</label>
-                <select class="form-select" id="client_id" name="client_id" required>
-                  {% for client in clients %}
-                  <option value="{{ client.id }}" {% if client.id == quote.client_id %}selected{% endif %}>
-                    {{ client.name }}
-                  </option>
-                  {% endfor %}
-                </select>
-              </div>
-            </div>
+              <label class="form-label">Client</label>
+              <div class="form-control-plaintext">
+             <strong>{{ quote.client.name }}</strong><br>
+            {{ quote.client.address }}<br>
+            {{ quote.client.email }}
+           </div>
+  <input type="hidden" name="client_id" value="{{ quote.client_id }}">
+</div>
             <div class="col-md-6">
               <h5>Quote Details</h5>
               <div class="mb-3">
