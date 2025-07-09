@@ -6,7 +6,7 @@ from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.user import User
 from app.models.client import Client
-from app.models.quote import Quote, QuoteStatus
+from app.models.quotes import Quotes, QuoteStatus
 from datetime import date, datetime
 
 router = APIRouter()
