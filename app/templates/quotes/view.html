@@ -144,4 +144,52 @@
     </div>
   </div>
 </div>
+
+<script>function addQuoteTax() {
+    // Implement add quote tax functionality
+    console.log('Add Quote Tax clicked');
+}
+
+function downloadPDF() {
+    window.location.href = '/quotes/{{ quote.id }}/pdf';
+}
+
+function sendEmail() {
+    window.location.href = '/quotes/{{ quote.id }}/email';
+}
+
+function quoteToInvoice() {
+    if (confirm('Convert this quote to an invoice?')) {
+        window.location.href = '/quotes/{{ quote.id }}/convert-to-invoice';
+    }
+}
+
+function copyQuote() {
+    if (confirm('Create a copy of this quote?')) {
+        window.location.href = '/quotes/{{ quote.id }}/copy';
+    }
+}
+
+function deleteQuote() {
+    if (confirm('Are you sure you want to delete this quote? This action cannot be undone.')) {
+        fetch('/quotes/{{ quote.id }}/delete', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.href = '/quotes';
+            } else {
+                alert('Error deleting quote');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting quote');
+        });
+    }
+}
+</script>
 {% endblock %}
