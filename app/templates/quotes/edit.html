@@ -4,552 +4,414 @@
 
 {% block content %}
 <style>
-    /* Custom styles to mimic InvoicePlane's appearance closely */
-    #headerbar {
-        background-color: #f8f9fa; /* Light grey, similar to body background */
-        border-bottom: 1px solid #dee2e6; /* Light grey border */
-        height: 60px; /* Fixed height for the header bar */
+    /* Targeted Custom CSS for Quote Page using Bootstrap 5 */
+
+    /* Header Bar (similar to your .quick-actions bar style but for top of content) */
+    .content-header-bar {
+        background-color: #e9ecef; /* Match your .quick-actions background */
+        padding: 15px 20px; /* Adjust padding to match your main-content area */
+        margin-bottom: 20px;
+        border-bottom: 1px solid #dee2e6;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 0 20px; /* Padding to match content alignment */
-        margin-bottom: 20px; /* Space below headerbar */
+        border-radius: 0.375rem; /* Bootstrap 5 default border-radius for cards/elements */
     }
 
-    .headerbar-title {
-        margin: 0;
-        font-size: 1.5rem; /* Larger font for the title */
-        font-weight: normal; /* InvoicePlane titles are often not bold */
-        color: #343a40; /* Darker text color */
+    .content-header-bar h5 {
+        margin-bottom: 0;
+        font-weight: 500;
+        color: #495057; /* Match your quick-actions h6 color */
     }
 
-    .headerbar-item {
-        display: flex;
-        align-items: center;
+    /* Client and Quote Details Cards */
+    .card-body .form-label {
+        font-size: 0.85em; /* Smaller label text */
+        margin-bottom: 0.25rem; /* Reduced margin */
+        color: #6c757d; /* Lighter grey for labels */
     }
 
-    .btn-group-sm > .btn {
-        padding: 0.25rem 0.5rem; /* Smaller padding for small buttons */
-        font-size: 0.875rem;
-        border-radius: 0.2rem;
+    .card-body .form-control,
+    .card-body .form-select {
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
+        font-size: 0.875rem; /* Smaller font for inputs */
+        border-radius: 0.2rem; /* Slightly smaller radius for inputs */
     }
 
-    /* Adjust dropdown toggle button style */
-    .btn.dropdown-toggle {
-        background-color: #f8f9fa; /* Light background for options button */
+    .input-group-text {
+        background-color: #e9ecef; /* Match light grey background */
         border-color: #dee2e6; /* Light border */
-        color: #495057; /* Darker text */
-    }
-
-    /* Alert styles (for "Record successfully created") */
-    .alert.alert-success {
-        background-color: #dff0d8; /* Light green */
-        border-color: #d0e9c6; /* Slightly darker green border */
-        color: #3c763d; /* Dark green text */
-        padding: 12px 20px;
-        border-radius: 4px; /* Standard Bootstrap alert border-radius */
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-    }
-    .alert.alert-success i {
-        margin-right: 8px;
-    }
-
-
-    #content {
-        padding: 0 20px; /* Padding for the main content area */
-    }
-
-    .details-box {
-        background-color: #fff; /* White background for the details box */
-        border: 1px solid #ddd; /* Light grey border */
-        border-radius: 4px; /* Rounded corners */
-        padding: 15px; /* Inner padding */
-        margin-bottom: 20px; /* Space below the box */
-    }
-
-    .quote-properties label {
-        display: block; /* Make labels take full width */
-        font-size: 0.9em; /* Smaller label font size */
-        color: #6c757d; /* Grey text for labels */
-        margin-bottom: 5px; /* Small space below label */
-    }
-
-    .form-control.input-sm { /* Replicating InvoicePlane's specific input-sm */
-        height: 30px; /* Specific height */
-        padding: 5px 10px;
-        font-size: 13px;
-        line-height: 1.5;
-        border-radius: 3px;
-    }
-
-    .input-group-addon {
-        background-color: #eee; /* Grey background for addon */
-        border: 1px solid #ccc; /* Light border */
-        border-radius: 3px;
-        padding: 6px 12px;
-        font-size: 14px;
-        font-weight: normal;
-        line-height: 1;
-        color: #555;
-        text-align: center;
-    }
-    .input-group-addon i {
         color: #495057; /* Icon color */
     }
 
-    /* Client address styling */
-    .client-address {
-        font-size: 0.95rem;
+    /* Client Address Text */
+    .client-address p {
+        margin-bottom: 0.2rem; /* Tighter line spacing */
         line-height: 1.4;
+        font-size: 0.95em;
     }
 
-    /* Item Table styling */
-    #item_table thead tr {
-        background-color: #f8f9fa; /* Light grey header background */
+    /* Item Table */
+    .table thead th {
+        background-color: #f8f9fa; /* Light background for table headers */
+        border-bottom: 1px solid #dee2e6; /* Ensure border exists */
+        border-top: none; /* Remove top border if present from default table styles */
     }
 
-    #item_table th, #item_table td {
-        border: 1px solid #e9ecef; /* Lighter border for table cells */
-        padding: 8px; /* Standard padding */
-        vertical-align: middle;
+    .table-bordered th, .table-bordered td {
+        border: 1px solid #dee2e6; /* Consistent border color */
     }
 
-    .item-table-row-actions td {
-        padding-top: 15px !important; /* Extra padding above add row/product buttons */
-        padding-bottom: 15px !important;
+    .item-table-row td {
+        vertical-align: middle; /* Align content vertically in middle */
+        padding: 0.4rem; /* Smaller padding for table cells */
     }
 
-    .table-item-description {
-        width: 25%; /* Adjust width for description */
+    .item-table-row .form-control,
+    .item-table-row .form-select {
+        padding-top: 0.2rem;
+        padding-bottom: 0.2rem;
+        font-size: 0.85rem;
+        height: auto; /* Allow height to adjust */
     }
 
-    .amount, .quantity {
-        text-align: right; /* Right align numbers */
+    .item-description-cell {
+        width: 30%; /* Adjust width for description */
     }
 
-    .item-table-total-row td {
-        padding-top: 15px; /* Space above totals within the table */
-        font-weight: bold;
+    .item-quantity-cell,
+    .item-price-cell,
+    .item-discount-cell,
+    .item-tax-cell {
+        width: 12%; /* Distribute width for other columns */
     }
 
-    /* Totals Summary */
-    .amount-panel {
-        background-color: #fff;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        padding: 15px;
-        margin-top: 20px; /* Space above totals panel */
+    .text-end {
+        text-align: right !important;
     }
 
-    .amount-panel .row {
-        margin-bottom: 10px;
+    .text-center {
+        text-align: center !important;
     }
 
-    .amount-panel .col-xs-6 {
-        padding: 0; /* Remove column padding to align text */
+    /* Total Summary Section (re-using card styles) */
+    .total-summary-card {
+        border-left: 4px solid #007bff; /* Example border color, match primary */
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 15px; /* Inner padding */
     }
 
-    .amount-panel .text-right {
-        text-align: right;
+    .total-summary-card .input-group {
+        max-width: 200px; /* Constrain width of discount input */
+        margin-left: auto; /* Push to right */
     }
 
-    .amount-panel .form-control-sm {
-        height: 25px; /* Smaller input for discount */
-        padding: 3px 8px;
-    }
-
-    .amount-panel .input-group-addon {
-        height: 25px;
-        padding: 3px 8px;
-    }
-
-    .total-amount {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: #000;
-        border-top: 1px solid #eee; /* Separator for total */
-        padding-top: 10px;
+    .total-summary-card hr {
         margin-top: 10px;
+        margin-bottom: 10px;
+        border-top-color: #e9ecef; /* Lighter hr color */
     }
 
-    /* Notes and Attachments */
-    .panel {
-        background-color: #fff;
-        border: 1px solid #ddd;
-        border-radius: 4px;
+    .total-summary-card .total-line {
+        font-size: 1.3rem; /* Larger font for total */
+        font-weight: bold;
+        color: #343a40;
+    }
+
+    /* Notes and Attachments Cards */
+    .panel-like-card {
+        background-color: #ffffff;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         margin-bottom: 20px;
     }
 
-    .panel-heading {
-        background-color: #f5f5f5;
-        border-bottom: 1px solid #ddd;
-        padding: 10px 15px;
-        border-top-left-radius: 3px;
-        border-top-right-radius: 3px;
-    }
-
-    .panel-heading .panel-title {
-        margin: 0;
-        font-size: 1rem;
+    .panel-like-card .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        padding: 0.75rem 1.25rem;
         font-weight: 600;
-        color: #333;
+        color: #495057;
+        border-top-left-radius: calc(0.375rem - 1px);
+        border-top-right-radius: calc(0.375rem - 1px);
     }
-
-    .panel-body {
-        padding: 15px;
+    
+    /* Bootstrap Icons for drag handle and trash */
+    .bi-arrows-move {
+        cursor: grab;
+        color: #6c757d;
     }
-
-    textarea.form-control {
-        resize: vertical; /* Allow vertical resizing */
-    }
-
-    /* Specific adjustments for screenshot elements */
-    #quote_form .form-control-static {
-        min-height: 20px; /* Ensure proper height even if content is small */
-        padding-top: 7px;
-        padding-bottom: 7px;
-        margin-bottom: 0;
-    }
-    .has-feedback .form-control {
-        padding-right: 32px; /* Space for feedback icon if any */
-    }
-    .has-feedback .form-control-feedback {
-        top: 0;
-        right: 0;
-        width: 30px;
-        height: 30px;
-        line-height: 30px;
-        text-align: center;
-    }
-    /* Styles for the "Record successfully created" alert */
-    .alert-success.no-margin {
-        margin-bottom: 0 !important;
+    .bi-trash {
+        color: #dc3545; /* Bootstrap danger color */
     }
 </style>
 
-<div id="headerbar">
-    <h1 class="headerbar-title">Quote 16</h1>
-    <div class="headerbar-item pull-right">
-        <div class="btn-group btn-group-sm">
-            <a class="btn btn-default dropdown-toggle" data-toggle="dropdown" href="#">
-                Options <i class="fa fa-chevron-down"></i>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-right">
-                <li>
-                    <a href="#add-quote-tax" data-toggle="modal">
-                        <i class="fa fa-plus fa-margin"></i>
-                        Add Quote Tax
-                    </a>
-                </li>
-                <li>
-                    <a href="#" id="btn_generate_pdf" data-quote-id="16">
-                        <i class="fa fa-print fa-margin"></i>
-                        Download PDF
-                    </a>
-                </li>
-                <li>
-                    <a href="https://aptinvoice.aptitudetech.com.au/index.php/mailer/quote/16">
-                        <i class="fa fa-send fa-margin"></i>
-                        Send Email
-                    </a>
-                </li>
-                <li>
-                    <a href="#" id="btn_quote_to_invoice" data-quote-id="16">
-                        <i class="fa fa-refresh fa-margin"></i>
-                        Quote to Invoice
-                    </a>
-                </li>
-                <li>
-                    <a href="#" id="btn_copy_quote" data-quote-id="16" data-client-id="25">
-                        <i class="fa fa-copy fa-margin"></i>
-                        Copy Quote
-                    </a>
-                </li>
-                <li>
-                    <a href="#delete-quote" data-toggle="modal">
-                        <i class="fa fa-trash-o fa-margin"></i> Delete
-                    </a>
-                </li>
+<div class="content-header-bar">
+    <h5 class="mb-0">Quote 16</h5>
+    <div>
+        <div class="dropdown d-inline-block me-2">
+            <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="optionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                Options <i class="bi bi-chevron-down ms-1"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="optionsDropdown">
+                <li><a class="dropdown-item" href="#add-quote-tax" data-bs-toggle="modal">
+                    <i class="bi bi-plus me-2"></i>Add Quote Tax
+                </a></li>
+                <li><a class="dropdown-item" href="#" id="btn_generate_pdf" data-quote-id="16">
+                    <i class="bi bi-file-earmark-pdf me-2"></i>Download PDF
+                </a></li>
+                <li><a class="dropdown-item" href="https://aptinvoice.aptitudetech.com.au/index.php/mailer/quote/16">
+                    <i class="bi bi-envelope me-2"></i>Send Email
+                </a></li>
+                <li><a class="dropdown-item" href="#" id="btn_quote_to_invoice" data-quote-id="16">
+                    <i class="bi bi-arrow-repeat me-2"></i>Quote to Invoice
+                </a></li>
+                <li><a class="dropdown-item" href="#" id="btn_copy_quote" data-quote-id="16" data-client-id="25">
+                    <i class="bi bi-files me-2"></i>Copy Quote
+                </a></li>
+                <li><a class="dropdown-item text-danger" href="#delete-quote" data-bs-toggle="modal">
+                    <i class="bi bi-trash me-2"></i> Delete
+                </a></li>
             </ul>
         </div>
-        <a href="#" class="btn btn-success btn-sm ajax-loader" id="btn_save_quote">
-            <i class="fa fa-check"></i>
-            Save
-        </a>
+        <button class="btn btn-success btn-sm" id="btn_save_quote">
+            <i class="bi bi-check-lg me-1"></i>Save
+        </button>
     </div>
 </div>
 
-<div id="content">
-    <div class="alert alert-success no-margin" style="display: block;">
-        <i class="fa fa-check-circle-o"></i> Record successfully created
+<div class="container-fluid px-0"> {# Using container-fluid from base.html's main-content div #}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        Record successfully created
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-    <div id="quote_form">
-        <div class="quote">
-            <div class="row">
-                <div class="col-xs-12 col-sm-6 col-md-5">
-                    <h3>
-                        <a href="https://aptinvoice.aptitudetech.com.au/index.php/clients/view/25">
+
+    <div class="row mb-3">
+        <div class="col-md-5">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title d-flex align-items-center mb-3">
+                        <a href="https://aptinvoice.aptitudetech.com.au/index.php/clients/view/25" class="text-decoration-none text-dark">
                             Joe Bloggs Business name Pty Ltd
                         </a>
-                        <span id="quote_change_client" class="fa fa-edit cursor-pointer small"
-                              data-toggle="tooltip" data-placement="bottom"
-                              title="Change client"></span>
-                    </h3>
-                    <br>
+                        <a href="#" id="quote_change_client" class="ms-2 text-secondary" style="font-size: 0.9em;"
+                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Change client">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                    </h5>
                     <div class="client-address">
-                        <span class="client-address-street-line">    123 Evergreen Terrace<br></span>
-                        <span class="client-address-street-line">    Leederville<br></span>
-                        <span class="client-adress-town-line">    Perth     WA     6007</span>
-                        <span class="client-adress-country-line">    <br>Australia</span>
+                        <p>123 Evergreen Terrace</p>
+                        <p>Leederville</p>
+                        <p>Perth WA 6007</p>
+                        <p>Australia</p>
                     </div>
                     <hr>
-                    <div>
-                        Email:&nbsp;
-                        {# The original email obfuscation script is replaced with a direct link #}
-                        <a href="mailto:joe@jbloggs.com.au">joe@jbloggs.com.au</a>
-                    </div>
+                    <p class="card-text text-primary" style="font-size: 0.9em;">Email: <a href="mailto:joe@jbloggs.com.au">joe@jbloggs.com.au</a></p>
                 </div>
-                <div class="col-xs-12 visible-xs"><br></div>
-                <div class="col-xs-12 col-sm-6 col-md-7">
-                    <div class="details-box">
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="card h-100">
+                <div class="card-body">
+                    <form>
                         <div class="row">
-                            <div class="col-xs-12 col-md-6">
-                                <div class="quote-properties">
-                                    <label for="quote_number">
-                                        Quote #
-                                    </label>
-                                    <input type="text" id="quote_number" class="form-control input-sm"
-                                           placeholder="Not set yet">
-                                </div>
-                                <div class="quote-properties has-feedback">
-                                    <label for="quote_date_created">
-                                        Date
-                                    </label>
-                                    <div class="input-group">
-                                        <input name="quote_date_created" id="quote_date_created"
-                                               class="form-control input-sm datepicker"
-                                               value="09/07/2025"/>
-                                        <span class="input-group-addon">
-                                            <i class="fa fa-calendar fa-fw"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="quote-properties has-feedback">
-                                    <label for="quote_date_expires">
-                                        Expires
-                                    </label>
-                                    <div class="input-group">
-                                        <input name="quote_date_expires" id="quote_date_expires"
-                                               class="form-control input-sm datepicker"
-                                               value="25/07/2025">
-                                        <span class="input-group-addon">
-                                            <i class="fa fa-calendar fa-fw"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                                {# Custom fields would go here if needed #}
+                            <div class="col-md-6 mb-3">
+                                <label for="quote_number" class="form-label">Quote #</label>
+                                <input type="text" id="quote_number" class="form-control" placeholder="Not yet set yet" readonly>
                             </div>
-                            <div class="col-xs-12 col-md-6">
-                                <div class="quote-properties">
-                                    <label for="quote_status_id">
-                                        Status
-                                    </label>
-                                    <select name="quote_status_id" id="quote_status_id"
-                                            class="form-control input-sm simple-select" data-minimum-results-for-search="Infinity">
-                                        <option value="1" selected="selected">Draft</option>
-                                        <option value="2">Sent</option>
-                                        <option value="3">Approved</option>
-                                        <option value="4">Rejected</option>
-                                    </select>
+                            <div class="col-md-6 mb-3">
+                                <label for="quote_status_id" class="form-label">Status</label>
+                                <select name="quote_status_id" id="quote_status_id" class="form-select">
+                                    <option value="1" selected>Draft</option>
+                                    <option value="2">Sent</option>
+                                    <option value="3">Accepted</option>
+                                    <option value="4">Rejected</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="quote_date_created" class="form-label">Date</label>
+                                <div class="input-group">
+                                    <input name="quote_date_created" id="quote_date_created" class="form-control datepicker" value="09/07/2025"/>
+                                    <span class="input-group-text">
+                                        <i class="bi bi-calendar"></i>
+                                    </span>
                                 </div>
-                                <div class="quote-properties">
-                                    <label for="quote_password">
-                                        Quote PDF password (optional)
-                                    </label>
-                                    <input type="password" id="quote_password" class="form-control input-sm">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="quote_password" class="form-label">Quote PDF password (optional)</label>
+                                <input type="password" id="quote_password" class="form-control">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="quote_date_expires" class="form-label">Expires</label>
+                                <div class="input-group">
+                                    <input name="quote_date_expires" id="quote_date_expires" class="form-control datepicker" value="25/07/2025">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-calendar"></i>
+                                    </span>
                                 </div>
-                                {# Hidden field for quote ID #}
-                                <input type="hidden" id="quote_id" value="16">
                             </div>
                         </div>
-                    </div>
+                    </form>
+                    <input type="hidden" id="quote_id" value="16"> {# Hidden field for JS #}
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div class="row">
-                <div class="col-xs-12">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h4 class="panel-title">Items</h4>
-                        </div>
-                        <div class="panel-body table-content">
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-sm" id="item_table">
-                                    <thead>
-                                        <tr>
-                                            <th style="width: 20px;"></th> {# For drag handle #}
-                                            <th class="table-item-description">Item</th>
-                                            <th style="width: 10%;">Quantity</th>
-                                            <th style="width: 10%;">Price</th>
-                                            <th style="width: 10%;">Item Discount</th>
-                                            <th style="width: 10%;">Tax Rate</th>
-                                            <th style="width: 20px;"></th> {# For delete button #}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {# This is the initial empty item row from the screenshot #}
-                                        <tr class="item">
-                                            <td class="text-center">
-                                                <i class="fa fa-arrows cursor-move"></i>
-                                            </td>
-                                            <td class="table-item-description">
-                                                <input type="text" name="item_name" class="form-control input-sm" placeholder="Description">
-                                            </td>
-                                            <td>
-                                                <input type="number" name="item_quantity" class="form-control input-sm quantity" value="">
-                                            </td>
-                                            <td>
-                                                <input type="number" name="item_price" class="form-control input-sm amount" value="" step="0.01">
-                                            </td>
-                                            <td>
-                                                <input type="number" name="item_discount_amount" class="form-control input-sm amount" value="" step="0.01">
-                                            </td>
-                                            <td>
-                                                <select name="item_tax_rate_id" class="form-control input-sm simple-select">
-                                                    <option value="0">None</option>
-                                                    <option value="2">10.00% - gst</option>
-                                                </select>
-                                            </td>
-                                            <td class="text-center">
-                                                <a href="#" class="btn_delete_item" data-item-id="">
-                                                    <i class="fa fa-trash-o"></i>
-                                                </a>
-                                            </td>
-                                        </tr>
-                                        <tr class="item">
-                                            <td class="text-center">
-                                                <i class="fa fa-arrows cursor-move"></i>
-                                            </td>
-                                            <td class="table-item-description">
-                                                <input type="text" name="item_name" class="form-control input-sm" placeholder="Description">
-                                            </td>
-                                            <td>
-                                                <input type="number" name="item_quantity" class="form-control input-sm quantity" value="1">
-                                            </td>
-                                            <td>
-                                                <input type="number" name="item_price" class="form-control input-sm amount" value="10.00" step="0.01">
-                                            </td>
-                                            <td>
-                                                <input type="number" name="item_discount_amount" class="form-control input-sm amount" value="0.00" step="0.01">
-                                            </td>
-                                            <td>
-                                                <select name="item_tax_rate_id" class="form-control input-sm simple-select">
-                                                    <option value="0">None</option>
-                                                    <option value="2" selected>10.00% - gst</option>
-                                                </select>
-                                            </td>
-                                            <td class="text-center">
-                                                <a href="#" class="btn_delete_item" data-item-id="1">
-                                                    <i class="fa fa-trash-o"></i>
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="row no-margin">
-                                <div class="col-xs-12 col-md-4">
-                                    <br>
-                                    <button class="btn btn-primary btn_add_row" type="button">
-                                        <i class="fa fa-plus"></i> Add new row
-                                    </button>
-                                    <button class="btn btn-primary btn_add_product" type="button">
-                                        <i class="fa fa-plus"></i> Add product
-                                    </button>
-                                </div>
-                                <div class="col-xs-12 col-md-offset-4 col-md-4">
-                                    <table class="table text-right">
-                                        <tbody>
-                                            <tr>
-                                                <td class="no-border">Subtotal:</td>
-                                                <td class="no-border amount">$0.00</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="no-border">Item Tax:</td>
-                                                <td class="no-border amount">$0.00</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="no-border">Quote Tax:</td>
-                                                <td class="no-border amount">$0.00</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="no-border">
-                                                    Discount:
-                                                </td>
-                                                <td class="no-border">
-                                                    <div class="input-group input-group-sm">
-                                                        <input id="quote_discount_amount" name="quote_discount_amount"
-                                                               class="form-control amount" value=""
-                                                               step="0.01">
-                                                        <div class="input-group-addon">
-                                                            $
-                                                        </div>
-                                                        <input id="quote_discount_percent" name="quote_discount_percent"
-                                                               class="form-control amount" value=""
-                                                               step="0.01">
-                                                        <div class="input-group-addon">
-                                                            %
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td class="no-border">
-                                                    <b>Total:</b>
-                                                </td>
-                                                <td class="no-border">
-                                                    <b>$0.00</b>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-xs-12 col-md-6">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h4 class="panel-title">Notes</h4>
-                        </div>
-                        <div class="panel-body">
-                            <textarea name="notes" id="notes" class="form-control"></textarea>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xs-12 col-md-6">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h4 class="panel-title">Attachments</h4>
-                        </div>
-                        <div class="panel-body">
-                            {# Original has Dropzone here. This is a simplified placeholder. #}
-                            <div id="dropzone_container">
-                                <button type="button" class="btn btn-default btn-sm">
-                                    <i class="fa fa-plus"></i> Add Files...
+    <div class="card mb-3 panel-like-card">
+        <div class="card-header">
+            <h5 class="mb-0">Items</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm mb-0" id="item_table">
+                    <thead>
+                        <tr>
+                            <th style="width: 20px;"></th> {# For drag handle #}
+                            <th class="item-description-cell">Item</th>
+                            <th class="item-quantity-cell">Quantity</th>
+                            <th class="item-price-cell">Price</th>
+                            <th class="item-discount-cell">Item Discount</th>
+                            <th class="item-tax-cell">Tax Rate</th>
+                            <th style="width: 20px;"></th> {# For delete button #}
+                        </tr>
+                    </thead>
+                    <tbody id="item_table_body">
+                        {# Initial placeholder item row (empty) #}
+                        <tr class="item-table-row item" data-item-id="">
+                            <td class="text-center">
+                                <i class="bi bi-arrows-move"></i>
+                            </td>
+                            <td>
+                                <input type="text" name="item_description[]" class="form-control" placeholder="Description">
+                            </td>
+                            <td>
+                                <input type="number" name="item_quantity[]" class="form-control text-end" value="" min="0">
+                            </td>
+                            <td>
+                                <input type="number" name="item_price[]" class="form-control text-end" value="" step="0.01">
+                            </td>
+                            <td>
+                                <input type="number" name="item_discount_amount[]" class="form-control text-end" value="" step="0.01">
+                            </td>
+                            <td>
+                                <select name="item_tax_rate_id[]" class="form-select">
+                                    <option value="0">None</option>
+                                    <option value="2">10.00% - GST</option>
+                                </select>
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-link p-0 delete-item-btn text-danger">
+                                    <i class="bi bi-trash"></i>
                                 </button>
-                                <p class="text-muted small mt-2">Max. file size: 2MB. Allowed file types: .jpg, .jpeg, .png, .gif, .pdf, .zip.</p>
-                            </div>
-                            <div class="attachments">
-                                {# Attached files would be listed here dynamically #}
-                            </div>
+                            </td>
+                        </tr>
+                        {# Example of a pre-filled item row #}
+                        <tr class="item-table-row item" data-item-id="1">
+                            <td class="text-center">
+                                <i class="bi bi-arrows-move"></i>
+                            </td>
+                            <td>
+                                <input type="text" name="item_description[]" class="form-control" value="Product 1">
+                            </td>
+                            <td>
+                                <input type="number" name="item_quantity[]" class="form-control text-end" value="1" min="0">
+                            </td>
+                            <td>
+                                <input type="number" name="item_price[]" class="form-control text-end" value="10.00" step="0.01">
+                            </td>
+                            <td>
+                                <input type="number" name="item_discount_amount[]" class="form-control text-end" value="0.00" step="0.01">
+                            </td>
+                            <td>
+                                <select name="item_tax_rate_id[]" class="form-select">
+                                    <option value="0">None</option>
+                                    <option value="2" selected>10.00% - GST</option>
+                                </select>
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-link p-0 delete-item-btn text-danger" data-item-id="1">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="row m-0 p-3"> {# No margins on row, padding for inner content #}
+                <div class="col-12 col-md-4 mb-3 mb-md-0">
+                    <button class="btn btn-primary btn-sm me-2 add-new-row-btn" type="button">
+                        <i class="bi bi-plus me-1"></i> Add new row
+                    </button>
+                    <button class="btn btn-primary btn-sm add-product-btn" type="button">
+                        <i class="bi bi-plus me-1"></i> Add product
+                    </button>
+                </div>
+                <div class="col-12 col-md-4 offset-md-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span class="text-end">$0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Item Tax:</span>
+                        <span class="text-end">$0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Quote Tax:</span>
+                        <span class="text-end">$0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Discount:</span>
+                        <div class="input-group input-group-sm ms-auto" style="width: auto;"> {# Adjust width here if needed #}
+                            <input id="quote_discount_amount" name="quote_discount_amount"
+                                   class="form-control text-end" value=""
+                                   step="0.01" style="max-width: 80px;">
+                            <span class="input-group-text">$</span>
+                            <input id="quote_discount_percent" name="quote_discount_percent"
+                                   class="form-control text-end" value=""
+                                   step="0.01" style="max-width: 60px;">
+                            <span class="input-group-text">%</span>
                         </div>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between total-line">
+                        <span>Total:</span>
+                        <span class="text-end">$0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card panel-like-card">
+                <div class="card-header">
+                    <h5 class="mb-0">Notes</h5>
+                </div>
+                <div class="card-body">
+                    <textarea name="notes" id="notes" class="form-control" rows="4" placeholder="Enter notes here..."></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card panel-like-card">
+                <div class="card-header">
+                    <h5 class="mb-0">Attachments</h5>
+                </div>
+                <div class="card-body">
+                    <button type="button" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-plus me-1"></i> Add Files...
+                    </button>
+                    <p class="text-muted small mt-2">Max. file size: 2MB. Allowed file types: .jpg, .jpeg, .png, .gif, .pdf, .zip.</p>
+                    <div class="attachments">
+                        {# Attached files would be listed here dynamically #}
                     </div>
                 </div>
             </div>
@@ -557,340 +419,276 @@
     </div>
 </div>
 
-{# Modals that appear in the original source, not directly part of the quote view content #}
-<div id="modal-placeholder"></div>
-<div id="delete-quote" class="modal modal-lg" role="dialog" aria-labelledby="modal_delete_quote" aria-hidden="true">
-    <div class="modal-content">
-        <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal"><i class="fa fa-close"></i></button>
-            <h4 class="panel-title">Delete Quote</h4>
-        </div>
-        <div class="modal-body">
-            <div class="alert alert-danger">If you delete this quote you will not be able to recover it later. Are you sure you want to permanently delete this quote?</div>
-        </div>
-        <div class="modal-footer">
-            <form action="https://aptinvoice.aptitudetech.com.au/index.php/quotes/delete/16" method="POST">
-                <input type="hidden" name="_ip_csrf" value="fbbd9f6fa72cd260d5e71d75d78963a5">
-                <div class="btn-group">
+{# Modals (now using Bootstrap 5 data attributes) #}
+<div class="modal fade" id="delete-quote" tabindex="-1" aria-labelledby="modal_delete_quote" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal_delete_quote_label">Delete Quote</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">If you delete this quote you will not be able to recover it later. Are you sure you want to permanently delete this quote?</div>
+            </div>
+            <div class="modal-footer">
+                <form action="/quotes/delete/16" method="POST" class="d-inline-block">
+                   {# Consider adding a CSRF token here for Flask: {{ csrf_token }} #}
                     <button type="submit" class="btn btn-danger">
-                        <i class="fa fa-trash-o fa-margin"></i> Confirm deletion
+                        <i class="bi bi-trash me-2"></i> Confirm deletion
                     </button>
-                    <a href="#" class="btn btn-default" data-dismiss="modal">
-                        <i class="fa fa-times"></i> Cancel
-                    </a>
-                </div>
-            </form>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg me-2"></i> Cancel
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 
-<div id="add-quote-tax" class="modal modal-lg" role="dialog" aria-labelledby="modal_add_quote_tax" aria-hidden="true">
-    <form class="modal-content">
-        <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal"><i class="fa fa-close"></i></button>
-            <h4 class="panel-title">Add Quote Tax</h4>
-        </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label for="tax_rate_id">
-                    Tax Rate
-                </label>
-                <div class="controls">
-                    <select name="tax_rate_id" id="tax_rate_id" class="form-control simple-select">
+<div class="modal fade" id="add-quote-tax" tabindex="-1" aria-labelledby="modal_add_quote_tax" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal_add_quote_tax_label">Add Quote Tax</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="tax_rate_id" class="form-label">Tax Rate</label>
+                    <select name="tax_rate_id" id="tax_rate_id" class="form-select">
                         <option value="0">None</option>
-                        <option value="2">10.00% - gst</option>
+                        <option value="2">10.00% - GST</option>
                     </select>
                 </div>
-            </div>
-            <div class="form-group">
-                <label for="include_item_tax">
-                    Tax Rate Placement
-                </label>
-                <div class="controls">
-                    <select name="include_item_tax" id="include_item_tax" class="form-control simple-select">
+                <div class="mb-3">
+                    <label for="include_item_tax" class="form-label">Tax Rate Placement</label>
+                    <select name="include_item_tax" id="include_item_tax" class="form-select">
                         <option value="0">Apply Before Item Tax</option>
                         <option value="1">Apply After Item Tax</option>
                     </select>
                 </div>
             </div>
-        </div>
-        <div class="modal-footer">
-            <div class="btn-group">
+            <div class="modal-footer">
                 <button class="btn btn-success" id="quote_tax_submit" type="button">
-                    <i class="fa fa-check"></i> Submit
+                    <i class="bi bi-check-lg me-2"></i> Submit
                 </button>
-                <button class="btn btn-danger" type="button" data-dismiss="modal">
-                    <i class="fa fa-times"></i> Cancel
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg me-2"></i> Cancel
                 </button>
             </div>
         </div>
-    </form>
+    </div>
 </div>
+
+{# Placeholder for dynamic modals loaded via AJAX (e.g., product lookup, change client) #}
+<div id="dynamic-modal-placeholder"></div>
+
 {% endblock %}
 
 {% block scripts %}
-    {# Original InvoicePlane JS dependencies are different from Bootstrap 5,
-       so we need to bridge them or mimic behavior.
-       Original uses jQuery and Bootstrap 3 (data-toggle="dropdown", data-dismiss="modal").
-       Your base.html uses Bootstrap 5.
-       
-       For simplicity, I'm keeping Bootstrap 5's data attributes where possible,
-       but the datepicker and dynamic row logic would still need to be reimplemented
-       with modern JS if not using a compatible library.
-    #}
     <script>
-        $(function () {
-            // Replicate the original InvoicePlane JS for dynamic rows
-            // This assumes jQuery is loaded (which it is in the original source)
-            // and that Bootstrap 3's JS behavior (for modals/dropdowns) is compatible
-            // or handled by Bootstrap 5's compatibility layer.
+        document.addEventListener('DOMContentLoaded', function() {
+            // Select buttons using their specific classes (corrected from :contains)
+            const addNewRowBtn = document.querySelector('.add-new-row-btn');
+            const addProductBtn = document.querySelector('.add-product-btn');
+            const itemTableBody = document.getElementById('item_table_body'); // Use ID for direct access
 
-            // The original script clones an element with id="new_row"
-            // For this to work, we need a hidden template row.
-            // Let's create a template row in the DOM that can be cloned.
-            // This template will not be displayed, but will be used by JS.
-            const itemTemplate = `
-                <tr class="item">
+            // Template for a new item row
+            const newItemRowHTML = `
+                <tr class="item-table-row item" data-item-id="">
                     <td class="text-center">
-                        <i class="fa fa-arrows cursor-move"></i>
-                    </td>
-                    <td class="table-item-description">
-                        <input type="text" name="item_name" class="form-control input-sm" placeholder="Description">
+                        <i class="bi bi-arrows-move"></i>
                     </td>
                     <td>
-                        <input type="number" name="item_quantity" class="form-control input-sm quantity" value="" min="0">
+                        <input type="text" name="item_description[]" class="form-control" placeholder="Description">
                     </td>
                     <td>
-                        <input type="number" name="item_price" class="form-control input-sm amount" value="" step="0.01">
+                        <input type="number" name="item_quantity[]" class="form-control text-end" value="" min="0">
                     </td>
                     <td>
-                        <input type="number" name="item_discount_amount" class="form-control input-sm amount" value="" step="0.01">
+                        <input type="number" name="item_price[]" class="form-control text-end" value="" step="0.01">
                     </td>
                     <td>
-                        <select name="item_tax_rate_id" class="form-control input-sm simple-select">
+                        <input type="number" name="item_discount_amount[]" class="form-control text-end" value="" step="0.01">
+                    </td>
+                    <td>
+                        <select name="item_tax_rate_id[]" class="form-select">
                             <option value="0">None</option>
-                            <option value="2">10.00% - gst</option>
+                            <option value="2">10.00% - GST</option>
                         </select>
                     </td>
                     <td class="text-center">
-                        <a href="#" class="btn_delete_item">
-                            <i class="fa fa-trash-o"></i>
-                        </a>
+                        <button type="button" class="btn btn-link p-0 delete-item-btn text-danger" data-item-id="">
+                            <i class="bi bi-trash"></i>
+                        </button>
                     </td>
                 </tr>
             `;
 
-            // Function to add a new row based on the template
+            // Function to add a new item row
             function addNewItemRow() {
-                // Find the table body
-                var $itemTable = $('#item_table tbody');
-                // Append the cloned template (without an ID)
-                $itemTable.append(itemTemplate);
-
-                // Re-attach event listeners for delete buttons on new rows
-                attachDeleteItemListeners();
+                itemTableBody.insertAdjacentHTML('beforeend', newItemRowHTML);
+                attachDeleteItemListeners(); // Re-attach listeners for all delete buttons
             }
 
-            // Bind click event to "Add new row" button
-            $('.btn_add_row').click(function () {
-                addNewItemRow();
-            });
-
-            // Bind click event to "Add product" button (mimicking original behavior for now)
-            $('.btn_add_product').click(function () {
-                $('#modal-placeholder').load(
-                    "https://aptinvoice.aptitudetech.com.au/index.php/products/ajax/modal_product_lookups/" +
-                    Math.floor(Math.random() * 1000)
-                );
-            });
-
-            // Bind click event for changing client
-            $('#quote_change_client').click(function () {
-                var quote_id = $('#quote_id').val(); // Get quote_id from hidden input
-                var client_id = "25"; // Hardcoded for now, retrieve dynamically if needed
-                $('#modal-placeholder').load("https://aptinvoice.aptitudetech.com.au/index.php/quotes/ajax/modal_change_client", {
-                    quote_id: quote_id,
-                    client_id: client_id,
-                });
-            });
-
-            // Function to attach delete item listeners
+            // Function to attach/re-attach delete item listeners
             function attachDeleteItemListeners() {
-                // Detach existing listeners to prevent duplicates
-                $(document).off('click', '.btn_delete_item');
-                // Re-attach listener to all current and future .btn_delete_item
-                $(document).on('click', '.btn_delete_item', function (e) {
-                    e.preventDefault(); // Prevent default link behavior
-                    var btn = $(this);
-                    var item_id = btn.data('item-id'); // For existing items
-
-                    // Just remove the row if no item ID is set (new row)
-                    if (typeof item_id === 'undefined' || item_id === '') {
-                        $(this).parents('.item').remove();
-                    } else {
-                        // Original AJAX call for deleting existing items
-                        $.post("https://aptinvoice.aptitudetech.com.au/index.php/quotes/ajax/delete_item/" + $('#quote_id').val(), {
-                                'item_id': item_id,
-                            },
-                            function (data) {
-                                var response = JSON.parse(data);
-                                if (response.success === 1) {
-                                    btn.parents('.item').remove();
-                                } else {
-                                    // Handle error, e.g., re-enable button and show message
-                                    btn.removeClass('btn-link').addClass('btn-danger').prop('disabled', false);
-                                    alert('Error deleting item: ' + (response.validation_errors || 'Unknown error'));
-                                }
-                            }
-                        ).fail(function() {
-                            alert('Network error or server issue during deletion.');
-                            btn.removeClass('btn-link').addClass('btn-danger').prop('disabled', false);
-                        });
-                    }
+                // Clear existing listeners to prevent duplicates (important for addEventListener)
+                document.querySelectorAll('.delete-item-btn').forEach(button => {
+                    button.removeEventListener('click', handleDeleteItem);
+                });
+                // Attach new listeners to all current delete buttons
+                document.querySelectorAll('.delete-item-btn').forEach(button => {
+                    button.addEventListener('click', handleDeleteItem);
                 });
             }
 
-            // Initial attachment for any delete buttons present on page load
+            function handleDeleteItem(event) {
+                event.preventDefault();
+                const button = event.currentTarget;
+                const row = button.closest('.item-table-row');
+                const itemId = button.dataset.itemId; // Get data-item-id
+
+                if (!itemId) { // If it's a newly added row (no item_id)
+                    row.remove();
+                    // Perform client-side recalculation if you have it
+                } else {
+                    // This part simulates the AJAX call from original InvoicePlane
+                    // In a real Flask app, you'd make a fetch/XHR to your Flask backend
+                    console.log(`Simulating AJAX delete for item ID: ${itemId}`);
+                    // Example fetch API call (replace with your actual Flask endpoint)
+                    /*
+                    fetch(`/quotes/${document.getElementById('quote_id').value}/items/${itemId}/delete`, {
+                        method: 'POST', // Or DELETE, depending on your Flask route
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token() }}' // If using Flask-WTF or similar
+                        },
+                        // body: JSON.stringify({ item_id: itemId }) // If sending JSON
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            row.remove();
+                            // Perform client-side recalculation
+                        } else {
+                            alert('Error deleting item: ' + (data.message || 'Unknown error'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Fetch error:', error);
+                        alert('Network error or server issue during deletion.');
+                    });
+                    */
+                    // For now, just remove the row visually for demo purposes
+                    row.remove();
+                }
+            }
+
+            // Attach event listeners to buttons
+            if (addNewRowBtn) {
+                addNewRowBtn.addEventListener('click', function(e) {
+                    e.preventDefault(); // Prevent form submission
+                    addNewItemRow();
+                });
+            }
+
+            if (addProductBtn) {
+                addProductBtn.addEventListener('click', function(e) {
+                    e.preventDefault(); // Prevent form submission
+                    // This would typically open a modal to select a product and then add a row.
+                    // Simulating the original InvoicePlane's AJAX load for product lookup modal
+                    // Replace with your Flask endpoint that renders the product lookup modal
+                    console.log('Simulating product lookup modal load.');
+                    fetch("https://aptinvoice.aptitudetech.com.au/index.php/products/ajax/modal_product_lookups/" + Math.floor(Math.random() * 1000))
+                        .then(response => response.text())
+                        .then(html => {
+                            const placeholder = document.getElementById('dynamic-modal-placeholder');
+                            placeholder.innerHTML = html;
+                            // Initialize Bootstrap 5 modal manually if the loaded content is not auto-initialized
+                            const modalElement = placeholder.querySelector('.modal');
+                            if (modalElement) {
+                                const modal = new bootstrap.Modal(modalElement);
+                                modal.show();
+                            }
+                        })
+                        .catch(error => console.error('Error loading product lookup modal:', error));
+                });
+            }
+
+            // Initial attachment for any existing remove buttons (e.g., if rendering with existing items)
             attachDeleteItemListeners();
 
-            // Datepicker initialization (mimicking the original .datepicker functionality)
-            $('body').on('focus', '.datepicker', function () {
-                if (!$(this).data('datepicker')) { // Prevent re-initializing
-                    $(this).datepicker({
-                        autoclose: true,
-                        format: 'dd/mm/yyyy',
-                        language: 'en',
-                        weekStart: '0',
-                        todayBtn: "linked"
-                    });
-                }
+            document.getElementById('quote_change_client').addEventListener('click', function(e) {
+                e.preventDefault();
+                const quoteId = document.getElementById('quote_id').value;
+                const clientId = this.dataset.clientId; // From data-client-id attribute
+                console.log(`Simulating client change modal for Quote ID: ${quoteId}, Client ID: ${clientId}`);
+
+                fetch(`https://aptinvoice.aptitudetech.com.au/index.php/quotes/ajax/modal_change_client`, {
+                    method: 'POST', // Or GET, depending on original implementation
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ quote_id: quoteId, client_id: clientId })
+                })
+                .then(response => response.text())
+                .then(html => {
+                    const placeholder = document.getElementById('dynamic-modal-placeholder');
+                    placeholder.innerHTML = html;
+                    const modalElement = placeholder.querySelector('.modal');
+                    if (modalElement) {
+                        const modal = new bootstrap.Modal(modalElement);
+                        modal.show();
+                    }
+                })
+                .catch(error => console.error('Error loading change client modal:', error));
             });
+
+
+            // Datepicker initialization (Requires a compatible library like Flatpickr)
+            // As your base.html doesn't load a datepicker, you'd need to add one.
+            // Example with Flatpickr (if you add <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+            // and <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"> to base.html):
+            // flatpickr(".datepicker", { dateFormat: "d/m/Y", allowInput: true });
+
+            // Dummy Datepicker (if no library is used, will be just text input)
+            document.querySelectorAll('.datepicker').forEach(input => {
+                input.addEventListener('focus', function() {
+                    console.log('Datepicker focused. A real datepicker library would open here.');
+                    // In a real app, you'd instantiate your datepicker library here.
+                });
+            });
+
 
             // Discount fields logic
-            $(document).ready(function () {
-                if ($('#quote_discount_percent').val().length > 0) {
-                    $('#quote_discount_amount').prop('disabled', true);
-                }
-                if ($('#quote_discount_amount').val().length > 0) {
-                    $('#quote_discount_percent').prop('disabled', true);
-                }
-            });
+            const quoteDiscountAmount = document.getElementById('quote_discount_amount');
+            const quoteDiscountPercent = document.getElementById('quote_discount_percent');
 
-            $('#quote_discount_amount').keyup(function () {
-                if (this.value.length > 0) {
-                    $('#quote_discount_percent').prop('disabled', true);
+            function toggleDiscountFields() {
+                if (quoteDiscountAmount.value.length > 0) {
+                    quoteDiscountPercent.disabled = true;
                 } else {
-                    $('#quote_discount_percent').prop('disabled', false);
+                    quoteDiscountPercent.disabled = false;
                 }
-            });
 
-            $('#quote_discount_percent').keyup(function () {
-                if (this.value.length > 0) {
-                    $('#quote_discount_amount').prop('disabled', true);
+                if (quoteDiscountPercent.value.length > 0) {
+                    quoteDiscountAmount.disabled = true;
                 } else {
-                    $('#quote_discount_amount').prop('disabled', false);
+                    quoteDiscountAmount.disabled = false;
                 }
-            });
+            }
 
-            // Sortable items (requires jQuery UI Sortable or similar library)
-            // Assuming jQuery UI is available from dependencies.min.js
-            var fixHelper = function (e, tr) {
-                var $originals = tr.children();
-                var $helper = tr.clone();
-                $helper.children().each(function (index) {
-                    $(this).width($originals.eq(index).width());
-                });
-                return $helper;
-            };
-            $('#item_table tbody').sortable({ // Target tbody for sorting rows
-                helper: fixHelper,
-                items: 'tr.item', // Only sort rows with class 'item'
-                axis: 'y', // Only allow vertical sorting
-                handle: '.fa-arrows', // Use the drag handle icon
-                stop: function(event, ui) {
-                    // This is where you'd update item_order if needed on the backend
-                    // e.g., by iterating over rows and updating a hidden order field
-                }
-            });
+            quoteDiscountAmount.addEventListener('keyup', toggleDiscountFields);
+            quoteDiscountPercent.addEventListener('keyup', toggleDiscountFields);
+            toggleDiscountFields(); // Initial call on load
 
-            // Save Quote functionality
-            $('#btn_save_quote').click(function () {
-                var items = [];
-                var item_order = 1;
-                $('#item_table .item').each(function () {
-                    var row = {};
-                    $(this).find('input,select,textarea').each(function () {
-                        if ($(this).is(':checkbox')) {
-                            row[$(this).attr('name')] = $(this).is(':checked');
-                        } else {
-                            row[$(this).attr('name')] = $(this).val();
-                        }
-                    });
-                    row['item_order'] = item_order;
-                    item_order++;
-                    items.push(row);
-                });
-
-                $.post("https://aptinvoice.aptitudetech.com.au/index.php/quotes/ajax/save", {
-                        quote_id: $('#quote_id').val(),
-                        quote_number: $('#quote_number').val(),
-                        quote_date_created: $('#quote_date_created').val(),
-                        quote_date_expires: $('#quote_date_expires').val(),
-                        quote_status_id: $('#quote_status_id').val(),
-                        quote_password: $('#quote_password').val(),
-                        items: JSON.stringify(items),
-                        quote_discount_amount: $('#quote_discount_amount').val(),
-                        quote_discount_percent: $('#quote_discount_percent').val(),
-                        notes: $('#notes').val(),
-                        // custom: $('input[name^=custom],select[name^=custom]').serializeArray(), // If you have custom fields
-                    },
-                    function (data) {
-                        var response = JSON.parse(data);
-                        if (response.success === 1) {
-                            window.location = "https://aptinvoice.aptitudetech.com.au/index.php/quotes/view/" + $('#quote_id').val();
-                        } else {
-                            // Re-enable save button, show errors
-                            $('#fullpage-loader').hide(); // If you have a loader
-                            $('.control-group').removeClass('has-error'); // Assuming Bootstrap 3
-                            $('div.alert[class*="alert-"]').remove();
-                            var resp_errors = response.validation_errors,
-                                all_resp_errors = '';
-                            if (typeof(resp_errors) == 'string') {
-                                all_resp_errors = resp_errors;
-                            } else {
-                                for (var key in resp_errors) {
-                                    $('#' + key).parent().addClass('has-error');
-                                    all_resp_errors += resp_errors[key];
-                                }
-                            }
-                            $('#quote_form').prepend('<div class="alert alert-danger">' + all_resp_errors + '</div>');
-                        }
-                    }
-                ).fail(function() {
-                    alert('Network error or server issue during save.');
-                    // Handle re-enabling save button if needed
-                });
-            });
-
-            // Generate PDF
-            $('#btn_generate_pdf').click(function () {
-                window.open('https://aptinvoice.aptitudetech.com.au/index.php/quotes/generate_pdf/' + $('#quote_id').val(), '_blank');
-            });
-
-            // Quote Tax Submit
-            $('#quote_tax_submit').click(function () {
-                $.post("https://aptinvoice.aptitudetech.com.au/index.php/quotes/ajax/save_quote_tax_rate", {
-                        quote_id: $('#quote_id').val(),
-                        tax_rate_id: $('#tax_rate_id').val(),
-                        include_item_tax: $('#include_item_tax').val()
-                    },
-                    function (data) {
-                        var response = JSON.parse(data);
-                        if (response.success === 1) {
-                            window.location = "https://aptinvoice.aptitudetech.com.au/index.php/quotes/view/" + $('#quote_id').val();
-                        }
-                    }
-                );
+            // Save Quote functionality (Simulated AJAX call)
+            document.getElementById('btn_save_quote').addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Save Quote button clicked!');
+                // Here you would collect all form data (including dynamic items)
+                // and send it via Fetch API or XMLHttpRequest to your Flask backend.
+                // Remember to include a CSRF token for POST requests.
+                alert('Save functionality would be implemented here, sending data to backend.');
             });
         });
     </script>
