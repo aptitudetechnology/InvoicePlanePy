@@ -1,58 +1,54 @@
 {% extends "base.html" %}
 
-{% block title %}Quote 16 - InvoicePlane Python{% endblock %}
+{% block title %}Quote 15 - InvoicePlane Python{% endblock %}
 
 {% block content %}
 <style>
-    /* Targeted Custom CSS for Quote Page using Bootstrap 5 */
-
-    /* Header Bar (similar to your .quick-actions bar style but for top of content) */
-    .content-header-bar {
-        background-color: #e9ecef; /* Match your .quick-actions background */
-        padding: 15px 20px; /* Adjust padding to match your main-content area */
+    /* Specific styles for the quote page to match screenshot */
+    .quote-header-bar {
+        background-color: #f8f9fa; /* Should be consistent with body background */
+        padding: 0 15px; /* Adjust padding to align with .main-content's container-fluid */
         margin-bottom: 20px;
-        border-bottom: 1px solid #dee2e6;
+        border-bottom: 1px solid #e9ecef;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-radius: 0.375rem; /* Bootstrap 5 default border-radius for cards/elements */
+        height: 60px; /* To match visual height of typical header bars */
     }
 
-    .content-header-bar h5 {
+    .quote-header-bar h5 {
         margin-bottom: 0;
         font-weight: 500;
-        color: #495057; /* Match your quick-actions h6 color */
+        color: #343a40;
     }
 
-    /* Client and Quote Details Cards */
-    .card-body .form-label {
+    .alert-success-custom {
+        background-color: #d4edda; /* Light green */
+        border-color: #c3e6cb;     /* Slightly darker green border */
+        color: #155724;            /* Dark green text */
+        padding: 12px 20px;
+        border-radius: 0.25rem;
+        margin-bottom: 20px;
+    }
+
+    .form-label-small {
         font-size: 0.85em; /* Smaller label text */
         margin-bottom: 0.25rem; /* Reduced margin */
-        color: #6c757d; /* Lighter grey for labels */
+        color: #6c757d;
     }
 
-    .card-body .form-control,
-    .card-body .form-select {
+    .form-control-sm, .form-select-sm, .input-group-sm > .form-control, .input-group-sm > .form-select, .input-group-sm > .input-group-text, .input-group-sm > .btn {
         padding-top: 0.25rem;
         padding-bottom: 0.25rem;
-        font-size: 0.875rem; /* Smaller font for inputs */
-        border-radius: 0.2rem; /* Slightly smaller radius for inputs */
+        font-size: 0.875rem;
+        border-radius: 0.2rem;
     }
 
-    .input-group-text {
-        background-color: #e9ecef; /* Match light grey background */
-        border-color: #dee2e6; /* Light border */
-        color: #495057; /* Icon color */
+    .table-sm th, .table-sm td {
+        padding: 0.4rem; /* Smaller padding for table cells */
     }
 
-    /* Client Address Text */
-    .client-address p {
-        margin-bottom: 0.2rem; /* Tighter line spacing */
-        line-height: 1.4;
-        font-size: 0.95em;
-    }
-
-    /* Item Table */
+    /* Adjust table header background */
     .table thead th {
         background-color: #f8f9fa; /* Light background for table headers */
         border-bottom: 1px solid #dee2e6; /* Ensure border exists */
@@ -65,324 +61,215 @@
 
     .item-table-row td {
         vertical-align: middle; /* Align content vertically in middle */
-        padding: 0.4rem; /* Smaller padding for table cells */
     }
 
-    .item-table-row .form-control,
-    .item-table-row .form-select {
-        padding-top: 0.2rem;
-        padding-bottom: 0.2rem;
-        font-size: 0.85rem;
-        height: auto; /* Allow height to adjust */
-    }
-
-    .item-description-cell {
-        width: 30%; /* Adjust width for description */
-    }
-
-    .item-quantity-cell,
-    .item-price-cell,
-    .item-discount-cell,
-    .item-tax-cell {
-        width: 12%; /* Distribute width for other columns */
-    }
-
-    .text-end {
-        text-align: right !important;
-    }
-
-    .text-center {
-        text-align: center !important;
-    }
-
-    /* Total Summary Section (re-using card styles) */
-    .total-summary-card {
-        border-left: 4px solid #007bff; /* Example border color, match primary */
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        padding: 15px; /* Inner padding */
+    .total-summary-card .card-body {
+        padding-top: 15px;
+        padding-bottom: 15px;
     }
 
     .total-summary-card .input-group {
-        max-width: 200px; /* Constrain width of discount input */
-        margin-left: auto; /* Push to right */
+        max-width: 150px; /* Constrain width of discount input */
     }
 
     .total-summary-card hr {
         margin-top: 10px;
         margin-bottom: 10px;
-        border-top-color: #e9ecef; /* Lighter hr color */
     }
 
     .total-summary-card .total-line {
-        font-size: 1.3rem; /* Larger font for total */
+        font-size: 1.25rem; /* Larger font for total */
         font-weight: bold;
-        color: #343a40;
-    }
-
-    /* Notes and Attachments Cards */
-    .panel-like-card {
-        background-color: #ffffff;
-        border: 1px solid #dee2e6;
-        border-radius: 0.375rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        margin-bottom: 20px;
-    }
-
-    .panel-like-card .card-header {
-        background-color: #f8f9fa;
-        border-bottom: 1px solid #dee2e6;
-        padding: 0.75rem 1.25rem;
-        font-weight: 600;
-        color: #495057;
-        border-top-left-radius: calc(0.375rem - 1px);
-        border-top-right-radius: calc(0.375rem - 1px);
-    }
-    
-    /* Bootstrap Icons for drag handle and trash */
-    .bi-arrows-move {
-        cursor: grab;
-        color: #6c757d;
-    }
-    .bi-trash {
-        color: #dc3545; /* Bootstrap danger color */
     }
 </style>
 
-<div class="content-header-bar">
-    <h5 class="mb-0">Quote 16</h5>
+<div class="quote-header-bar">
+    <h5 class="mb-0">Quote 15</h5>
     <div>
-        <div class="dropdown d-inline-block me-2">
+        <div class="dropdown d-inline-block">
             <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="optionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                Options <i class="bi bi-chevron-down ms-1"></i>
+                Options
             </button>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="optionsDropdown">
-                <li><a class="dropdown-item" href="#add-quote-tax" data-bs-toggle="modal">
-                    <i class="bi bi-plus me-2"></i>Add Quote Tax
-                </a></li>
-                <li><a class="dropdown-item" href="#" id="btn_generate_pdf" data-quote-id="16">
-                    <i class="bi bi-file-earmark-pdf me-2"></i>Download PDF
-                </a></li>
-                <li><a class="dropdown-item" href="https://aptinvoice.aptitudetech.com.au/index.php/mailer/quote/16">
-                    <i class="bi bi-envelope me-2"></i>Send Email
-                </a></li>
-                <li><a class="dropdown-item" href="#" id="btn_quote_to_invoice" data-quote-id="16">
-                    <i class="bi bi-arrow-repeat me-2"></i>Quote to Invoice
-                </a></li>
-                <li><a class="dropdown-item" href="#" id="btn_copy_quote" data-quote-id="16" data-client-id="25">
-                    <i class="bi bi-files me-2"></i>Copy Quote
-                </a></li>
-                <li><a class="dropdown-item text-danger" href="#delete-quote" data-bs-toggle="modal">
-                    <i class="bi bi-trash me-2"></i> Delete
-                </a></li>
+                <li><a class="dropdown-item" href="#">Action 1</a></li>
+                <li><a class="dropdown-item" href="#">Action 2</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#">Another action</a></li>
             </ul>
         </div>
-        <button class="btn btn-success btn-sm" id="btn_save_quote">
+        <button class="btn btn-success btn-sm ms-2">
             <i class="bi bi-check-lg me-1"></i>Save
         </button>
     </div>
 </div>
 
-<div class="container-fluid px-0"> {# Using container-fluid from base.html's main-content div #}
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
+<div class="container-fluid"> {# This container-fluid is already provided by your base.html .main-content #}
+    <div class="alert alert-success alert-success-custom d-flex align-items-center" role="alert">
         <i class="bi bi-check-circle-fill me-2"></i>
-        Record successfully created
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div>
+            Record successfully created
+        </div>
     </div>
 
     <div class="row mb-3">
         <div class="col-md-5">
-            <div class="card h-100">
+            <div class="card h-100"> {# h-100 to make cards same height #}
                 <div class="card-body">
                     <h5 class="card-title d-flex align-items-center mb-3">
-                        <a href="https://aptinvoice.aptitudetech.com.au/index.php/clients/view/25" class="text-decoration-none text-dark">
-                            Joe Bloggs Business name Pty Ltd
-                        </a>
-                        <a href="#" id="quote_change_client" class="ms-2 text-secondary" style="font-size: 0.9em;"
-                           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Change client">
+                        Joe Bloggs Business name Pty Ltd
+                        <a href="#" class="ms-2 text-secondary" style="font-size: 0.9em;">
                             <i class="bi bi-pencil-square"></i>
                         </a>
                     </h5>
-                    <div class="client-address">
-                        <p>123 Evergreen Terrace</p>
-                        <p>Leederville</p>
-                        <p>Perth WA 6007</p>
-                        <p>Australia</p>
-                    </div>
-                    <hr>
+                    <p class="card-text mb-0">123 Evergreen Terrace</p>
+                    <p class="card-text mb-0">Leederville</p>
+                    <p class="card-text mb-0">Perth WA 4007</p>
+                    <p class="card-text mb-2">Australia</p>
                     <p class="card-text text-primary" style="font-size: 0.9em;">Email: <a href="mailto:joe@jbloggs.com.au">joe@jbloggs.com.au</a></p>
                 </div>
             </div>
         </div>
 
         <div class="col-md-7">
-            <div class="card h-100">
+            <div class="card h-100"> {# h-100 to make cards same height #}
                 <div class="card-body">
                     <form>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="quote_number" class="form-label">Quote #</label>
-                                <input type="text" id="quote_number" class="form-control" placeholder="Not yet set yet" readonly>
+                                <label for="quoteNumber" class="form-label form-label-small">Quote #</label>
+                                <input type="text" class="form-control form-control-sm" id="quoteNumber" value="Not yet set yet" readonly>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="quote_status_id" class="form-label">Status</label>
-                                <select name="quote_status_id" id="quote_status_id" class="form-select">
-                                    <option value="1" selected>Draft</option>
-                                    <option value="2">Sent</option>
-                                    <option value="3">Accepted</option>
-                                    <option value="4">Rejected</option>
+                                <label for="status" class="form-label form-label-small">Status</label>
+                                <select class="form-select form-select-sm" id="status">
+                                    <option selected>Draft</option>
+                                    <option>Sent</option>
+                                    <option>Accepted</option>
+                                    <option>Rejected</option>
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="quote_date_created" class="form-label">Date</label>
-                                <div class="input-group">
-                                    <input name="quote_date_created" id="quote_date_created" class="form-control datepicker" value="09/07/2025"/>
-                                    <span class="input-group-text">
-                                        <i class="bi bi-calendar"></i>
-                                    </span>
+                                <label for="date" class="form-label form-label-small">Date</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control" id="date" value="09/07/2025" placeholder="DD/MM/YYYY">
+                                    <span class="input-group-text"><i class="bi bi-calendar"></i></span>
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="quote_password" class="form-label">Quote PDF password (optional)</label>
-                                <input type="password" id="quote_password" class="form-control">
+                                <label for="quotePassword" class="form-label form-label-small">Quote PDF password (optional)</label>
+                                <input type="password" class="form-control form-control-sm" id="quotePassword">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="quote_date_expires" class="form-label">Expires</label>
-                                <div class="input-group">
-                                    <input name="quote_date_expires" id="quote_date_expires" class="form-control datepicker" value="25/07/2025">
-                                    <span class="input-group-text">
-                                        <i class="bi bi-calendar"></i>
-                                    </span>
+                                <label for="expires" class="form-label form-label-small">Expires</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control" id="expires" value="25/07/2025" placeholder="DD/MM/YYYY">
+                                    <span class="input-group-text"><i class="bi bi-calendar"></i></span>
                                 </div>
                             </div>
                         </div>
                     </form>
-                    <input type="hidden" id="quote_id" value="16"> {# Hidden field for JS #}
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card mb-3 panel-like-card">
-        <div class="card-header">
-            <h5 class="mb-0">Items</h5>
-        </div>
+    <div class="card mb-3">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-bordered table-sm mb-0" id="item_table">
+                <table class="table table-bordered table-sm mb-0">
                     <thead>
                         <tr>
-                            <th style="width: 20px;"></th> {# For drag handle #}
-                            <th class="item-description-cell">Item</th>
-                            <th class="item-quantity-cell">Quantity</th>
-                            <th class="item-price-cell">Price</th>
-                            <th class="item-discount-cell">Item Discount</th>
-                            <th class="item-tax-cell">Tax Rate</th>
-                            <th style="width: 20px;"></th> {# For delete button #}
+                            <th style="width: 50px;"></th> {# For the plus button if items are nested #}
+                            <th style="width: 25%;">Item</th>
+                            <th style="width: 10%;">Quantity</th>
+                            <th style="width: 15%;">Price</th>
+                            <th style="width: 15%;">Item Discount</th>
+                            <th style="width: 15%;">Tax Rate</th>
+                            <th style="width: 10%;"></th> {# For the delete button #}
                         </tr>
                     </thead>
-                    <tbody id="item_table_body">
-                        {# Initial placeholder item row (empty) #}
-                        <tr class="item-table-row item" data-item-id="">
+                    <tbody>
+                        {# This is the placeholder row for a new item, similar to the screenshot's empty row #}
+                        <tr class="item-table-row">
                             <td class="text-center">
-                                <i class="bi bi-arrows-move"></i>
+                                {# The original screenshot doesn't show a '+' button IN the row, but for consistency if rows can be added, it makes sense. I'll remove it as the screenshot doesn't show it. #}
                             </td>
                             <td>
-                                <input type="text" name="item_description[]" class="form-control" placeholder="Description">
+                                <input type="text" class="form-control form-control-sm" placeholder="Description">
                             </td>
                             <td>
-                                <input type="number" name="item_quantity[]" class="form-control text-end" value="" min="0">
+                                <input type="number" class="form-control form-control-sm text-end" value="" min="0">
                             </td>
                             <td>
-                                <input type="number" name="item_price[]" class="form-control text-end" value="" step="0.01">
+                                <input type="number" class="form-control form-control-sm text-end" value="" step="0.01">
                             </td>
                             <td>
-                                <input type="number" name="item_discount_amount[]" class="form-control text-end" value="" step="0.01">
+                                <input type="number" class="form-control form-control-sm text-end" value="" step="0.01">
                             </td>
                             <td>
-                                <select name="item_tax_rate_id[]" class="form-select">
-                                    <option value="0">None</option>
-                                    <option value="2">10.00% - GST</option>
+                                <select class="form-select form-select-sm">
+                                    <option selected>None</option>
+                                    <option>GST 10%</option>
+                                    <option>VAT 20%</option>
                                 </select>
                             </td>
                             <td class="text-center">
-                                <button type="button" class="btn btn-link p-0 delete-item-btn text-danger">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                                <button class="btn btn-sm btn-danger py-0 px-1"><i class="bi bi-trash"></i></button>
                             </td>
                         </tr>
-                        {# Example of a pre-filled item row #}
-                        <tr class="item-table-row item" data-item-id="1">
-                            <td class="text-center">
-                                <i class="bi bi-arrows-move"></i>
-                            </td>
+                        <tr class="item-table-row">
+                            <td></td> {# Empty cell for alignment #}
                             <td>
-                                <input type="text" name="item_description[]" class="form-control" value="Product 1">
+                                <input type="text" class="form-control form-control-sm" placeholder="Product Unit">
                             </td>
-                            <td>
-                                <input type="number" name="item_quantity[]" class="form-control text-end" value="1" min="0">
-                            </td>
-                            <td>
-                                <input type="number" name="item_price[]" class="form-control text-end" value="10.00" step="0.01">
-                            </td>
-                            <td>
-                                <input type="number" name="item_discount_amount[]" class="form-control text-end" value="0.00" step="0.01">
-                            </td>
-                            <td>
-                                <select name="item_tax_rate_id[]" class="form-select">
-                                    <option value="0">None</option>
-                                    <option value="2" selected>10.00% - GST</option>
-                                </select>
-                            </td>
-                            <td class="text-center">
-                                <button type="button" class="btn btn-link p-0 delete-item-btn text-danger" data-item-id="1">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
+                            <td colspan="4" class="text-end fw-bold pe-3 pt-2">Subtotal</td>
+                            <td class="text-end pt-2">$0.00</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-            <div class="row m-0 p-3"> {# No margins on row, padding for inner content #}
-                <div class="col-12 col-md-4 mb-3 mb-md-0">
-                    <button class="btn btn-primary btn-sm me-2 add-new-row-btn" type="button">
-                        <i class="bi bi-plus me-1"></i> Add new row
-                    </button>
-                    <button class="btn btn-primary btn-sm add-product-btn" type="button">
-                        <i class="bi bi-plus me-1"></i> Add product
-                    </button>
-                </div>
-                <div class="col-12 col-md-4 offset-md-4">
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-start mb-4">
+        <button class="btn btn-outline-secondary btn-sm me-2">
+            <i class="bi bi-plus me-1"></i>Add new row
+        </button>
+        <button class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-plus me-1"></i>Add product
+        </button>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-7"></div> {# Empty column to push the totals card to the right #}
+        <div class="col-md-5">
+            <div class="card total-summary-card">
+                <div class="card-body">
                     <div class="d-flex justify-content-between mb-2">
-                        <span>Subtotal:</span>
-                        <span class="text-end">$0.00</span>
+                        <span>Subtotal</span>
+                        <span>$0.00</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
-                        <span>Item Tax:</span>
-                        <span class="text-end">$0.00</span>
+                        <span>Item Tax</span>
+                        <span>$0.00</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
-                        <span>Quote Tax:</span>
-                        <span class="text-end">$0.00</span>
+                        <span>Quote Tax</span>
+                        <span>$0.00</span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span>Discount:</span>
-                        <div class="input-group input-group-sm ms-auto" style="width: auto;"> {# Adjust width here if needed #}
-                            <input id="quote_discount_amount" name="quote_discount_amount"
-                                   class="form-control text-end" value=""
-                                   step="0.01" style="max-width: 80px;">
-                            <span class="input-group-text">$</span>
-                            <input id="quote_discount_percent" name="quote_discount_percent"
-                                   class="form-control text-end" value=""
-                                   step="0.01" style="max-width: 60px;">
+                        <span>Discount</span>
+                        <div class="input-group input-group-sm">
+                            <input type="number" class="form-control text-end" value="0" min="0" max="100">
                             <span class="input-group-text">%</span>
+                            <input type="number" class="form-control text-end" value="0.00" step="0.01">
+                            <span class="input-group-text">$</span>
                         </div>
                     </div>
                     <hr>
                     <div class="d-flex justify-content-between total-line">
-                        <span>Total:</span>
-                        <span class="text-end">$0.00</span>
+                        <span>Total</span>
+                        <span>$0.00</span>
                     </div>
                 </div>
             </div>
@@ -391,201 +278,101 @@
 
     <div class="row">
         <div class="col-md-6">
-            <div class="card panel-like-card">
-                <div class="card-header">
-                    <h5 class="mb-0">Notes</h5>
-                </div>
+            <div class="card h-100">
                 <div class="card-body">
-                    <textarea name="notes" id="notes" class="form-control" rows="4" placeholder="Enter notes here..."></textarea>
+                    <h6 class="card-title mb-3">Notes</h6>
+                    <textarea class="form-control" rows="4" placeholder="Enter notes here..."></textarea>
                 </div>
             </div>
         </div>
         <div class="col-md-6">
-            <div class="card panel-like-card">
-                <div class="card-header">
-                    <h5 class="mb-0">Attachments</h5>
-                </div>
+            <div class="card h-100">
                 <div class="card-body">
-                    <button type="button" class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-plus me-1"></i> Add Files...
+                    <h6 class="card-title mb-3">Attachments</h6>
+                    <button class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-plus me-1"></i>Add Files...
                     </button>
-                    <p class="text-muted small mt-2">Max. file size: 2MB. Allowed file types: .jpg, .jpeg, .png, .gif, .pdf, .zip.</p>
-                    <div class="attachments">
-                        {# Attached files would be listed here dynamically #}
-                    </div>
+                    {# Optional: display list of attached files here #}
+                    <ul class="list-group list-group-flush mt-3">
+                        {# Example:
+                        <li class="list-group-item d-flex justify-content-between align-items-center py-1">
+                            document.pdf
+                            <a href="#" class="text-danger"><i class="bi bi-x-circle-fill"></i></a>
+                        </li>
+                        #}
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
+
 </div>
-
-{# Modals (now using Bootstrap 5 data attributes) #}
-<div class="modal fade" id="delete-quote" tabindex="-1" aria-labelledby="modal_delete_quote" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modal_delete_quote_label">Delete Quote</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-danger">If you delete this quote you will not be able to recover it later. Are you sure you want to permanently delete this quote?</div>
-            </div>
-            <div class="modal-footer">
-                <form action="/quotes/delete/16" method="POST" class="d-inline-block">
-                   {# Consider adding a CSRF token here for Flask: {{ csrf_token }} #}
-                    <button type="submit" class="btn btn-danger">
-                        <i class="bi bi-trash me-2"></i> Confirm deletion
-                    </button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-lg me-2"></i> Cancel
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="add-quote-tax" tabindex="-1" aria-labelledby="modal_add_quote_tax" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modal_add_quote_tax_label">Add Quote Tax</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="tax_rate_id" class="form-label">Tax Rate</label>
-                    <select name="tax_rate_id" id="tax_rate_id" class="form-select">
-                        <option value="0">None</option>
-                        <option value="2">10.00% - GST</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="include_item_tax" class="form-label">Tax Rate Placement</label>
-                    <select name="include_item_tax" id="include_item_tax" class="form-select">
-                        <option value="0">Apply Before Item Tax</option>
-                        <option value="1">Apply After Item Tax</option>
-                    </select>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-success" id="quote_tax_submit" type="button">
-                    <i class="bi bi-check-lg me-2"></i> Submit
-                </button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="bi bi-x-lg me-2"></i> Cancel
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-{# Placeholder for dynamic modals loaded via AJAX (e.g., product lookup, change client) #}
-<div id="dynamic-modal-placeholder"></div>
-
 {% endblock %}
 
 {% block scripts %}
+    {# You would put your JavaScript for dynamic row addition here. #}
     <script>
+        // Placeholder for future JavaScript logic
         document.addEventListener('DOMContentLoaded', function() {
-            // Select buttons using their specific classes (corrected from :contains)
-            const addNewRowBtn = document.querySelector('.add-new-row-btn');
-            const addProductBtn = document.querySelector('.add-product-btn');
-            const itemTableBody = document.getElementById('item_table_body'); // Use ID for direct access
+            const addNewRowBtn = document.querySelector('.btn:contains("Add new row")');
+            const addProductBtn = document.querySelector('.btn:contains("Add product")');
+            const itemTableBody = document.querySelector('.table tbody');
 
-            // Template for a new item row
+            // This is a simplified template for a new item row.
+            // In a real app, you'd want unique names/IDs for each input field.
             const newItemRowHTML = `
-                <tr class="item-table-row item" data-item-id="">
-                    <td class="text-center">
-                        <i class="bi bi-arrows-move"></i>
+                <tr class="item-table-row">
+                    <td></td>
+                    <td>
+                        <input type="text" class="form-control form-control-sm" placeholder="Description" name="item_description[]">
                     </td>
                     <td>
-                        <input type="text" name="item_description[]" class="form-control" placeholder="Description">
+                        <input type="number" class="form-control form-control-sm text-end" value="" min="0" name="item_quantity[]">
                     </td>
                     <td>
-                        <input type="number" name="item_quantity[]" class="form-control text-end" value="" min="0">
+                        <input type="number" class="form-control form-control-sm text-end" value="" step="0.01" name="item_price[]">
                     </td>
                     <td>
-                        <input type="number" name="item_price[]" class="form-control text-end" value="" step="0.01">
+                        <input type="number" class="form-control form-control-sm text-end" value="" step="0.01" name="item_discount[]">
                     </td>
                     <td>
-                        <input type="number" name="item_discount_amount[]" class="form-control text-end" value="" step="0.01">
-                    </td>
-                    <td>
-                        <select name="item_tax_rate_id[]" class="form-select">
-                            <option value="0">None</option>
-                            <option value="2">10.00% - GST</option>
+                        <select class="form-select form-select-sm" name="item_tax_rate[]">
+                            <option selected>None</option>
+                            <option>GST 10%</option>
+                            <option>VAT 20%</option>
                         </select>
                     </td>
                     <td class="text-center">
-                        <button type="button" class="btn btn-link p-0 delete-item-btn text-danger" data-item-id="">
-                            <i class="bi bi-trash"></i>
-                        </button>
+                        <button class="btn btn-sm btn-danger py-0 px-1 remove-row-btn"><i class="bi bi-trash"></i></button>
                     </td>
                 </tr>
             `;
 
-            // Function to add a new item row
+            // Function to add a new row
             function addNewItemRow() {
-                itemTableBody.insertAdjacentHTML('beforeend', newItemRowHTML);
-                attachDeleteItemListeners(); // Re-attach listeners for all delete buttons
-            }
-
-            // Function to attach/re-attach delete item listeners
-            function attachDeleteItemListeners() {
-                // Clear existing listeners to prevent duplicates (important for addEventListener)
-                document.querySelectorAll('.delete-item-btn').forEach(button => {
-                    button.removeEventListener('click', handleDeleteItem);
-                });
-                // Attach new listeners to all current delete buttons
-                document.querySelectorAll('.delete-item-btn').forEach(button => {
-                    button.addEventListener('click', handleDeleteItem);
-                });
-            }
-
-            function handleDeleteItem(event) {
-                event.preventDefault();
-                const button = event.currentTarget;
-                const row = button.closest('.item-table-row');
-                const itemId = button.dataset.itemId; // Get data-item-id
-
-                if (!itemId) { // If it's a newly added row (no item_id)
-                    row.remove();
-                    // Perform client-side recalculation if you have it
+                // Find the second-to-last row (which is the "Subtotal" row)
+                const subtotalRow = itemTableBody.querySelector('tr:last-child');
+                // Insert the new row before the subtotal row
+                if (subtotalRow) {
+                    subtotalRow.insertAdjacentHTML('beforebegin', newItemRowHTML);
                 } else {
-                    // This part simulates the AJAX call from original InvoicePlane
-                    // In a real Flask app, you'd make a fetch/XHR to your Flask backend
-                    console.log(`Simulating AJAX delete for item ID: ${itemId}`);
-                    // Example fetch API call (replace with your actual Flask endpoint)
-                    /*
-                    fetch(`/quotes/${document.getElementById('quote_id').value}/items/${itemId}/delete`, {
-                        method: 'POST', // Or DELETE, depending on your Flask route
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': '{{ csrf_token() }}' // If using Flask-WTF or similar
-                        },
-                        // body: JSON.stringify({ item_id: itemId }) // If sending JSON
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            row.remove();
-                            // Perform client-side recalculation
-                        } else {
-                            alert('Error deleting item: ' + (data.message || 'Unknown error'));
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Fetch error:', error);
-                        alert('Network error or server issue during deletion.');
-                    });
-                    */
-                    // For now, just remove the row visually for demo purposes
-                    row.remove();
+                    // Fallback if subtotal row is not found (e.g., initial empty table)
+                    itemTableBody.insertAdjacentHTML('beforeend', newItemRowHTML);
                 }
+                // (Optional) Add event listeners for new delete buttons
+                attachRemoveRowListeners();
             }
 
-            // Attach event listeners to buttons
+            // Function to attach listeners to remove buttons
+            function attachRemoveRowListeners() {
+                document.querySelectorAll('.remove-row-btn').forEach(button => {
+                    button.onclick = function() {
+                        this.closest('tr').remove(); // Remove the closest table row
+                        // (Optional) Recalculate totals here
+                    };
+                });
+            }
+
             if (addNewRowBtn) {
                 addNewRowBtn.addEventListener('click', function(e) {
                     e.preventDefault(); // Prevent form submission
@@ -596,100 +383,20 @@
             if (addProductBtn) {
                 addProductBtn.addEventListener('click', function(e) {
                     e.preventDefault(); // Prevent form submission
-                    // This would typically open a modal to select a product and then add a row.
-                    // Simulating the original InvoicePlane's AJAX load for product lookup modal
-                    // Replace with your Flask endpoint that renders the product lookup modal
-                    console.log('Simulating product lookup modal load.');
-                    fetch("https://aptinvoice.aptitudetech.com.au/index.php/products/ajax/modal_product_lookups/" + Math.floor(Math.random() * 1000))
-                        .then(response => response.text())
-                        .then(html => {
-                            const placeholder = document.getElementById('dynamic-modal-placeholder');
-                            placeholder.innerHTML = html;
-                            // Initialize Bootstrap 5 modal manually if the loaded content is not auto-initialized
-                            const modalElement = placeholder.querySelector('.modal');
-                            if (modalElement) {
-                                const modal = new bootstrap.Modal(modalElement);
-                                modal.show();
-                            }
-                        })
-                        .catch(error => console.error('Error loading product lookup modal:', error));
+                    // In a real app, this would open a modal to select a product
+                    // For now, just add a generic row like 'Add new row'
+                    addNewItemRow();
+                    // You might pre-fill the description and price based on selected product here
                 });
             }
 
             // Initial attachment for any existing remove buttons (e.g., if rendering with existing items)
-            attachDeleteItemListeners();
+            attachRemoveRowListeners();
 
-            document.getElementById('quote_change_client').addEventListener('click', function(e) {
-                e.preventDefault();
-                const quoteId = document.getElementById('quote_id').value;
-                const clientId = this.dataset.clientId; // From data-client-id attribute
-                console.log(`Simulating client change modal for Quote ID: ${quoteId}, Client ID: ${clientId}`);
-
-                fetch(`https://aptinvoice.aptitudetech.com.au/index.php/quotes/ajax/modal_change_client`, {
-                    method: 'POST', // Or GET, depending on original implementation
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({ quote_id: quoteId, client_id: clientId })
-                })
-                .then(response => response.text())
-                .then(html => {
-                    const placeholder = document.getElementById('dynamic-modal-placeholder');
-                    placeholder.innerHTML = html;
-                    const modalElement = placeholder.querySelector('.modal');
-                    if (modalElement) {
-                        const modal = new bootstrap.Modal(modalElement);
-                        modal.show();
-                    }
-                })
-                .catch(error => console.error('Error loading change client modal:', error));
-            });
-
-
-            // Datepicker initialization (Requires a compatible library like Flatpickr)
-            // As your base.html doesn't load a datepicker, you'd need to add one.
-            // Example with Flatpickr (if you add <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-            // and <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"> to base.html):
-            // flatpickr(".datepicker", { dateFormat: "d/m/Y", allowInput: true });
-
-            // Dummy Datepicker (if no library is used, will be just text input)
-            document.querySelectorAll('.datepicker').forEach(input => {
-                input.addEventListener('focus', function() {
-                    console.log('Datepicker focused. A real datepicker library would open here.');
-                    // In a real app, you'd instantiate your datepicker library here.
-                });
-            });
-
-
-            // Discount fields logic
-            const quoteDiscountAmount = document.getElementById('quote_discount_amount');
-            const quoteDiscountPercent = document.getElementById('quote_discount_percent');
-
-            function toggleDiscountFields() {
-                if (quoteDiscountAmount.value.length > 0) {
-                    quoteDiscountPercent.disabled = true;
-                } else {
-                    quoteDiscountPercent.disabled = false;
-                }
-
-                if (quoteDiscountPercent.value.length > 0) {
-                    quoteDiscountAmount.disabled = true;
-                } else {
-                    quoteDiscountAmount.disabled = false;
-                }
-            }
-
-            quoteDiscountAmount.addEventListener('keyup', toggleDiscountFields);
-            quoteDiscountPercent.addEventListener('keyup', toggleDiscountFields);
-            toggleDiscountFields(); // Initial call on load
-
-            // Save Quote functionality (Simulated AJAX call)
-            document.getElementById('btn_save_quote').addEventListener('click', function(e) {
-                e.preventDefault();
-                console.log('Save Quote button clicked!');
-                // Here you would collect all form data (including dynamic items)
-                // and send it via Fetch API or XMLHttpRequest to your Flask backend.
-                // Remember to include a CSRF token for POST requests.
-                alert('Save functionality would be implemented here, sending data to backend.');
-            });
+            // Date picker example (requires a library like Flatpickr or jQuery UI Datepicker)
+            // If you're using Flatpickr:
+            // flatpickr("#date", { dateFormat: "d/m/Y" });
+            // flatpickr("#expires", { dateFormat: "d/m/Y" });
         });
     </script>
 {% endblock %}
