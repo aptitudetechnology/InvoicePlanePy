@@ -107,11 +107,26 @@ async def quote_create_post(
         db.commit()
         db.refresh(quote)
         
-        return RedirectResponse(url=f"/quotes/{quote.id}", status_code=302)
+        # Get client info for the template (matching invoice pattern)
+        client = db.query(Client).filter(Client.id == client_id).first()
+        
+        return templates.TemplateResponse("quotes/details.html", {
+            "request": request,
+            "user": current_user,
+            "client": client,
+            "quote": quote,
+            "message": "Quote created successfully"
+        })
         
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error creating quote: {str(e)}")
+        client = db.query(Client).filter(Client.id == client_id).first()
+        return templates.TemplateResponse("quotes/details.html", {
+            "request": request,
+            "user": current_user,
+            "client": client,
+            "error": f"Error creating quote: {str(e)}"
+        })
 
 @router.get("/{quote_id}", response_class=HTMLResponse)
 async def view_quote(
