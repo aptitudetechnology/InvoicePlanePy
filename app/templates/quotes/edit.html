@@ -211,15 +211,15 @@
 <div class="card-body">
 <div class="row mb-2">
 <div class="col-6"><strong>Subtotal:</strong></div>
-<div class="col-6 text-end" id="quote-subtotal">${{ "{:.2f}".format(quote.subtotal) }}</div>
+<div class="col-6 text-end" id="quote-subtotal">${{ (quote.subtotal | default(0)) | round(2) }}</div>
 </div>
 <div class="row mb-2">
 <div class="col-6"><strong>Item Tax:</strong></div>
-<div class="col-6 text-end" id="quote-item-tax">${{ (quote.item_tax | default(0.00)) | format("%.2f") }}</div>
+<div class="col-6 text-end" id="quote-item-tax">${{ (quote.item_tax | default(0)) | round(2) }}</div>
 </div>
 <div class="row mb-2">
 <div class="col-6"><strong>Quote Tax:</strong></div>
-<div class="col-6 text-end" id="quote-tax">${{ "{:.2f}".format(quote.quote_tax) }}</div>
+<div class="col-6 text-end" id="quote-tax">${{ (quote.quote_tax | default(0)) | round(2) }}</div>
 </div>
 <div class="row mb-2">
 <div class="col-6">
@@ -235,8 +235,7 @@
 <hr>
 <div class="row">
 <div class="col-6"><strong>Total:</strong></div>
-<div class="col-6 text-end" id="quote-total"><strong>${{ "{:.2f}".format(quote.total) }}</strong></div>
-</div>
+<div class="col-6 text-end" id="quote-total"><strong>${{ (quote.total | default(0)) | round(2) }}</strong></div>
 </div>
 </div>
 </div>
