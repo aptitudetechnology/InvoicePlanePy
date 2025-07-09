@@ -179,7 +179,7 @@
                 <table class="table table-bordered table-sm mb-0">
                     <thead>
                         <tr>
-                            <th style="width: 50px;"></th> {# For the plus button if items are nested #}
+                            <th style="width: 50px;"></th> {# For the plus button #}
                             <th style="width: 25%;">Item</th>
                             <th style="width: 10%;">Quantity</th>
                             <th style="width: 15%;">Price</th>
@@ -189,22 +189,21 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {# This is the placeholder row for a new item, similar to the screenshot's empty row #}
                         <tr class="item-table-row">
                             <td class="text-center">
-                                {# The original screenshot doesn't show a '+' button IN the row, but for consistency if rows can be added, it makes sense. I'll remove it as the screenshot doesn't show it. #}
+                                <button class="btn btn-sm btn-outline-secondary py-0 px-1"><i class="bi bi-plus"></i></button>
                             </td>
                             <td>
                                 <input type="text" class="form-control form-control-sm" placeholder="Description">
                             </td>
                             <td>
-                                <input type="number" class="form-control form-control-sm text-end" value="" min="0">
+                                <input type="number" class="form-control form-control-sm text-end" value="1" min="0">
                             </td>
                             <td>
-                                <input type="number" class="form-control form-control-sm text-end" value="" step="0.01">
+                                <input type="number" class="form-control form-control-sm text-end" value="0.00" step="0.01">
                             </td>
                             <td>
-                                <input type="number" class="form-control form-control-sm text-end" value="" step="0.01">
+                                <input type="number" class="form-control form-control-sm text-end" value="0.00" step="0.01">
                             </td>
                             <td>
                                 <select class="form-select form-select-sm">
@@ -310,93 +309,11 @@
 {% endblock %}
 
 {% block scripts %}
-    {# You would put your JavaScript for dynamic row addition here. #}
+    {# You might add specific JavaScript for date pickers or dynamic item rows here #}
     <script>
-        // Placeholder for future JavaScript logic
-        document.addEventListener('DOMContentLoaded', function() {
-            const addNewRowBtn = document.querySelector('.btn:contains("Add new row")');
-            const addProductBtn = document.querySelector('.btn:contains("Add product")');
-            const itemTableBody = document.querySelector('.table tbody');
-
-            // This is a simplified template for a new item row.
-            // In a real app, you'd want unique names/IDs for each input field.
-            const newItemRowHTML = `
-                <tr class="item-table-row">
-                    <td></td>
-                    <td>
-                        <input type="text" class="form-control form-control-sm" placeholder="Description" name="item_description[]">
-                    </td>
-                    <td>
-                        <input type="number" class="form-control form-control-sm text-end" value="" min="0" name="item_quantity[]">
-                    </td>
-                    <td>
-                        <input type="number" class="form-control form-control-sm text-end" value="" step="0.01" name="item_price[]">
-                    </td>
-                    <td>
-                        <input type="number" class="form-control form-control-sm text-end" value="" step="0.01" name="item_discount[]">
-                    </td>
-                    <td>
-                        <select class="form-select form-select-sm" name="item_tax_rate[]">
-                            <option selected>None</option>
-                            <option>GST 10%</option>
-                            <option>VAT 20%</option>
-                        </select>
-                    </td>
-                    <td class="text-center">
-                        <button class="btn btn-sm btn-danger py-0 px-1 remove-row-btn"><i class="bi bi-trash"></i></button>
-                    </td>
-                </tr>
-            `;
-
-            // Function to add a new row
-            function addNewItemRow() {
-                // Find the second-to-last row (which is the "Subtotal" row)
-                const subtotalRow = itemTableBody.querySelector('tr:last-child');
-                // Insert the new row before the subtotal row
-                if (subtotalRow) {
-                    subtotalRow.insertAdjacentHTML('beforebegin', newItemRowHTML);
-                } else {
-                    // Fallback if subtotal row is not found (e.g., initial empty table)
-                    itemTableBody.insertAdjacentHTML('beforeend', newItemRowHTML);
-                }
-                // (Optional) Add event listeners for new delete buttons
-                attachRemoveRowListeners();
-            }
-
-            // Function to attach listeners to remove buttons
-            function attachRemoveRowListeners() {
-                document.querySelectorAll('.remove-row-btn').forEach(button => {
-                    button.onclick = function() {
-                        this.closest('tr').remove(); // Remove the closest table row
-                        // (Optional) Recalculate totals here
-                    };
-                });
-            }
-
-            if (addNewRowBtn) {
-                addNewRowBtn.addEventListener('click', function(e) {
-                    e.preventDefault(); // Prevent form submission
-                    addNewItemRow();
-                });
-            }
-
-            if (addProductBtn) {
-                addProductBtn.addEventListener('click', function(e) {
-                    e.preventDefault(); // Prevent form submission
-                    // In a real app, this would open a modal to select a product
-                    // For now, just add a generic row like 'Add new row'
-                    addNewItemRow();
-                    // You might pre-fill the description and price based on selected product here
-                });
-            }
-
-            // Initial attachment for any existing remove buttons (e.g., if rendering with existing items)
-            attachRemoveRowListeners();
-
-            // Date picker example (requires a library like Flatpickr or jQuery UI Datepicker)
-            // If you're using Flatpickr:
-            // flatpickr("#date", { dateFormat: "d/m/Y" });
-            // flatpickr("#expires", { dateFormat: "d/m/Y" });
-        });
+        // Example for date picker (requires a library like Flatpickr or jQuery UI Datepicker)
+        // If you're using Flatpickr:
+        // flatpickr("#date", { dateFormat: "d/m/Y" });
+        // flatpickr("#expires", { dateFormat: "d/m/Y" });
     </script>
 {% endblock %}
