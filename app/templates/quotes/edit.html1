@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2>Edit Quote #{{ quote.quote_number }}</h2>
+      <a href="/quotes" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Quotes
+      </a>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <form method="post" action="/quotes/{{ quote.id }}/edit">
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <h5>Client Information</h5>
+              <div class="mb-3">
+              <label class="form-label">Client</label>
+              <div class="form-control-plaintext">
+             <strong>{{ quote.client.name }}</strong><br>
+            {{ quote.client.address }}<br>
+            {{ quote.client.email }}
+           </div>
+  <input type="hidden" name="client_id" value="{{ quote.client_id }}">
+</div>
+            <div class="col-md-6">
+              <h5>Quote Details</h5>
+              <div class="mb-3">
+                <label for="quote_number" class="form-label">Quote #</label>
+                <input type="text" class="form-control" id="quote_number" name="quote_number" value="{{ quote.quote_number }}" required>
+              </div>
+              <div class="mb-3">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                  {% for status in quote_statuses %}
+                  <option value="{{ status.value }}" {% if status == quote.status %}selected{% endif %}>
+                    {{ status.value|capitalize }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="issue_date" class="form-label">Date</label>
+                <input type="date" class="form-control" id="issue_date" name="issue_date" value="{{ quote.issue_date }}">
+              </div>
+              <div class="mb-3">
+                <label for="valid_until" class="form-label">Expires</label>
+                <input type="date" class="form-control" id="valid_until" name="valid_until" value="{{ quote.valid_until }}">
+              </div>
+            </div>
+          </div>
+
+          <!-- Items section would go here if you want to allow editing items -->
+
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label"><strong>Notes</strong></label>
+                <textarea class="form-control" name="notes" rows="4">{{ quote.notes }}</textarea>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label"><strong>Attachments</strong></label>
+                <div class="border p-3 bg-light">
+                  <small class="form-text text-muted d-block mt-2">File attachments not-implemented yet</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-success">
+              <i class="bi bi-check-lg"></i> Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

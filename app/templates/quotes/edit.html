@@ -1,83 +1,161 @@
 {% extends "base.html" %}
-
 {% block content %}
 <div class="row">
-  <div class="col-12">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2>Edit Quote #{{ quote.quote_number }}</h2>
-      <a href="/quotes" class="btn btn-secondary">
-        <i class="bi bi-arrow-left"></i> Back to Quotes
-      </a>
-    </div>
-    <div class="card">
-      <div class="card-body">
-        <form method="post" action="/quotes/{{ quote.id }}/edit">
-          <div class="row mb-4">
-            <div class="col-md-6">
-              <h5>Client Information</h5>
-              <div class="mb-3">
-              <label class="form-label">Client</label>
-              <div class="form-control-plaintext">
-             <strong>{{ quote.client.name }}</strong><br>
-            {{ quote.client.address }}<br>
-            {{ quote.client.email }}
-           </div>
-  <input type="hidden" name="client_id" value="{{ quote.client_id }}">
+<div class="col-12">
+<div class="d-flex justify-content-between align-items-center mb-4">
+<h2>Edit Quote #{{ quote.quote_number }}</h2>
+<a href="/quotes" class="btn btn-secondary">
+<i class="bi bi-arrow-left"></i> Back to Quotes
+</a>
 </div>
-            <div class="col-md-6">
-              <h5>Quote Details</h5>
-              <div class="mb-3">
-                <label for="quote_number" class="form-label">Quote #</label>
-                <input type="text" class="form-control" id="quote_number" name="quote_number" value="{{ quote.quote_number }}" required>
-              </div>
-              <div class="mb-3">
-                <label for="status" class="form-label">Status</label>
-                <select class="form-select" id="status" name="status">
-                  {% for status in quote_statuses %}
-                  <option value="{{ status.value }}" {% if status == quote.status %}selected{% endif %}>
-                    {{ status.value|capitalize }}
-                  </option>
-                  {% endfor %}
-                </select>
-              </div>
-              <div class="mb-3">
-                <label for="issue_date" class="form-label">Date</label>
-                <input type="date" class="form-control" id="issue_date" name="issue_date" value="{{ quote.issue_date }}">
-              </div>
-              <div class="mb-3">
-                <label for="valid_until" class="form-label">Expires</label>
-                <input type="date" class="form-control" id="valid_until" name="valid_until" value="{{ quote.valid_until }}">
-              </div>
-            </div>
-          </div>
 
-          <!-- Items section would go here if you want to allow editing items -->
-
-          <div class="row mb-4">
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label"><strong>Notes</strong></label>
-                <textarea class="form-control" name="notes" rows="4">{{ quote.notes }}</textarea>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label"><strong>Attachments</strong></label>
-                <div class="border p-3 bg-light">
-                  <small class="form-text text-muted d-block mt-2">File attachments not-implemented yet</small>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="d-flex justify-content-end">
-            <button type="submit" class="btn btn-success">
-              <i class="bi bi-check-lg"></i> Save Changes
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+<!-- Toolbar -->
+<div class="card mb-4">
+<div class="card-body py-2">
+<div class="d-flex flex-wrap gap-2">
+<button type="button" class="btn btn-outline-primary btn-sm" onclick="addQuoteTax()">
+<i class="bi bi-plus-circle"></i> Add Quote Tax
+</button>
+<button type="button" class="btn btn-outline-success btn-sm" onclick="downloadPDF()">
+<i class="bi bi-file-earmark-pdf"></i> Download PDF
+</button>
+<button type="button" class="btn btn-outline-info btn-sm" onclick="sendEmail()">
+<i class="bi bi-envelope"></i> Send Email
+</button>
+<button type="button" class="btn btn-outline-warning btn-sm" onclick="quoteToInvoice()">
+<i class="bi bi-file-earmark-text"></i> Quote to Invoice
+</button>
+<button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyQuote()">
+<i class="bi bi-files"></i> Copy Quote
+</button>
+<button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteQuote()">
+<i class="bi bi-trash"></i> Delete
+</button>
 </div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-body">
+<form method="post" action="/quotes/{{ quote.id }}/edit">
+<div class="row mb-4">
+<div class="col-md-6">
+<h5>Client Information</h5>
+<div class="mb-3">
+<label class="form-label">Client</label>
+<div class="form-control-plaintext">
+<strong>{{ quote.client.name }}</strong><br>
+ {{ quote.client.address }}<br>
+ {{ quote.client.email }}
+</div>
+<input type="hidden" name="client_id" value="{{ quote.client_id }}">
+</div>
+</div>
+<div class="col-md-6">
+<h5>Quote Details</h5>
+<div class="mb-3">
+<label for="quote_number" class="form-label">Quote #</label>
+<input type="text" class="form-control" id="quote_number" name="quote_number" value="{{ quote.quote_number }}" required>
+</div>
+<div class="mb-3">
+<label for="status" class="form-label">Status</label>
+<select class="form-select" id="status" name="status">
+ {% for status in quote_statuses %}
+<option value="{{ status.value }}" {% if status == quote.status %}selected{% endif %}>
+ {{ status.value|capitalize }}
+</option>
+ {% endfor %}
+</select>
+</div>
+<div class="mb-3">
+<label for="issue_date" class="form-label">Date</label>
+<input type="date" class="form-control" id="issue_date" name="issue_date" value="{{ quote.issue_date }}">
+</div>
+<div class="mb-3">
+<label for="valid_until" class="form-label">Expires</label>
+<input type="date" class="form-control" id="valid_until" name="valid_until" value="{{ quote.valid_until }}">
+</div>
+</div>
+</div>
+<!-- Items section would go here if you want to allow editing items -->
+<div class="row mb-4">
+<div class="col-md-6">
+<div class="mb-3">
+<label class="form-label"><strong>Notes</strong></label>
+<textarea class="form-control" name="notes" rows="4">{{ quote.notes }}</textarea>
+</div>
+</div>
+<div class="col-md-6">
+<div class="mb-3">
+<label class="form-label"><strong>Attachments</strong></label>
+<div class="border p-3 bg-light">
+<small class="form-text text-muted d-block mt-2">File attachments not-implemented yet</small>
+</div>
+</div>
+</div>
+</div>
+<div class="d-flex justify-content-end">
+<button type="submit" class="btn btn-success">
+<i class="bi bi-check-lg"></i> Save Changes
+</button>
+</div>
+</form>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+function addQuoteTax() {
+    // Implement add quote tax functionality
+    console.log('Add Quote Tax clicked');
+}
+
+function downloadPDF() {
+    // Implement PDF download functionality
+    window.location.href = '/quotes/{{ quote.id }}/pdf';
+}
+
+function sendEmail() {
+    // Implement send email functionality
+    window.location.href = '/quotes/{{ quote.id }}/email';
+}
+
+function quoteToInvoice() {
+    // Implement quote to invoice conversion
+    if (confirm('Convert this quote to an invoice?')) {
+        window.location.href = '/quotes/{{ quote.id }}/convert-to-invoice';
+    }
+}
+
+function copyQuote() {
+    // Implement copy quote functionality
+    if (confirm('Create a copy of this quote?')) {
+        window.location.href = '/quotes/{{ quote.id }}/copy';
+    }
+}
+
+function deleteQuote() {
+    // Implement delete quote functionality
+    if (confirm('Are you sure you want to delete this quote? This action cannot be undone.')) {
+        fetch('/quotes/{{ quote.id }}/delete', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.href = '/quotes';
+            } else {
+                alert('Error deleting quote');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting quote');
+        });
+    }
+}
+</script>
 {% endblock %}
