@@ -6,7 +6,7 @@ from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.user import User
 from app.models.client import Client
-from app.models.quote import Quote, QuoteStatus
+from app.models.quotes import Quote, QuoteStatus
 from datetime import date, datetime
 
 router = APIRouter()
@@ -46,7 +46,7 @@ async def create_quote(
         "clients": clients
     })
 
-@router.post("/", response_class=HTMLResponse)
+@router.post("/create", response_class=HTMLResponse)
 async def quote_create_post(
     request: Request,
     db: Session = Depends(get_db),
@@ -107,26 +107,11 @@ async def quote_create_post(
         db.commit()
         db.refresh(quote)
         
-        # Get client info for the template (matching invoice pattern)
-        client = db.query(Client).filter(Client.id == client_id).first()
-        
-        return templates.TemplateResponse("quotes/details.html", {
-            "request": request,
-            "user": current_user,
-            "client": client,
-            "quote": quote,
-            "message": "Quote created successfully"
-        })
+        return RedirectResponse(url=f"/quotes/{quote.id}", status_code=302)
         
     except Exception as e:
         db.rollback()
-        client = db.query(Client).filter(Client.id == client_id).first()
-        return templates.TemplateResponse("quotes/details.html", {
-            "request": request,
-            "user": current_user,
-            "client": client,
-            "error": f"Error creating quote: {str(e)}"
-        })
+        raise HTTPException(status_code=500, detail=f"Error creating quote: {str(e)}")
 
 @router.get("/{quote_id}", response_class=HTMLResponse)
 async def view_quote(
