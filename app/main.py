@@ -48,7 +48,7 @@ app.include_router(settings.router, prefix="/settings", tags=["settings"])
 app.include_router(help.router, prefix="/help", tags=["help"])
 app.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
 app.include_router(profile.router, prefix="/profile", tags=["profile"])
-app.include_router(tax_rates.router, prefix="/tax_rates", tags=["tax_rates"])
+app.include_router(tax_rates.router, prefix="/settings/tax_rates", tags=["tax_rates"])
 
 # Debug route to show all registered routes
 @app.get("/debug/routes")
