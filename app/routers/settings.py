@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Depends, HTTPException
+from fastapi import APIRouter, Request, Depends, HTTPException, Form
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -8,8 +8,49 @@ from app.dependencies import get_current_user
 from app.models.user import User
 from app.models.api_key import ApiKey
 
+
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
+
+# Move the POST /invoices route here, after router is defined
+@router.post("/invoices", response_class=HTMLResponse)
+async def save_invoice_settings(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    default_invoice_group: str = Form(None),
+    default_payment_method: str = Form(None),
+    default_terms: str = Form(None),
+    invoices_due_after: int = Form(None),
+    generate_invoice_number_draft: str = Form(None),
+    mark_invoices_sent_pdf: str = Form(None),
+    enable_pdf_watermarks: str = Form(None),
+    invoice_pdf_password: str = Form(None),
+    include_zugferd: str = Form(None),
+    default_pdf_template: str = Form(None)
+    # Add other fields as needed
+):
+    """Save invoice settings"""
+    # TODO: Save settings to the database or config file
+    # For now, just reload the page with a success message
+    settings = {
+        "default_invoice_group": default_invoice_group,
+        "default_payment_method": default_payment_method,
+        "default_terms": default_terms,
+        "invoices_due_after": invoices_due_after,
+        "generate_invoice_number_draft": generate_invoice_number_draft,
+        "mark_invoices_sent_pdf": mark_invoices_sent_pdf,
+        "enable_pdf_watermarks": enable_pdf_watermarks,
+        "invoice_pdf_password": invoice_pdf_password,
+        "include_zugferd": include_zugferd,
+        "default_pdf_template": default_pdf_template
+    }
+    return templates.TemplateResponse("settings/invoice.html", {
+        "request": request,
+        "user": current_user,
+        "settings": settings,
+        "success_message": "Settings saved successfully. (Not yet persisted)"
+    })
 
 @router.get("/", response_class=HTMLResponse)
 async def settings_page(
@@ -31,9 +72,18 @@ async def company_settings(
     current_user: User = Depends(get_current_user)
 ):
     """Show company settings"""
+    # Add default settings for the template
+    settings = {
+        "language": "english",
+        "company_name": "",
+        "company_address": "",
+        # Add other fields that company.html expects
+    }
+    
     return templates.TemplateResponse("settings/company.html", {
         "request": request,
         "user": current_user,
+        "settings": settings,  # This is what was missing!
         "title": "Company Settings"
     })
 
@@ -59,10 +109,65 @@ async def invoice_settings(
     current_user: User = Depends(get_current_user)
 ):
     """Show invoice settings"""
+    # Define default settings for the invoice template, or fetch from DB if applicable
+    invoice_settings_data = {
+        "language": "english", # Example: Default language setting
+        "invoice_prefix": "INV-",
+        "invoice_start_number": 1,
+        "due_days": 30,
+        # Add any other settings your invoice.html template expects
+    }
+
+    # If you have actual invoice settings stored in your database (e.g., in a SystemSettings table or UserSettings related to invoices), you would fetch them here
+    # For example:
+    # invoice_db_settings = db.query(InvoiceSettingsModel).filter(...).first()
+    # if invoice_db_settings:
+    #     invoice_settings_data.update(invoice_db_settings.__dict__) # Or map relevant fields
+
     return templates.TemplateResponse("settings/invoice.html", {
         "request": request,
         "user": current_user,
+        "settings": invoice_settings_data, # <--- THIS IS THE FIX
         "title": "Invoice Settings"
+    })
+
+@router.post("/invoices", response_class=HTMLResponse)
+async def save_invoice_settings(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    default_invoice_group: str = Form(None),
+    default_payment_method: str = Form(None),
+    default_terms: str = Form(None),
+    invoices_due_after: int = Form(None),
+    generate_invoice_number_draft: str = Form(None),
+    mark_invoices_sent_pdf: str = Form(None),
+    enable_pdf_watermarks: str = Form(None),
+    invoice_pdf_password: str = Form(None),
+    include_zugferd: str = Form(None),
+    default_pdf_template: str = Form(None)
+    # Add other fields as needed
+):
+    """Save invoice settings"""
+    # TODO: Save settings to the database or config file
+    # For now, just reload the page with a success message
+    settings = {
+        "default_invoice_group": default_invoice_group,
+        "default_payment_method": default_payment_method,
+        "default_terms": default_terms,
+        "invoices_due_after": invoices_due_after,
+        "generate_invoice_number_draft": generate_invoice_number_draft,
+        "mark_invoices_sent_pdf": mark_invoices_sent_pdf,
+        "enable_pdf_watermarks": enable_pdf_watermarks,
+        "invoice_pdf_password": invoice_pdf_password,
+        "include_zugferd": include_zugferd,
+        "default_pdf_template": default_pdf_template
+    }
+    return templates.TemplateResponse("settings/invoice.html", {
+        "request": request,
+        "user": current_user,
+        "settings": settings,
+        "success_message": "Settings saved successfully. (Not yet persisted)"
     })
 
 @router.get("/custom-fields", response_class=HTMLResponse)
@@ -72,7 +177,7 @@ async def custom_fields(
     current_user: User = Depends(get_current_user)
 ):
     """Show custom fields management"""
-    return templates.TemplateResponse("settings/custom_fields.html", {
+    return templates.TemplateResponse("settings/new_custom_field.html", {
         "request": request,
         "user": current_user,
         "title": "Custom Fields"
@@ -248,3 +353,48 @@ async def delete_api_key(
     db.commit()
     
     return JSONResponse({"success": True, "message": "API key deleted"})
+
+@router.get("/quote-settings", response_class=HTMLResponse)
+async def quote_settings(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Show quote settings page (placeholder)"""
+    return templates.TemplateResponse("settings/quote_settings.html", {
+        "request": request,
+        "user": current_user,
+        "title": "Quote Settings"
+    })
+
+@router.get("/email", response_class=HTMLResponse)
+async def email_settings(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Show email settings page (placeholder)"""
+    return templates.TemplateResponse("settings/email.html", {
+        "request": request,
+        "user": current_user,
+        "title": "Email Settings"
+    })
+
+@router.get("/online-payment", response_class=HTMLResponse)
+async def online_payment_settings(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Show online payment settings page (placeholder)"""
+    return templates.TemplateResponse("settings/online_payment.html", {
+        "request": request,
+        "user": current_user,
+        "title": "Online Payment Settings"
+    })
+
+@router.get("/projects", response_class=HTMLResponse)
+async def projects_settings(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Show projects settings page (placeholder)"""
+    return templates.TemplateResponse("settings/projects.html", {
+        "request": request,
+        "user": current_user,
+        "title": "Projects Settings"
+    })
+
+@router.get("/updates", response_class=HTMLResponse)
+async def updates_settings(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Show updates page (placeholder)"""
+    return templates.TemplateResponse("settings/updates.html", {
+        "request": request,
+        "user": current_user,
+        "title": "Updates"
+    })

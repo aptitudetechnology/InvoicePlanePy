@@ -1,3 +1,4 @@
+from app.models.invoice import InvoiceStatus
 from fastapi import APIRouter, Request, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -29,8 +30,8 @@ async def reports_dashboard(
     
     # Calculate revenue statistics
     total_revenue = db.query(func.sum(Payment.amount)).scalar() or 0
-    pending_invoices = db.query(func.count(Invoice.id)).filter(Invoice.status == 'draft').scalar()
-    
+    #pending_invoices = db.query(func.count(Invoice.id)).filter(Invoice.status == 'DRAFT').scalar()
+    pending_invoices = db.query(func.count(Invoice.id)).filter(Invoice.status == InvoiceStatus.DRAFT).scalar()
     stats = {
         'total_clients': total_clients,
         'total_invoices': total_invoices,
@@ -83,4 +84,17 @@ async def client_reports(
         "request": request,
         "user": current_user,
         "title": "Client Reports"
+    })
+
+@router.get("/invoice-aging", response_class=HTMLResponse)
+async def invoice_aging_report(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Show invoice aging report (placeholder)"""
+    return templates.TemplateResponse("reports/invoice_aging.html", {
+        "request": request,
+        "user": current_user,
+        "title": "Invoice Aging Report"
     })

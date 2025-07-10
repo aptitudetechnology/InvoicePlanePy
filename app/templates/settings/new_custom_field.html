@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Custom Field Form</h2>
+            <div>
+                <button type="submit" class="btn btn-success me-2">
+                    <i class="bi bi-check"></i> Save
+                </button>
+                <a href="/settings/custom-fields" class="btn btn-danger">
+                    <i class="bi bi-x"></i> Cancel
+                </a>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="POST">
+                            
+                            
+                            <div class="mb-3">
+                                <label for="table" class="form-label">Table</label>
+                                <select class="form-select" id="table" name="table" required>
+                                    <option value="">Select a table...</option>
+                                    <option value="client" selected>Client</option>
+                                    <option value="invoice">Invoice</option>
+                                    <option value="quote">Quote</option>
+                                    <option value="project">Project</option>
+                                    <option value="task">Task</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="label" class="form-label">Label</label>
+                                <input type="text" class="form-control" id="label" name="label" placeholder="Enter field label" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="type" class="form-label">Type</label>
+                                <select class="form-select" id="type" name="type" required>
+                                    <option value="">Select field type...</option>
+                                    <option value="text" selected>Text</option>
+                                    <option value="date">Date</option>
+                                    <option value="boolean">Boolean</option>
+                                    <option value="single_choice">Single Choice</option>
+                                    <option value="multiple_choice">Multiple Choice</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="order" class="form-label">Order</label>
+                                <input type="number" class="form-control" id="order" name="order" placeholder="Enter display order" min="0">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="position" class="form-label">Position</label>
+                                <select class="form-select" id="position" name="position" required>
+                                    <option value="">Select position...</option>
+                                    <option value="custom_fields" selected>Custom Fields</option>
+                                    <option value="main_form">Main Form</option>
+                                    <option value="additional_info">Additional Info</option>
+                                    <option value="sidebar">Sidebar</option>
+                                </select>
+                            </div>
+
+                            <!-- Additional options for choice fields -->
+                            <div id="choice-options" class="mb-3" style="display: none;">
+                                <label class="form-label">Options</label>
+                                <div id="options-container">
+                                    <div class="input-group mb-2">
+                                        <input type="text" class="form-control" name="options[]" placeholder="Option 1">
+                                        <button class="btn btn-outline-danger" type="button" onclick="removeOption(this)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addOption()">
+                                    <i class="bi bi-plus"></i> Add Option
+                                </button>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="required" name="required">
+                                    <label class="form-check-label" for="required">
+                                        Required field
+                                    </label>
+                                </div>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('type').addEventListener('change', function() {
+    const choiceOptions = document.getElementById('choice-options');
+    const selectedType = this.value;
+    
+    if (selectedType === 'single_choice' || selectedType === 'multiple_choice') {
+        choiceOptions.style.display = 'block';
+    } else {
+        choiceOptions.style.display = 'none';
+    }
+});
+
+function addOption() {
+    const container = document.getElementById('options-container');
+    const optionCount = container.children.length + 1;
+    
+    const optionDiv = document.createElement('div');
+    optionDiv.className = 'input-group mb-2';
+    optionDiv.innerHTML = `
+        <input type="text" class="form-control" name="options[]" placeholder="Option ${optionCount}">
+        <button class="btn btn-outline-danger" type="button" onclick="removeOption(this)">
+            <i class="bi bi-trash"></i>
+        </button>
+    `;
+    
+    container.appendChild(optionDiv);
+}
+
+function removeOption(button) {
+    button.parentElement.remove();
+}
+</script>
+{% endblock %}

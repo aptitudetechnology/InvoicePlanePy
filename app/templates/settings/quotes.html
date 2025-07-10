@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Quote Settings</h2>
+            <button type="submit" class="btn btn-success" form="quoteSettingsForm">
+                <i class="bi bi-check-lg me-1"></i>
+                Save
+            </button>
+        </div>
+
+        {% if success_message %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ success_message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/settings/quotes" enctype="multipart/form-data" id="quoteSettingsForm">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-file-earmark-text me-2"></i>
+                        Quotes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="default-quote-group" class="form-label">Default Quote Group</label>
+                                <select id="default-quote-group" name="default_quote_group" class="form-select">
+                                    <option value="quote-default" {% if settings.default_quote_group == 'quote-default' %}selected{% endif %}>Quote Default</option>
+                                    <option value="monthly-quotes" {% if settings.default_quote_group == 'monthly-quotes' %}selected{% endif %}>Monthly Quotes</option>
+                                    <option value="yearly-quotes" {% if settings.default_quote_group == 'yearly-quotes' %}selected{% endif %}>Yearly Quotes</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="quotes-expire-after" class="form-label">Quotes Expire After (Days)</label>
+                                <input type="number" id="quotes-expire-after" name="quotes_expire_after"
+                                       class="form-control" value="{{ settings.quotes_expire_after or 30 }}"
+                                       min="0" max="365">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="default-quote-terms" class="form-label">Default Quote Terms</label>
+                                <textarea id="default-quote-terms" name="default_quote_terms" class="form-control" rows="4" placeholder="Enter default quote terms...">{{ settings.default_quote_terms or 'This quote is valid for 30 days.' }}</textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="convert-quote-to-invoice" class="form-label">Convert Quote to Invoice Automatically</label>
+                                <select id="convert-quote-to-invoice" name="convert_quote_to_invoice" class="form-select">
+                                    <option value="no" {% if settings.convert_quote_to_invoice == 'no' %}selected{% endif %}>No</option>
+                                    <option value="yes" {% if settings.convert_quote_to_invoice == 'yes' %}selected{% endif %}>Yes</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-file-earmark-pdf me-2"></i>
+                        PDF Settings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="mark-quotes-sent-pdf" class="form-label">Mark quotes as sent when PDF is generated</label>
+                                <select id="mark-quotes-sent-pdf" name="mark_quotes_sent_pdf" class="form-select">
+                                    <option value="no" {% if settings.mark_quotes_sent_pdf == 'no' %}selected{% endif %}>No</option>
+                                    <option value="yes" {% if settings.mark_quotes_sent_pdf == 'yes' %}selected{% endif %}>Yes</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="quote-pdf-password" class="form-label">Quote standard PDF password (optional)</label>
+                                <input type="password" id="quote-pdf-password" name="quote_pdf_password"
+                                       class="form-control" value="{{ settings.quote_pdf_password or '' }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="quote-logo" class="form-label">Quote Logo</label>
+                                <div class="input-group">
+                                    <input type="file" id="quote-logo" name="quote_logo" class="form-control" accept="image/*">
+                                    <button type="button" class="btn btn-outline-secondary">Browse...</button>
+                                </div>
+                                <small class="form-text text-muted">No file selected.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-file-earmark-code me-2"></i>
+                        Quote Templates
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="default-quote-pdf-template" class="form-label">Default PDF Template for Quotes</label>
+                                <select id="default-quote-pdf-template" name="default_quote_pdf_template" class="form-select">
+                                    <option value="quote-template-1" {% if settings.default_quote_pdf_template == 'quote-template-1' %}selected{% endif %}>Quote Template 1</option>
+                                    <option value="quote-template-2" {% if settings.default_quote_pdf_template == 'quote-template-2' %}selected{% endif %}>Quote Template 2</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

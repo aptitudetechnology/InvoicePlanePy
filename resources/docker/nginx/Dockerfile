@@ -8,7 +8,12 @@ RUN apk update \
     && apk add --no-cache openssl \
     && apk add --no-cache bash
 
+# ...existing Dockerfile content...
+
+RUN apk add --no-cache gnupg
+RUN apk add --pg_dump
 RUN apk add --no-cache curl
+
 
 RUN set -x ; \
     addgroup -g 82 -S www-data ; \

@@ -111,6 +111,7 @@ dev-setup: build up
 	@echo "🌐 Open http://localhost:8080 in your browser"
 	@echo "🔑 Admin credentials: admin / admin123"
 
+
 # Clean up everything
 clean:
 	docker-compose -f docker-compose.python.yml down -v

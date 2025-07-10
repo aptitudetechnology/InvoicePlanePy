@@ -2,6 +2,8 @@ from sqlalchemy import Column, String, Boolean, Text, Date
 from sqlalchemy.orm import relationship
 from app.models.base import BaseModel
 
+
+
 class Client(BaseModel):
     __tablename__ = "clients"
     
@@ -45,6 +47,8 @@ class Client(BaseModel):
     # Relationships
     invoices = relationship("Invoice", back_populates="client")
     # quotes = relationship("Quote", back_populates="client")  # TODO: Create Quote model
+    # Change this line:
+    quotes = relationship("Quote", back_populates="client")  # Change from Quotes to Quote
     # projects = relationship("Project", back_populates="client")  # TODO: Create Project model
     
     @property
