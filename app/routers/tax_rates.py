@@ -1,3 +1,54 @@
+# --- BULK SAVE ENDPOINT ---
+from fastapi import Body
+
+@router.post("/tax_rates/api/save", response_class=JSONResponse)
+async def bulk_save_tax_rates(
+    payload: dict = Body(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Bulk save endpoint for tax rates. Accepts a list of tax rates and updates/inserts/deletes as needed.
+    Expects JSON: { "tax_rates": [ {id, name, rate}, ... ] }
+    """
+    tax_rates_in = payload.get("tax_rates", [])
+    if not isinstance(tax_rates_in, list):
+        raise HTTPException(status_code=400, detail="tax_rates must be a list")
+
+    # Fetch all existing tax rates from DB
+    db_tax_rates = db.query(TaxRate).all()
+    db_tax_rates_by_id = {tr.id: tr for tr in db_tax_rates}
+    incoming_ids = set()
+
+    # Update or create
+    for tr_in in tax_rates_in:
+        tr_id = tr_in.get("id")
+        name = tr_in.get("name", "").strip()
+        rate = tr_in.get("rate")
+        if not name or rate is None or not (0 <= rate <= 100):
+            continue  # skip invalid
+        if tr_id and tr_id in db_tax_rates_by_id:
+            # Update existing
+            tr = db_tax_rates_by_id[tr_id]
+            tr.name = name
+            tr.rate = rate
+            db.add(tr)
+            incoming_ids.add(tr_id)
+        else:
+            # Create new
+            new_tr = TaxRate(name=name, rate=rate)
+            db.add(new_tr)
+            db.flush()  # assign id
+            incoming_ids.add(new_tr.id)
+
+    # Delete tax rates not present in incoming list
+    for tr in db_tax_rates:
+        if tr.id not in incoming_ids:
+            db.delete(tr)
+
+    db.commit()
+
+    return {"message": "Tax rates saved successfully!"}
 # app/routes/tax_rates.py
 from fastapi import APIRouter, Depends, Request, Form, HTTPException, status
 from fastapi.responses import HTMLResponse, JSONResponse

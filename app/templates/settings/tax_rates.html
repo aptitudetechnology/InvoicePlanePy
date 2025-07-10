@@ -118,14 +118,37 @@
     document.getElementById('saveTaxRateBtn').addEventListener('click', saveTaxRate);
 
     // Event listeners for the new main page Save/Cancel buttons
-    document.getElementById('mainSaveBtn').addEventListener('click', () => {
+    //document.getElementById('mainSaveBtn').addEventListener('click', () => {
         // This is where you would implement the logic to save the entire page's configuration.
         // This could involve:
         // 1. Sending the current 'taxRates' array to your backend.
         // 2. Saving any other configurable fields you might add to the main page later.
-        console.log('Saving entire page configuration...', taxRates);
-        alert('Main page Save button clicked! (Tax rates in console, implement full save logic)');
+    //    console.log('Saving entire page configuration...', taxRates);
+     //   alert('Main page Save button clicked! (Tax rates in console, implement full save logic)');
+    //});
+
+    document.getElementById('mainSaveBtn').addEventListener('click', () => {
+    fetch('/tax_rates/api/save', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ tax_rates: taxRates })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Failed to save tax rates');
+        return response.json();
+    })
+    .then(data => {
+        alert('Tax rates saved successfully!');
+        // Optionally, update UI or state here
+    })
+    .catch(error => {
+        alert('Error saving tax rates: ' + error.message);
     });
+    });
+
+
     document.getElementById('mainCancelBtn').addEventListener('click', () => {
         // This is where you would implement logic to revert changes or navigate away.
         // For example, reloading the initial 'taxRates' data from a stored original state
