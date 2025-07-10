@@ -19,7 +19,7 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="InvoicePlane Python", version="1.0.0")
 
-# Mount static files only if directory exists
+# Mount static files only if directory exists.
 static_dir = Path("static")
 if static_dir.exists():
     app.mount("/static", StaticFiles(directory="static"), name="static")
