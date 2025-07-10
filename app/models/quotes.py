@@ -2,7 +2,6 @@ from sqlalchemy import Column, String, Text, Date, ForeignKey, Enum, Boolean, In
 from sqlalchemy.orm import relationship
 from enum import Enum as PyEnum
 from app.models.base import BaseModel
-
 from datetime import date
 
 class QuoteStatus(PyEnum):
@@ -15,7 +14,7 @@ class QuoteStatus(PyEnum):
     CONVERTED = 'CONVERTED'  # When quote becomes an invoice
 
 class Quote(BaseModel):  # Changed from Quotes to Quote
-    __tablename__ = "quotes"
+    __tablename__ = "quotes"  # Fixed: was **tablename**
     
     # Foreign keys
     user_id = Column(ForeignKey("users.id"), nullable=False)
@@ -67,7 +66,7 @@ class Quote(BaseModel):  # Changed from Quotes to Quote
         return self.status == QuoteStatus.ACCEPTED
 
 class QuoteItem(BaseModel):
-    __tablename__ = "quote_items"
+    __tablename__ = "quote_items"  # Fixed: was **tablename**
     
     # Foreign keys
     quote_id = Column(ForeignKey("quotes.id"), nullable=False)
