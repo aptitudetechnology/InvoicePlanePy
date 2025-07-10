@@ -278,7 +278,9 @@ async def convert_quote_to_invoice(
         raise HTTPException(status_code=403, detail="Not authorized to convert this quote")
     
     # Check if quote is in a valid state to convert
-    if quote.status not in ["approved", "accepted", "sent"]:
+    # Or alternatively, check against the enum objects themselves:
+    # if quote.status not in [QuoteStatus.APPROVED, QuoteStatus.ACCEPTED, QuoteStatus.SENT]:
+    if quote.status.value.lower() not in ["approved", "accepted", "sent"]:
         raise HTTPException(
             status_code=400, 
             detail="Quote must be approved, accepted, or sent before converting to invoice"
@@ -340,7 +342,8 @@ async def convert_quote_to_invoice(
             db.add(invoice_item)
         
         # Update quote status to indicate it's been converted
-        quote.status = "converted"
+        #quote.status = "converted"
+        quote.status = QuoteStatus.CONVERTED
         quote.converted_to_invoice_id = invoice.id
         quote.updated_at = datetime.utcnow()
         
