@@ -75,17 +75,17 @@
                         <label for="taxRate" class="form-label">Rate (%)</label>
                         <input type="number" class="form-control" id="taxRate" step="0.01" min="0" max="100" required>
                     </div>
+                    <!-- Form Actions: Move modal-footer inside the form -->
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </button>
+                        <button type="button" class="btn btn-primary" id="saveTaxRateBtn">
+                            <i class="bi bi-check-circle"></i> Save Tax Rate
+                        </button>
+                    </div>
                 </form>
             </div>
-           <!-- Form Actions -->
-<div class="modal-footer">
-    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-        <i class="bi bi-x-circle"></i> Cancel
-    </button>
-    <button type="button" class="btn btn-primary" id="saveTaxRateBtn">
-        <i class="bi bi-check-circle"></i> Save Tax Rate
-    </button>
-</div>
 
 
         </div>
