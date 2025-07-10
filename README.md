@@ -5,7 +5,27 @@
 <div align="center">
 
 _A libre self-hosted web application designed to help you manage invoices, clients, and payments efficiently._
+<br>
 
+STOP PRESS!
+
+This is a Python version with docker support.
+
+git clone https://github.com/aptitudetechnology/InvoicePlanePy
+chmod +x startup.sh 
+make build && make up
+
+to shut it down and start again
+make down
+docker system prune --all --volumes
+
+to update to the latest development version
+git pull origin development
+
+the latest main version (which is behind development)
+git pull origin main
+
+note: we are pre-alpha so neither branch is ready for production
 <br>
 
 [![Curent version](https://img.shields.io/badge/dynamic/json.svg?label=Current%20Version&url=https%3A%2F%2Fapi.github.com%2Frepos%2FInvoicePlane%2FInvoicePlane%2Freleases%2Flatest&query=%24.name&colorB=%23429ae1)](https://www.invoiceplane.com/)
