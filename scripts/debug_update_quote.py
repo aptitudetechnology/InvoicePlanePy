@@ -83,7 +83,7 @@ if __name__ == "__main__":
         new_data={
             "client_id": 2,
             "quote_number": "QUO-9999",
-            "status": "draft",  # or "approved", etc.
+            "status": "approved",  # or "approved", etc.
             "issue_date": "2025-07-10",
             "valid_until": "2025-07-31",
             "notes": "Updated via debug script"
