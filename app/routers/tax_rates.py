@@ -1,6 +1,17 @@
-from fastapi import Body
+# app/routers/tax_rates.py
+from fastapi import APIRouter, Depends, Request, Form, HTTPException, status, Body
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
+from sqlalchemy.orm import Session
+from typing import List, Optional
 
-# ...existing code...
+from app.database import get_db
+from app.models.user import User
+from app.models.tax_rate import TaxRate
+from app.dependencies import get_current_user
+
+router = APIRouter()
+templates = Jinja2Templates(directory="app/templates")
 
 # --- BULK SAVE ENDPOINT ---
 @router.post("/tax_rates/api/save", response_class=JSONResponse)
@@ -51,20 +62,6 @@ async def bulk_save_tax_rates(
     db.commit()
 
     return {"message": "Tax rates saved successfully!"}
-# app/routes/tax_rates.py
-from fastapi import APIRouter, Depends, Request, Form, HTTPException, status
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
-from sqlalchemy.orm import Session
-from typing import List, Optional
-
-from app.database import get_db
-from app.models.user import User
-from app.models.tax_rate import TaxRate # Import the new TaxRate model
-from app.dependencies import get_current_user
-
-router = APIRouter()
-templates = Jinja2Templates(directory="app/templates")
 
 # --- HTML Page Route ---
 
@@ -98,10 +95,6 @@ async def tax_rates_page(
     )
 
 # --- API Endpoints for AJAX Calls ---
-
-# You might want to prefix these with /api, e.g., /api/tax_rates
-# For now, I'll keep them directly under /tax_rates to simplify pathing based on current client.py pattern.
-# If you prefer /api prefix, let me know.
 
 @router.get("/tax_rates/api", response_class=JSONResponse)
 async def get_all_tax_rates_api(
