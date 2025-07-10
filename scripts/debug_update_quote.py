@@ -1,175 +1,102 @@
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
-from datetime import datetime, date
+#!/usr/bin/env python3
+
 import sys
-# --- CONFIGURE THIS ---
 import os
-DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL is not set in the environment")
+sys.path.append('/app')
 
-# Import your Quote model and QuoteStatus enum
-try:
-    from app.models.quotes import Quote, QuoteStatus
-except ImportError:
-    print("Could not import Quote or QuoteStatus. Check your import paths.")
-    sys.exit(1)
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.models.quotes import Quote, QuoteStatus
+from fastapi import HTTPException
 
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-def test_quote_status_values():
-    """Test what values are available in QuoteStatus enum"""
-    print("Available QuoteStatus values:")
-    for status in QuoteStatus:
-        print(f"  {status.name} = '{status.value}'")
-    print()
-
-def debug_update_quote(quote_id, new_data):
-    db = SessionLocal()
+def debug_update_quote(quote_id: int, new_status: str, db: Session) -> bool:
+    """
+    Debug function to test quote status updates
+    Returns True if successful, False if failed
+    """
     try:
         quote = db.query(Quote).filter(Quote.id == quote_id).first()
-        assert quote is not None, "Quote not found"
-        print("Before update:", quote.__dict__)
-        
-        # Assert required fields
-        assert "client_id" in new_data, "client_id is required"
-        assert "quote_number" in new_data, "quote_number is required"
-        assert "status" in new_data, "status is required"
-        assert "issue_date" in new_data, "issue_date is required"
-        
-        # Update fields
-        quote.client_id = new_data["client_id"]
-        quote.quote_number = new_data["quote_number"]
-        
-        # Try different approaches to set status
-        status_value = new_data["status"]
-        print(f"Attempting to set status to: {status_value}")
-        
-        # Try multiple approaches
-        try:
-            # Approach 1: Direct string value
-            quote.status = QuoteStatus(status_value)
-            print(f"✓ Direct string '{status_value}' worked")
-        except ValueError as e1:
-            print(f"✗ Direct string '{status_value}' failed: {e1}")
+        if not quote:
+            print(f"Quote {quote_id} not found")
+            return False
             
-            # Approach 2: Uppercase string
-            try:
-                quote.status = QuoteStatus(status_value.upper())
-                print(f"✓ Uppercase '{status_value.upper()}' worked")
-            except ValueError as e2:
-                print(f"✗ Uppercase '{status_value.upper()}' failed: {e2}")
+        print(f"Before update: {quote.__dict__}")
+        print(f"Attempting to set status to: {new_status}")
+        
+        # Try different variations
+        variations = [
+            (new_status, f"Direct string '{new_status}'"),
+            (new_status.upper(), f"Uppercase '{new_status.upper()}'"),
+            (getattr(QuoteStatus, new_status.upper(), None), f"Enum attribute '{new_status.upper()}'")
+        ]
+        
+        for value, description in variations:
+            if value is None:
+                continue
                 
-                # Approach 3: Try to get enum by name
-                try:
-                    quote.status = getattr(QuoteStatus, status_value.upper())
-                    print(f"✓ Enum attribute '{status_value.upper()}' worked")
-                except AttributeError as e3:
-                    print(f"✗ Enum attribute '{status_value.upper()}' failed: {e3}")
-                    
-                    # Approach 4: Try common variations
-                    variations = [
-                        status_value.lower(),
-                        status_value.capitalize(),
-                        status_value.title(),
-                        f"{status_value.upper()}",
-                        f"{status_value.lower()}"
-                    ]
-                    
-                    success = False
-                    for variation in variations:
-                        try:
-                            quote.status = QuoteStatus(variation)
-                            print(f"✓ Variation '{variation}' worked")
-                            success = True
-                            break
-                        except ValueError:
-                            continue
-                    
-                    if not success:
-                        print("❌ All status variations failed")
-                        raise ValueError(f"Could not set status to any variation of '{status_value}'")
-        
-        quote.notes = new_data.get("notes", quote.notes)
-        
-        # Parse and update dates
-        try:
-            quote.issue_date = datetime.strptime(new_data["issue_date"], "%Y-%m-%d").date()
-        except Exception as e:
-            print("Invalid issue_date:", new_data["issue_date"])
-            raise
-        
-        valid_until = new_data.get("valid_until")
-        if valid_until:
             try:
-                quote.valid_until = datetime.strptime(valid_until, "%Y-%m-%d").date()
+                quote.status = value
+                db.commit()
+                print(f"✅ {description} succeeded")
+                print(f"After update: {quote.__dict__}")
+                return True
             except Exception as e:
-                print("Invalid valid_until:", valid_until)
-                raise
-        else:
-            quote.valid_until = None
+                print(f"✗ {description} failed: {e}")
+                db.rollback()
         
-        quote.updated_at = datetime.utcnow()
+        print("❌ All status variations failed")
+        return False
         
-        db.commit()
-        db.refresh(quote)
-        print("After update:", quote.__dict__)
-        print("Quote updated successfully.")
-        
-    except AssertionError as ae:
-        print("AssertionError:", ae)
     except Exception as e:
         db.rollback()
-        print("Error updating quote:", e)
-    finally:
-        db.close()
+        print(f"Unexpected error: {e}")
+        return False
 
-def test_multiple_status_values(quote_id):
-    """Test multiple status values to see which ones work"""
+def main():
+    """Main function to test quote status updates"""
+    # Get database session
+    db = next(get_db())
+    
+    # Test with quote ID 1 (adjust as needed)
+    quote_id = 1
+    
+    # Test different status values
     test_statuses = [
-        "approved",
-        "APPROVED", 
-        "draft",
-        "DRAFT",
-        "sent",
-        "SENT",
-        "accepted",
-        "ACCEPTED",
-        "converted",
-        "CONVERTED",
-        "pending",
-        "PENDING",
-        "rejected",
-        "REJECTED"
+        'approved',
+        'draft', 
+        'DRAFT',
+        'sent',
+        'SENT',
+        'accepted',
+        'ACCEPTED',
+        'converted',
+        'CONVERTED',
+        'rejected',
+        'REJECTED'
     ]
     
-    print("Testing multiple status values:")
-    print("-" * 50)
+    print("=== Quote Status Update Debug ===")
+    print(f"Testing quote ID: {quote_id}")
+    print(f"Available QuoteStatus enum values: {[status.value for status in QuoteStatus]}")
+    print()
     
+    # Test each status until one works
     for status in test_statuses:
         print(f"\nTesting status: '{status}'")
-        try:
-            debug_update_quote(
-                quote_id=quote_id,
-                new_data={
-                    "client_id": 2,
-                    "quote_number": "QUO-9999",
-                    "status": status,
-                    "issue_date": "2025-07-10",
-                    "valid_until": "2025-07-31",
-                    "notes": f"Updated via debug script with status {status}"
-                }
-            )
-            print(f"✅ Status '{status}' SUCCESS")
-            break  # Stop after first success
-        except Exception as e:
-            print(f"❌ Status '{status}' FAILED: {e}")
-            continue
+        print("-" * 40)
+        
+        success = debug_update_quote(quote_id, status, db)
+        
+        if success:
+            print(f"✅ Status '{status}' SUCCESS - First working status found!")
+            break
+        else:
+            print(f"❌ Status '{status}' FAILED - Trying next status...")
+    else:
+        print("\n❌ All test statuses failed!")
+    
+    # Close database session
+    db.close()
 
 if __name__ == "__main__":
-    # First, show what enum values are available
-    test_quote_status_values()
-    
-    # Then test multiple values
-    test_multiple_status_values(quote_id=1)
+    main()
