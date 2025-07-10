@@ -280,11 +280,11 @@ async def convert_quote_to_invoice(
     # Check if quote is in a valid state to convert
     # Or alternatively, check against the enum objects themselves:
     # if quote.status not in [QuoteStatus.APPROVED, QuoteStatus.ACCEPTED, QuoteStatus.SENT]:
-    if quote.status.value.lower() not in ["approved", "accepted", "sent"]:
-        raise HTTPException(
-            status_code=400, 
-            detail="Quote must be approved, accepted, or sent before converting to invoice"
-        )
+    if quote.status not in [QuoteStatus.ACCEPTED, QuoteStatus.SENT]:
+    raise HTTPException(
+        status_code=400,
+        detail="Quote must be accepted or sent before converting to invoice"
+    )
     
     try:
         # Generate invoice number (you may want to implement a proper numbering system)
