@@ -1,102 +1,146 @@
-#!/usr/bin/env python3
-
-import sys
-import os
-sys.path.append('/app')
-
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+from typing import List, Optional
+from datetime import datetime
+
 from app.database import get_db
-from app.models.quotes import Quote, QuoteStatus
-from fastapi import HTTPException
+from app.dependencies import get_current_user
+from app.models.user import User
 
-def debug_update_quote(quote_id: int, new_status: str, db: Session) -> bool:
-    """
-    Debug function to test quote status updates
-    Returns True if successful, False if failed
-    """
-    try:
-        quote = db.query(Quote).filter(Quote.id == quote_id).first()
-        if not quote:
-            print(f"Quote {quote_id} not found")
-            return False
-            
-        print(f"Before update: {quote.__dict__}")
-        print(f"Attempting to set status to: {new_status}")
-        
-        # Try different variations
-        variations = [
-            (new_status, f"Direct string '{new_status}'"),
-            (new_status.upper(), f"Uppercase '{new_status.upper()}'"),
-            (getattr(QuoteStatus, new_status.upper(), None), f"Enum attribute '{new_status.upper()}'")
-        ]
-        
-        for value, description in variations:
-            if value is None:
-                continue
-                
-            try:
-                quote.status = value
-                db.commit()
-                print(f"✅ {description} succeeded")
-                print(f"After update: {quote.__dict__}")
-                return True
-            except Exception as e:
-                print(f"✗ {description} failed: {e}")
-                db.rollback()
-        
-        print("❌ All status variations failed")
-        return False
-        
-    except Exception as e:
-        db.rollback()
-        print(f"Unexpected error: {e}")
-        return False
+router = APIRouter()
+templates = Jinja2Templates(directory="app/templates")
 
-def main():
-    """Main function to test quote status updates"""
-    # Get database session
-    db = next(get_db())
-    
-    # Test with quote ID 1 (adjust as needed)
-    quote_id = 1
-    
-    # Test different status values
-    test_statuses = [
-        'approved',
-        'draft', 
-        'DRAFT',
-        'sent',
-        'SENT',
-        'accepted',
-        'ACCEPTED',
-        'converted',
-        'CONVERTED',
-        'rejected',
-        'REJECTED'
+@router.get("/", response_class=HTMLResponse)
+async def quotes_list(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Display quotes list page"""
+    return templates.TemplateResponse(
+        "quotes/list.html",
+        {
+            "request": request,
+            "user": current_user,
+            "title": "Quotes"
+        }
+    )
+
+@router.get("/create", response_class=HTMLResponse)
+async def create_quote_form(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Display create quote form"""
+    return templates.TemplateResponse(
+        "quotes/create.html",
+        {
+            "request": request,
+            "user": current_user,
+            "title": "Create Quote"
+        }
+    )
+
+@router.post("/create")
+async def create_quote(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Create a new quote"""
+    # TODO: Implement quote creation logic
+    # For now, just return success
+    return {"message": "Quote created successfully"}
+
+@router.get("/{quote_id}", response_class=HTMLResponse)
+async def view_quote(
+    quote_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """View a specific quote"""
+    # TODO: Implement quote retrieval logic
+    return templates.TemplateResponse(
+        "quotes/view.html",
+        {
+            "request": request,
+            "user": current_user,
+            "quote_id": quote_id,
+            "title": f"Quote #{quote_id}"
+        }
+    )
+
+@router.get("/{quote_id}/edit", response_class=HTMLResponse)
+async def edit_quote_form(
+    quote_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Display edit quote form"""
+    # TODO: Implement quote retrieval logic
+    return templates.TemplateResponse(
+        "quotes/edit.html",
+        {
+            "request": request,
+            "user": current_user,
+            "quote_id": quote_id,
+            "title": f"Edit Quote #{quote_id}"
+        }
+    )
+
+@router.post("/{quote_id}/edit")
+async def edit_quote(
+    quote_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Update a quote"""
+    # TODO: Implement quote update logic
+    return {"message": f"Quote {quote_id} updated successfully"}
+
+@router.delete("/{quote_id}")
+async def delete_quote(
+    quote_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a quote"""
+    # TODO: Implement quote deletion logic
+    return {"message": f"Quote {quote_id} deleted successfully"}
+
+# API endpoints for AJAX requests
+@router.get("/api/quotes", response_model=List[dict])
+async def get_quotes_api(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    skip: int = 0,
+    limit: int = 100
+):
+    """Get quotes via API"""
+    # TODO: Implement quote retrieval logic
+    return [
+        {
+            "id": 1,
+            "quote_number": "Q-2024-001",
+            "client_name": "Sample Client",
+            "date_created": datetime.now().isoformat(),
+            "total": 1000.00,
+            "status": "draft"
+        }
     ]
-    
-    print("=== Quote Status Update Debug ===")
-    print(f"Testing quote ID: {quote_id}")
-    print(f"Available QuoteStatus enum values: {[status.value for status in QuoteStatus]}")
-    print()
-    
-    # Test each status until one works
-    for status in test_statuses:
-        print(f"\nTesting status: '{status}'")
-        print("-" * 40)
-        
-        success = debug_update_quote(quote_id, status, db)
-        
-        if success:
-            print(f"✅ Status '{status}' SUCCESS - First working status found!")
-            break
-        else:
-            print(f"❌ Status '{status}' FAILED - Trying next status...")
-    else:
-        print("\n❌ All test statuses failed!")
-    
-    # Close database session
-    db.close()
 
-if __name__ == "__main__":
-    main()
+@router.post("/api/quotes")
+async def create_quote_api(
+    quote_data: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Create quote via API"""
+    # TODO: Implement quote creation logic
+    return {"message": "Quote created successfully", "quote_id": 1}
