@@ -20,7 +20,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy application code AFTER dependencies are installed
+# This ensures that if only application code changes,
+# the layers above (dependencies) are cached.
 COPY . .
 
 # Create necessary directories
@@ -30,7 +32,8 @@ RUN mkdir -p /app/static/css \
     && mkdir -p /app/uploads \
     && mkdir -p /app/storage/logs
 
-# Make startup script executable (multiple approaches for reliability)
+# Make startup script executable
+# This is crucial and correctly placed AFTER the COPY . .
 RUN chmod +x startup.sh && \
     chmod +x scripts/*.py && \
     ls -la startup.sh  # Verify permissions are set
