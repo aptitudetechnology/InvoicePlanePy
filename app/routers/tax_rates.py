@@ -14,7 +14,7 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
 # --- BULK SAVE ENDPOINT ---
-@router.post("/tax_rates/api/save", response_class=JSONResponse)
+@router.post("/api/save", response_class=JSONResponse)
 async def bulk_save_tax_rates(
     payload: dict = Body(...),
     db: Session = Depends(get_db),
