@@ -16,6 +16,52 @@ import secrets
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
+def parse_quote_status(status_str: str) -> QuoteStatus:
+    """
+    Parse status string to QuoteStatus enum with fallback handling
+    """
+    if not status_str:
+        return QuoteStatus.DRAFT
+    
+    # Try direct match first
+    try:
+        return QuoteStatus(status_str)
+    except ValueError:
+        pass
+    
+    # Try uppercase
+    try:
+        return QuoteStatus(status_str.upper())
+    except ValueError:
+        pass
+    
+    # Try mapping common variations
+    status_mapping = {
+        'approved': QuoteStatus.ACCEPTED,
+        'approve': QuoteStatus.ACCEPTED,
+        'accept': QuoteStatus.ACCEPTED,
+        'accepted': QuoteStatus.ACCEPTED,
+        'draft': QuoteStatus.DRAFT,
+        'sent': QuoteStatus.SENT,
+        'send': QuoteStatus.SENT,
+        'viewed': QuoteStatus.VIEWED,
+        'view': QuoteStatus.VIEWED,
+        'rejected': QuoteStatus.REJECTED,
+        'reject': QuoteStatus.REJECTED,
+        'expired': QuoteStatus.EXPIRED,
+        'expire': QuoteStatus.EXPIRED,
+        'converted': QuoteStatus.CONVERTED,
+        'convert': QuoteStatus.CONVERTED,
+    }
+    
+    mapped_status = status_mapping.get(status_str.lower())
+    if mapped_status:
+        return mapped_status
+    
+    # If all else fails, return DRAFT
+    print(f"Warning: Could not parse status '{status_str}', defaulting to DRAFT")
+    return QuoteStatus.DRAFT
+
 
 @router.get("/", response_class=HTMLResponse)
 async def quotes_list(
@@ -24,7 +70,6 @@ async def quotes_list(
     current_user: User = Depends(get_current_user),
 ):
     """List all quotes"""
-    # Get quotes based on user role (matching invoice pattern)
     query = db.query(Quote)
     if not current_user.is_admin:
         query = query.filter(Quote.user_id == current_user.id)
@@ -46,7 +91,7 @@ async def create_quote(
     clients = db.query(Client).all()
     return templates.TemplateResponse(
         "quotes/create.html",
-        {"request": request, "user": current_user, "clients": clients},
+        {"request": request, "user": current_user, "clients": clients, "quote_statuses": QuoteStatus},
     )
 
 
@@ -63,7 +108,7 @@ async def quote_create_post(
     terms: str = Form(None),
     notes: str = Form(None),
 ):
-    """Handle quote creation (matching invoice pattern)"""
+    """Handle quote creation with improved enum handling"""
     try:
         # Parse dates
         issue_date_parsed = None
@@ -78,18 +123,12 @@ async def quote_create_post(
 
         # Generate quote number if not provided
         if not quote_number:
-            # Simple auto-generation - you might want to customize this
             last_quote = db.query(Quote).order_by(Quote.id.desc()).first()
             next_number = (last_quote.id + 1) if last_quote else 1
             quote_number = f"QUO-{next_number:04d}"
 
-        # Parse status
-        quote_status = QuoteStatus.DRAFT
-        if status:
-            try:
-                quote_status = QuoteStatus(status)
-            except ValueError:
-                quote_status = QuoteStatus.DRAFT
+        # Parse status with fallback handling
+        quote_status = parse_quote_status(status)
 
         # Create new quote
         quote = Quote(
@@ -103,16 +142,13 @@ async def quote_create_post(
             notes=notes,
         )
 
-        # Generate URL key (similar to invoice pattern)
-        import secrets
-
+        # Generate URL key
         quote.url_key = secrets.token_urlsafe(24)
 
         db.add(quote)
         db.commit()
         db.refresh(quote)
 
-        # return RedirectResponse(url=f"/quotes/{quote.id}", status_code=302)
         return RedirectResponse(url=f"/quotes/{quote.id}/edit", status_code=302)
 
     except Exception as e:
@@ -133,7 +169,7 @@ async def view_quote(
     if not quote:
         raise HTTPException(status_code=404, detail="Quote not found")
 
-    # Check permissions (matching invoice pattern)
+    # Check permissions
     if not current_user.is_admin and quote.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Permission denied")
 
@@ -191,10 +227,9 @@ async def edit_quote_post(
     status: str = Form(...),
     issue_date: str = Form(...),
     valid_until: str = Form(None),
-    # terms: str = Form(None),
     notes: str = Form(None),
 ):
-    """Handle quote editing"""
+    """Handle quote editing with improved enum handling"""
     quote = db.query(Quote).filter(Quote.id == quote_id).first()
 
     if not quote:
@@ -205,11 +240,18 @@ async def edit_quote_post(
         raise HTTPException(status_code=403, detail="Permission denied")
 
     try:
+        # Store original values for debugging
+        original_status = quote.status
+        print(f"Updating quote {quote_id}: {original_status} -> {status}")
+
         # Update quote fields
         quote.client_id = client_id
         quote.quote_number = quote_number
-        quote.status = QuoteStatus(status)
-        # quote.terms = terms
+        
+        # Use improved status parsing
+        quote.status = parse_quote_status(status)
+        print(f"Parsed status: {quote.status}")
+        
         quote.notes = notes
 
         # Parse and update dates
@@ -221,15 +263,17 @@ async def edit_quote_post(
         else:
             quote.valid_until = None
 
-        # Update timestamp (BaseModel should handle this automatically)
+        # Update timestamp
         quote.updated_at = datetime.utcnow()
 
         db.commit()
+        print(f"Quote {quote_id} updated successfully")
 
         return RedirectResponse(url=f"/quotes/{quote.id}", status_code=302)
 
     except Exception as e:
         db.rollback()
+        print(f"Error updating quote {quote_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error updating quote: {str(e)}")
 
 
@@ -260,24 +304,13 @@ async def delete_quote(
         raise HTTPException(status_code=500, detail=f"Error deleting quote: {str(e)}")
 
 
-"""
-@router.post("/{quote_id}/convert")
-async def convert_quote_to_invoice(
-    quote_id: int,
-    request: Request,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-"""
-
-
 @router.get("/{quote_id}/convert-to-invoice")
 async def convert_quote_to_invoice(
     quote_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    # Get the quote with all related data
+    """Convert accepted quote to invoice"""
     quote = (
         db.query(Quote)
         .options(joinedload(Quote.client), joinedload(Quote.items))
@@ -288,15 +321,13 @@ async def convert_quote_to_invoice(
     if not quote:
         raise HTTPException(status_code=404, detail="Quote not found")
 
-    # Check if quote belongs to current user or user has permission
+    # Check permissions
     if quote.user_id != current_user.id:
         raise HTTPException(
             status_code=403, detail="Not authorized to convert this quote"
         )
 
     # Check if quote is in a valid state to convert
-    # Or alternatively, check against the enum objects themselves:
-    # if quote.status not in [QuoteStatus.APPROVED, QuoteStatus.ACCEPTED, QuoteStatus.SENT]:
     if quote.status not in [QuoteStatus.ACCEPTED, QuoteStatus.SENT]:
         raise HTTPException(
             status_code=400,
@@ -304,10 +335,9 @@ async def convert_quote_to_invoice(
         )
 
     try:
-        # Generate invoice number (you may want to implement a proper numbering system)
+        # Generate invoice number
         latest_invoice = db.query(Invoice).order_by(Invoice.id.desc()).first()
         if latest_invoice and latest_invoice.invoice_number:
-            # Extract number from last invoice and increment
             last_num = (
                 int(latest_invoice.invoice_number.split("-")[-1])
                 if "-" in latest_invoice.invoice_number
@@ -323,7 +353,7 @@ async def convert_quote_to_invoice(
             user_id=current_user.id,
             invoice_number=invoice_number,
             issue_date=date.today(),
-            due_date=date.today() + timedelta(days=30),  # Default 30 days payment terms
+            due_date=date.today() + timedelta(days=30),
             status="draft",
             terms=quote.terms,
             notes=quote.notes,
@@ -334,13 +364,13 @@ async def convert_quote_to_invoice(
             discount_percentage=quote.discount_percentage or 0,
             tax_rate=quote.tax_rate or 0,
             currency=quote.currency or "USD",
-            reference_quote_id=quote.id,  # Keep reference to original quote
+            reference_quote_id=quote.id,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )
 
         db.add(invoice)
-        db.flush()  # Flush to get the invoice ID
+        db.flush()
 
         # Copy items from quote to invoice
         for item in quote.items:
@@ -362,24 +392,18 @@ async def convert_quote_to_invoice(
             )
             db.add(invoice_item)
 
-        # Update quote status to indicate it's been converted
-        # quote.status = "converted"
+        # Update quote status to converted
         quote.status = QuoteStatus.CONVERTED
         quote.converted_to_invoice_id = invoice.id
         quote.updated_at = datetime.utcnow()
 
-        # Commit all changes
         db.commit()
         db.refresh(invoice)
-
-        # Add success message (if using flash messages)
-        # flash(f"Quote #{quote.quote_number} successfully converted to Invoice #{invoice.invoice_number}", "success")
 
         return RedirectResponse(url=f"/invoices/{invoice.id}", status_code=302)
 
     except Exception as e:
         db.rollback()
-        # Log the error
         print(f"Error converting quote to invoice: {str(e)}")
         raise HTTPException(
             status_code=500,
@@ -387,7 +411,6 @@ async def convert_quote_to_invoice(
         )
 
 
-# Alternative POST version if you prefer form submission
 @router.post("/{quote_id}/convert-to-invoice")
 async def convert_quote_to_invoice_post(
     quote_id: int,
@@ -397,102 +420,11 @@ async def convert_quote_to_invoice_post(
 ):
     """POST version for form submission with confirmation"""
     try:
-        # Call the main conversion function
         return await convert_quote_to_invoice(quote_id, db, current_user)
     except HTTPException as e:
-        # Handle errors and redirect back to quote with error message
         return RedirectResponse(
             url=f"/quotes/{quote_id}?error={e.detail}", status_code=302
         )
-
-
-# Helper function to validate quote conversion eligibility
-def can_convert_quote_to_invoice(quote: Quote) -> tuple[bool, str]:
-    """
-    Check if a quote can be converted to an invoice
-    Returns (can_convert, reason)
-    """
-    if not quote:
-        return False, "Quote not found"
-
-    if quote.status == "converted":
-        return False, "Quote has already been converted to an invoice"
-
-    if quote.status not in ["approved", "accepted", "sent"]:
-        return False, "Quote must be approved, accepted, or sent before converting"
-
-    if not quote.items:
-        return False, "Quote must have at least one item"
-
-    if not quote.client_id:
-        return False, "Quote must have a client assigned"
-
-    # Check if quote is expired
-    if quote.valid_until and quote.valid_until < date.today():
-        return False, "Quote has expired and cannot be converted"
-
-    return True, "Quote can be converted"
-
-    """Convert accepted quote to invoice"""
-    quote = db.query(Quote).filter(Quote.id == quote_id).first()
-
-    if not quote:
-        raise HTTPException(status_code=404, detail="Quote not found")
-
-    # Check permissions
-    if not current_user.is_admin and quote.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Permission denied")
-
-    # Check if quote can be converted
-    if not quote.can_be_converted:
-        raise HTTPException(
-            status_code=400,
-            detail="Quote cannot be converted. It must be accepted first.",
-        )
-
-    try:
-        # You'll need to implement this based on your Invoice model
-        # This is a placeholder for the conversion logic
-        from app.models.invoice import Invoice, InvoiceStatus
-
-        # Generate invoice number
-        last_invoice = db.query(Invoice).order_by(Invoice.id.desc()).first()
-        next_number = (last_invoice.id + 1) if last_invoice else 1
-        invoice_number = f"INV-{next_number:04d}"
-
-        # Create invoice from quote
-        invoice = Invoice(
-            invoice_number=invoice_number,
-            client_id=quote.client_id,
-            user_id=quote.user_id,
-            issue_date=date.today(),
-            due_date=date.today(),  # You might want to calculate this
-            status=InvoiceStatus.DRAFT,
-            terms=quote.terms,
-            notes=quote.notes,
-            subtotal=quote.subtotal,
-            tax_total=quote.tax_total,
-            total=quote.total,
-        )
-
-        # Generate URL key
-        import secrets
-
-        invoice.url_key = secrets.token_urlsafe(24)
-
-        db.add(invoice)
-
-        # Update quote status
-        quote.status = QuoteStatus.CONVERTED
-
-        db.commit()
-        db.refresh(invoice)
-
-        return RedirectResponse(url=f"/invoices/{invoice.id}", status_code=302)
-
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error converting quote: {str(e)}")
 
 
 @router.get("/{quote_id}/duplicate", response_class=HTMLResponse)
@@ -534,8 +466,6 @@ async def duplicate_quote(
         )
 
         # Generate URL key
-        import secrets
-
         new_quote.url_key = secrets.token_urlsafe(24)
 
         db.add(new_quote)
@@ -549,3 +479,31 @@ async def duplicate_quote(
         raise HTTPException(
             status_code=500, detail=f"Error duplicating quote: {str(e)}"
         )
+
+
+# Helper function to validate quote conversion eligibility
+def can_convert_quote_to_invoice(quote: Quote) -> tuple[bool, str]:
+    """
+    Check if a quote can be converted to an invoice
+    Returns (can_convert, reason)
+    """
+    if not quote:
+        return False, "Quote not found"
+
+    if quote.status == QuoteStatus.CONVERTED:
+        return False, "Quote has already been converted to an invoice"
+
+    if quote.status not in [QuoteStatus.ACCEPTED, QuoteStatus.SENT]:
+        return False, "Quote must be accepted or sent before converting"
+
+    if not hasattr(quote, 'items') or not quote.items:
+        return False, "Quote must have at least one item"
+
+    if not quote.client_id:
+        return False, "Quote must have a client assigned"
+
+    # Check if quote is expired
+    if quote.valid_until and quote.valid_until < date.today():
+        return False, "Quote has expired and cannot be converted"
+
+    return True, "Quote can be converted"
