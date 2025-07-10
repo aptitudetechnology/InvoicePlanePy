@@ -12,6 +12,7 @@ STOP PRESS!<br>
 This is a Python version with docker support.<br><br>
 
 git clone https://github.com/aptitudetechnology/InvoicePlanePy<br>
+cd InvoicePLanePy<br>
 chmod +x startup.sh <br>
 make build && make up<br><br>
 
