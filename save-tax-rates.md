@@ -59,9 +59,35 @@ And your frontend can use:
 fetch('/tax_rates/api/save', { ... })
 ```
 
+### Option 3: (Recommended) Remove the duplicate `/tax_rates` from the route definition
+
+In your `app/routers/tax_rates.py`, change:
+```python
+@router.post("/tax_rates/api/save")
+```
+to:
+```python
+@router.post("/api/save")
+```
+
+This way, with your current router prefix in `app/main.py`:
+```python
+app.include_router(tax_rates.router, prefix="/tax_rates", tags=["tax_rates"])
+```
+your endpoint will be available at:
+```
+/tax_rates/api/save
+```
+
+And your frontend can use:
+```javascript
+fetch('/tax_rates/api/save', { ... })
+```
+
 ---
 
 ## Summary
 - The 404 is due to a double prefix in your route.
 - Either update your frontend to match the full path, or change the router prefix for cleaner URLs.
 - Option 2 is recommended for clarity and maintainability.
+- Option 3 is the cleanest solution, avoiding double prefixes and keeping your API URLs simple and predictable.

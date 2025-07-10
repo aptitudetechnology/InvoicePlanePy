@@ -228,7 +228,7 @@ async def update_tax_rate_api(
     )
 
 
-@router.delete("/tax_rates/api/{tax_rate_id}", response_class=JSONResponse)
+@router.delete("/api/{tax_rate_id}", response_class=JSONResponse)
 async def delete_tax_rate_api(
     tax_rate_id: int,
     db: Session = Depends(get_db),
