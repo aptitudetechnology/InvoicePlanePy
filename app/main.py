@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 
 from app.database import get_db, engine, Base
-from app.routers import auth, dashboard, clients, invoices, quotes, payments, products, tasks, reports, settings, help, notifications, profile
+from app.routers import auth, dashboard, clients, invoices, quotes, payments, products, tasks, reports, settings, help, notifications, profile, tax_rates
 from app.dependencies import get_current_user_optional
 from app.models.user import User
 
