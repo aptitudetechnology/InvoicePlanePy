@@ -248,16 +248,6 @@ async def delete_quote(
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error deleting quote: {str(e)}")
 
-"""
-@router.post("/{quote_id}/convert")
-async def convert_quote_to_invoice(
-    quote_id: int,
-    request: Request,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-"""
-
 @router.get("/{quote_id}/convert-to-invoice")
 async def convert_quote_to_invoice(
     quote_id: int,
@@ -278,13 +268,11 @@ async def convert_quote_to_invoice(
         raise HTTPException(status_code=403, detail="Not authorized to convert this quote")
     
     # Check if quote is in a valid state to convert
-    # Or alternatively, check against the enum objects themselves:
-    # if quote.status not in [QuoteStatus.APPROVED, QuoteStatus.ACCEPTED, QuoteStatus.SENT]:
     if quote.status not in [QuoteStatus.ACCEPTED, QuoteStatus.SENT]:
-    raise HTTPException(
-        status_code=400,
-        detail="Quote must be accepted or sent before converting to invoice"
-    )
+        raise HTTPException(
+            status_code=400,
+            detail="Quote must be accepted or sent before converting to invoice"
+        )
     
     try:
         # Generate invoice number (you may want to implement a proper numbering system)
@@ -342,7 +330,6 @@ async def convert_quote_to_invoice(
             db.add(invoice_item)
         
         # Update quote status to indicate it's been converted
-        #quote.status = "converted"
         quote.status = QuoteStatus.CONVERTED
         quote.converted_to_invoice_id = invoice.id
         quote.updated_at = datetime.utcnow()
@@ -350,9 +337,6 @@ async def convert_quote_to_invoice(
         # Commit all changes
         db.commit()
         db.refresh(invoice)
-        
-        # Add success message (if using flash messages)
-        # flash(f"Quote #{quote.quote_number} successfully converted to Invoice #{invoice.invoice_number}", "success")
         
         return RedirectResponse(url=f"/invoices/{invoice.id}", status_code=302)
         
@@ -364,7 +348,6 @@ async def convert_quote_to_invoice(
             status_code=500, 
             detail="An error occurred while converting the quote to invoice"
         )
-
 
 # Alternative POST version if you prefer form submission
 @router.post("/{quote_id}/convert-to-invoice")
@@ -384,7 +367,6 @@ async def convert_quote_to_invoice_post(
             url=f"/quotes/{quote_id}?error={e.detail}", 
             status_code=302
         )
-
 
 # Helper function to validate quote conversion eligibility
 def can_convert_quote_to_invoice(quote: Quote) -> tuple[bool, str]:
@@ -412,64 +394,6 @@ def can_convert_quote_to_invoice(quote: Quote) -> tuple[bool, str]:
         return False, "Quote has expired and cannot be converted"
     
     return True, "Quote can be converted"
-
-
-    """Convert accepted quote to invoice"""
-    quote = db.query(Quote).filter(Quote.id == quote_id).first()
-    
-    if not quote:
-        raise HTTPException(status_code=404, detail="Quote not found")
-    
-    # Check permissions
-    if not current_user.is_admin and quote.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Permission denied")
-    
-    # Check if quote can be converted
-    if not quote.can_be_converted:
-        raise HTTPException(status_code=400, detail="Quote cannot be converted. It must be accepted first.")
-    
-    try:
-        # You'll need to implement this based on your Invoice model
-        # This is a placeholder for the conversion logic
-        from app.models.invoice import Invoice, InvoiceStatus
-        
-        # Generate invoice number
-        last_invoice = db.query(Invoice).order_by(Invoice.id.desc()).first()
-        next_number = (last_invoice.id + 1) if last_invoice else 1
-        invoice_number = f"INV-{next_number:04d}"
-        
-        # Create invoice from quote
-        invoice = Invoice(
-            invoice_number=invoice_number,
-            client_id=quote.client_id,
-            user_id=quote.user_id,
-            issue_date=date.today(),
-            due_date=date.today(),  # You might want to calculate this
-            status=InvoiceStatus.DRAFT,
-            terms=quote.terms,
-            notes=quote.notes,
-            subtotal=quote.subtotal,
-            tax_total=quote.tax_total,
-            total=quote.total
-        )
-        
-        # Generate URL key
-        import secrets
-        invoice.url_key = secrets.token_urlsafe(24)
-        
-        db.add(invoice)
-        
-        # Update quote status
-        quote.status = QuoteStatus.CONVERTED
-        
-        db.commit()
-        db.refresh(invoice)
-        
-        return RedirectResponse(url=f"/invoices/{invoice.id}", status_code=302)
-        
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error converting quote: {str(e)}")
 
 @router.get("/{quote_id}/duplicate", response_class=HTMLResponse)
 async def duplicate_quote(
