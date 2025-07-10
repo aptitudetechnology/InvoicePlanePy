@@ -12,6 +12,29 @@
 
 </summary>
 
+
+STOP PRESS!
+
+This is a Python version with docker support.
+
+git clone https://github.com/aptitudetechnology/InvoicePlanePy
+chmod +x startup.sh 
+make build && make up
+
+to shut it down and start again
+make down
+docker system prune --all --volumes
+
+to update to the latest development version
+git pull origin development
+
+the latest main version (which is behind development)
+git pull origin main
+
+note: we are pre-alpha so neither branch is ready for production
+
+
+
 _To implement a new e-invoicing xml system, there are 2 files that need to be placed in their respective folder._
 
 > Add the configuration file (`Shortidv10.php`) in `helpers/XMLconfigs/` folder (here)
