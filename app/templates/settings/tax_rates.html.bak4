@@ -36,14 +36,6 @@
                     </table>
                 </div>
 
-                <div class="d-flex justify-content-end mt-3">
-                    <button type="button" class="btn btn-secondary btn-lg me-2" id="mainCancelBtn">
-                        <i class="bi bi-x-circle"></i> Cancel
-                    </button>
-                    <button type="button" class="btn btn-primary btn-lg" id="mainSaveBtn">
-                        <i class="bi bi-check-circle"></i> Save
-                    </button>
-                </div>
                 <div class="mt-4">
                     <h6>Tax Rate Information</h6>
                     <div class="row">
@@ -83,6 +75,7 @@
                         <label for="taxRate" class="form-label">Rate (%)</label>
                         <input type="number" class="form-control" id="taxRate" step="0.01" min="0" max="100" required>
                     </div>
+                    <!-- Form Actions: Move modal-footer inside the form -->
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                             <i class="bi bi-x-circle"></i> Cancel
@@ -93,6 +86,8 @@
                     </div>
                 </form>
             </div>
+
+
         </div>
     </div>
 </div>
@@ -117,26 +112,6 @@
     document.getElementById('addTaxRateBtn').addEventListener('click', addTaxRate);
     document.getElementById('saveTaxRateBtn').addEventListener('click', saveTaxRate);
 
-    // Event listeners for the new main page Save/Cancel buttons
-    document.getElementById('mainSaveBtn').addEventListener('click', () => {
-        // This is where you would implement the logic to save the entire page's configuration.
-        // This could involve:
-        // 1. Sending the current 'taxRates' array to your backend.
-        // 2. Saving any other configurable fields you might add to the main page later.
-        console.log('Saving entire page configuration...', taxRates);
-        alert('Main page Save button clicked! (Tax rates in console, implement full save logic)');
-    });
-    document.getElementById('mainCancelBtn').addEventListener('click', () => {
-        // This is where you would implement logic to revert changes or navigate away.
-        // For example, reloading the initial 'taxRates' data from a stored original state
-        // or making an AJAX call to fetch the original state from the server.
-        console.log('Cancelling changes...');
-        alert('Main page Cancel button clicked! (Implement revert/navigation logic)');
-        // Example: If you had a mechanism to store original state, you might restore it here
-        // taxRates = JSON.parse(JSON.stringify(originalTaxRates));
-        // renderTable();
-    });
-
     /**
      * Renders the tax rates table based on the current `taxRates` array.
      */
@@ -145,6 +120,7 @@
         tbody.innerHTML = ''; // Clear existing rows
 
         if (taxRates.length === 0) {
+            // Updated colspan to 3 to match the new number of columns
             tbody.innerHTML = `<tr><td colspan="3" class="text-center py-4">No tax rates configured. Click "Add Tax Rate" to get started!</td></tr>`;
             return;
         }
