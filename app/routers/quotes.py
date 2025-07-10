@@ -181,7 +181,7 @@ async def edit_quote_post(
     status: str = Form(...),
     issue_date: str = Form(...),
     valid_until: str = Form(None),
-    terms: str = Form(None),
+    #terms: str = Form(None),
     notes: str = Form(None)
 ):
     """Handle quote editing"""
@@ -199,7 +199,7 @@ async def edit_quote_post(
         quote.client_id = client_id
         quote.quote_number = quote_number
         quote.status = QuoteStatus(status)
-        quote.terms = terms
+        #quote.terms = terms
         quote.notes = notes
         
         # Parse and update dates
