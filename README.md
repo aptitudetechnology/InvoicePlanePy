@@ -1,6 +1,6 @@
 <img align="right" alt="InvoicePlane logo" src="/assets/core/img/favicon.png">
 
-# _InvoicePlane__
+# _InvoicePlane___
 
 <div align="center">
 
