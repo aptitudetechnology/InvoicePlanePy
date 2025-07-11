@@ -282,7 +282,7 @@
 
 <script>
     // Initialize itemCounter based on the number of existing items or 1 if none
-    let itemCounter = {{ (quote.items|length if quote.items else 1) | tojson }};
+    let itemCounter = {{ (quote.items|length if quote.items else 1)|int }};
     let taxRates = []; // Will be populated from database
 
     /**
