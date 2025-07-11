@@ -96,11 +96,30 @@ async def bulk_save_tax_rates(
     try:
         db.commit()
         logger.info("Bulk save committed successfully.")
+        # Log final state of tax_rate table
+        final_tax_rates = db.query(TaxRate).all()
+        logger.info(f"Final tax rates in DB: {[{'id': tr.id, 'name': tr.name, 'rate': tr.rate} for tr in final_tax_rates]}")
         return {"message": "Tax rates saved successfully!"}
     except Exception as e:
-        logger.error(f"Bulk save failed: {e}")
+        import traceback
+        logger.exception("Bulk save failed with exception:")
+        # Log session state
+        logger.error(f"Session dirty: {db.dirty}")
+        logger.error(f"Session new: {db.new}")
+        logger.error(f"Session deleted: {db.deleted}")
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Bulk save failed: {e}")
+        # Log state after rollback
+        logger.error(f"Session dirty after rollback: {db.dirty}")
+        logger.error(f"Session new after rollback: {db.new}")
+        logger.error(f"Session deleted after rollback: {db.deleted}")
+        # Log tax rates in DB after rollback
+        try:
+            rolled_back_tax_rates = db.query(TaxRate).all()
+            logger.error(f"Tax rates in DB after rollback: {[{'id': tr.id, 'name': tr.name, 'rate': tr.rate} for tr in rolled_back_tax_rates]}")
+        except Exception as inner_e:
+            logger.error(f"Error querying tax rates after rollback: {inner_e}")
+        tb_str = traceback.format_exc()
+        raise HTTPException(status_code=500, detail=f"Bulk save failed: {type(e).__name__}: {e}\nTraceback:\n{tb_str}")
 
 # --- HTML Page Route ---
 @router.get("/", response_class=HTMLResponse)
