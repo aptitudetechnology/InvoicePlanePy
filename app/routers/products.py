@@ -1,3 +1,41 @@
+@router.post("/{product_id}/edit")
+async def update_product(
+    product_id: int,
+    request: Request,
+    name: str = Form(...),
+    description: str = Form(""),
+    price: float = Form(...),
+    sku: str = Form(""),
+    family_id: int = Form(None),
+    unit_id: int = Form(None),
+    tax_rate_id: int = Form(None),
+    provider_name: str = Form("") ,
+    purchase_price: float = Form(None),
+    sumex: str = Form("") ,
+    tariff: float = Form(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Handle product update"""
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    product.name = name
+    product.description = description
+    product.price = price
+    product.sku = sku if sku else None
+    product.family_id = family_id if family_id else None
+    product.unit_id = unit_id if unit_id else None
+    product.tax_rate_id = tax_rate_id if tax_rate_id else None
+    product.provider_name = provider_name if provider_name else None
+    product.purchase_price = purchase_price if purchase_price is not None else None
+    product.sumex = sumex if sumex else None
+    product.tariff = tariff if tariff is not None else None
+
+    db.commit()
+
+    return RedirectResponse(url=f"/products/{product_id}", status_code=302)
 from fastapi import APIRouter, Request, Depends, HTTPException, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
