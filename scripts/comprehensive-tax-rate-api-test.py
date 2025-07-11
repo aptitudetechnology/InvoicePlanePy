@@ -400,7 +400,7 @@ def main():
     # Configuration
     base_url = os.environ.get("BASE_URL", "http://simple.local:8080")
     username = os.environ.get("USERNAME", "admin")
-    password = os.environ.get("PASSWORD", "admin")
+    password = os.environ.get("PASSWORD", "admin123")
     
     print("🔍 Comprehensive Tax Rate API Test")
     print("=" * 50)
