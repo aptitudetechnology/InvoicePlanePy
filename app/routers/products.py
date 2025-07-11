@@ -1,41 +1,3 @@
-@router.post("/{product_id}/edit")
-async def update_product(
-    product_id: int,
-    request: Request,
-    name: str = Form(...),
-    description: str = Form(""),
-    price: float = Form(...),
-    sku: str = Form(""),
-    family_id: int = Form(None),
-    unit_id: int = Form(None),
-    tax_rate_id: int = Form(None),
-    provider_name: str = Form("") ,
-    purchase_price: float = Form(None),
-    sumex: str = Form("") ,
-    tariff: float = Form(None),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Handle product update"""
-    product = db.query(Product).filter(Product.id == product_id).first()
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
-
-    product.name = name
-    product.description = description
-    product.price = price
-    product.sku = sku if sku else None
-    product.family_id = family_id if family_id else None
-    product.unit_id = unit_id if unit_id else None
-    product.tax_rate_id = tax_rate_id if tax_rate_id else None
-    product.provider_name = provider_name if provider_name else None
-    product.purchase_price = purchase_price if purchase_price is not None else None
-    product.sumex = sumex if sumex else None
-    product.tariff = tariff if tariff is not None else None
-
-    db.commit()
-
-    return RedirectResponse(url=f"/products/{product_id}", status_code=302)
 from fastapi import APIRouter, Request, Depends, HTTPException, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -233,17 +195,61 @@ async def edit_product(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Edit a specific product (placeholder)"""
+    """Edit a specific product"""
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    # For now, just show a placeholder page
+    
+    families = db.query(ProductFamily).filter(ProductFamily.is_active == True).all()
+    units = db.query(ProductUnit).filter(ProductUnit.is_active == True).all()
+    
     return templates.TemplateResponse("products/edit.html", {
         "request": request,
         "user": current_user,
         "product": product,
+        "families": families,
+        "units": units,
         "title": f"Edit Product: {product.name}"
     })
+
+@router.post("/{product_id}/edit")
+async def update_product(
+    product_id: int,
+    request: Request,
+    name: str = Form(...),
+    description: str = Form(""),
+    price: float = Form(...),
+    sku: str = Form(""),
+    family_id: int = Form(None),
+    unit_id: int = Form(None),
+    tax_rate_id: int = Form(None),
+    provider_name: str = Form(""),
+    purchase_price: float = Form(None),
+    sumex: str = Form(""),
+    tariff: float = Form(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Handle product update"""
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    product.name = name
+    product.description = description
+    product.price = price
+    product.sku = sku if sku else None
+    product.family_id = family_id if family_id else None
+    product.unit_id = unit_id if unit_id else None
+    product.tax_rate_id = tax_rate_id if tax_rate_id else None
+    product.provider_name = provider_name if provider_name else None
+    product.purchase_price = purchase_price if purchase_price is not None else None
+    product.sumex = sumex if sumex else None
+    product.tariff = tariff if tariff is not None else None
+
+    db.commit()
+
+    return RedirectResponse(url=f"/products/{product_id}", status_code=302)
 
 @router.get("/families/{family_id}", response_class=HTMLResponse)
 async def view_product_family(
@@ -274,7 +280,7 @@ async def edit_product_family(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Edit a specific product family (placeholder)"""
+    """Edit a specific product family"""
     family = db.query(ProductFamily).filter(ProductFamily.id == family_id).first()
     if not family:
         return templates.TemplateResponse("errors/not_found.html", {
@@ -318,7 +324,7 @@ async def edit_product_unit(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Edit a specific product unit (placeholder)"""
+    """Edit a specific product unit"""
     unit = db.query(ProductUnit).filter(ProductUnit.id == unit_id).first()
     if not unit:
         return templates.TemplateResponse("errors/not_found.html", {
