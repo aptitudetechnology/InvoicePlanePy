@@ -288,16 +288,69 @@
      * Fetches tax rates from the backend API and returns them as a Promise.
      * @returns {Promise<Array>} Array of tax rate objects
      */
-    async function fetchTaxRates() {
+
+// ...existing code...
+
+    // Load tax rates from database
+    async function loadTaxRates() {
         try {
             const response = await fetch('/tax_rates/api');
-            if (!response.ok) throw new Error('Failed to fetch tax rates');
+            if (!response.ok) throw new Error('Failed to load tax rates');
             const data = await response.json();
-            return data.tax_rates || data;
+            taxRates = data.tax_rates || data;
+            // Populate all existing tax rate dropdowns
+            populateAllTaxRateDropdowns();
         } catch (error) {
-            console.error('Error fetching tax rates:', error);
-            return [];
+            console.error('Error loading tax rates:', error);
+            // Fallback to empty array if server fails
+            taxRates = [];
+            // Still populate dropdowns with just the "None" option
+            populateAllTaxRateDropdowns();
         }
+    }
+
+    // Populate all tax rate dropdowns with current tax rates
+    function populateAllTaxRateDropdowns() {
+        const taxRateSelects = document.querySelectorAll('.tax-rate-select');
+        taxRateSelects.forEach(select => {
+            populateTaxRateDropdown(select);
+        });
+    }
+
+    // Populate a single tax rate dropdown
+    function populateTaxRateDropdown(selectElement) {
+        // Get initial value from hidden input if it exists
+        const initialValueInput = selectElement.closest('td').querySelector('.initial-tax-rate');
+        const initialValue = initialValueInput ? parseFloat(initialValueInput.value) : 0;
+        // Clear existing options
+        selectElement.innerHTML = '<option value="0">None (0%)</option>';
+        // Add tax rates from database
+        taxRates.forEach(taxRate => {
+            const option = document.createElement('option');
+            option.value = taxRate.rate;
+            option.textContent = `${taxRate.name} (${taxRate.rate.toFixed(2)}%)`;
+            option.setAttribute('data-tax-id', taxRate.id);
+            selectElement.appendChild(option);
+        });
+        // Set the initial value
+        const matchingOption = Array.from(selectElement.options).find(opt => 
+            parseFloat(opt.value) === initialValue
+        );
+        if (matchingOption) {
+            matchingOption.selected = true;
+        } else {
+            selectElement.value = '0';
+        }
+    }
+
+    // Create tax rate dropdown HTML for new rows
+    function createTaxRateDropdownHTML(itemIndex, selectedRate = 0) {
+        let optionsHTML = '<option value="0">None (0%)</option>';
+        taxRates.forEach(taxRate => {
+            const selected = taxRate.rate == selectedRate ? 'selected' : '';
+            optionsHTML += `<option value="${taxRate.rate}" data-tax-id="${taxRate.id}" ${selected}>${taxRate.name} (${taxRate.rate.toFixed(2)}%)</option>`;
+        });
+        return `<select class="form-select item-tax-rate tax-rate-select" name="item_tax_rate_${itemIndex}">${optionsHTML}</select>`;
     }
 
     /**
@@ -320,7 +373,7 @@
     }
     // Initialize itemCounter based on the number of existing items or 1 if none
 let itemCounter = parseInt('{{ quote.items|length if quote.items else 1 }}', 10) || 1;
-    let taxRates = []; // Will be populated from database
+// ...existing code...
 
     /**
      * Asynchronously loads tax rates from the backend API.
