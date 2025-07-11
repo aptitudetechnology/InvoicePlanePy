@@ -1,5 +1,154 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+
+{% block title %}{{ "Edit Product" if product else "Create Product" }} - InvoicePlane{% endblock %}
+
 {% block content %}
-<h2>Edit Product: {{ product.name }}</h2>
-<p>This is a placeholder for editing product details. Feature coming soon.</p>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>{{ "Edit Product" if product else "Create Product" }}</h1>
+                <a href="/products" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Products
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" action="{{ '/products/' + product.id|string + '/edit' if product else '/products/create' }}">
+                        <div class="row">
+                            <!-- Left Column - Main Product Information -->
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label for="family_id">Family</label>
+                                    <select class="form-control" id="family_id" name="family_id">
+                                        <option value="">Select family</option>
+                                        {% for family in families %}
+                                        <option value="{{ family.id }}" {{ 'selected' if product and product.family_id == family.id else '' }}>
+                                            {{ family.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <small class="form-text text-muted">
+                                        <a href="/products/families/create">Create new family</a>
+                                    </small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="sku">SKU</label>
+                                    <input type="text" class="form-control" id="sku" name="sku" 
+                                           value="{{ product.sku if product else '' }}">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="name">Product name</label>
+                                    <input type="text" class="form-control" id="name" name="name" 
+                                           value="{{ product.name if product else '' }}" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="description">Product description</label>
+                                    <textarea class="form-control" id="description" name="description" rows="4">{{ product.description if product else '' }}</textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="price">Price</label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">$</span>
+                                        </div>
+                                        <input type="number" class="form-control" id="price" name="price" 
+                                               step="0.01" min="0" value="{{ product.price if product else '10.00' }}" required>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="unit_id">Product Unit</label>
+                                    <select class="form-control" id="unit_id" name="unit_id">
+                                        <option value="">Select unit</option>
+                                        {% for unit in units %}
+                                        <option value="{{ unit.id }}" {{ 'selected' if product and product.unit_id == unit.id else '' }}>
+                                            {{ unit.name }} ({{ unit.abbreviation }})
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <small class="form-text text-muted">
+                                        <a href="/products/units/create">Create new unit</a>
+                                    </small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="tax_rate_id">Tax Rate</label>
+                                    <select class="form-control" id="tax_rate_id" name="tax_rate_id">
+                                        <option value="">None</option>
+                                        {% for tax_rate in tax_rates %}
+                                        <option value="{{ tax_rate.id }}" {{ 'selected' if product and product.tax_rate_id == tax_rate.id else '' }}>
+                                            {{ tax_rate.name }} ({{ tax_rate.percentage }}%)
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <small class="form-text text-muted">
+                                        <a href="/tax-rates/create">Create new tax rate</a>
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- Right Column - Extra Information -->
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Extra information</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label for="provider_name">Provider Name</label>
+                                            <input type="text" class="form-control" id="provider_name" name="provider_name" 
+                                                   value="{{ product.provider_name if product else '' }}">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="purchase_price">Purchase price</label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text">$</span>
+                                                </div>
+                                                <input type="number" class="form-control" id="purchase_price" name="purchase_price" 
+                                                       step="0.01" min="0" value="{{ product.purchase_price if product else '' }}">
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="sumex">Sumex</label>
+                                            <input type="text" class="form-control" id="sumex" name="sumex" 
+                                                   value="{{ product.sumex if product else '' }}">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="tariff">Tariff</label>
+                                            <input type="number" class="form-control" id="tariff" name="tariff" 
+                                                   step="0.01" min="0" value="{{ product.tariff if product else '0' }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-save"></i> {{ "Update Product" if product else "Create Product" }}
+                                    </button>
+                                    <a href="/products" class="btn btn-secondary ml-2">
+                                        Cancel
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
