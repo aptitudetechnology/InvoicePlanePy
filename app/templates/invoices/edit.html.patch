@@ -1,0 +1,156 @@
+--- a/invoice_edit.html
++++ b/invoice_edit.html
+@@ -251,6 +251,7 @@
+ 
+ <script>
+     /**
+      * Fetches tax rates from the backend API and returns them as a Promise.
+      * @returns {Promise<Array>} Array of tax rate objects
+      */
++    let taxRates = []; // Will be populated from database
+ 
+ // ...existing code...
+ 
+@@ -315,33 +316,6 @@
+         return `<select class="form-select item-tax-rate" name="item_tax_rate_${itemIndex}" onchange="calculateItemTotal(this)">${optionsHTML}</select>`;
+     }
+ 
+-
+-    document.addEventListener('DOMContentLoaded', function() {
+-        const clientIdSelect = document.getElementById('client_id');
+-        const clientDetailsDiv = document.getElementById('client_details');
+-        const clientNameDiv = document.getElementById('client_name');
+-        const clientAddressDiv = document.getElementById('client_address');
+-        const clientEmailDiv = document.getElementById('client_email');
+-
+-        // Function to update client details in the UI
+-        function updateClientDetails() {
+-            const selectedOption = clientIdSelect.options[clientIdSelect.selectedIndex];
+-            if (selectedOption && selectedOption.value) {
+-                clientNameDiv.textContent = selectedOption.dataset.name;
+-                clientAddressDiv.textContent = selectedOption.dataset.address;
+-                clientEmailDiv.textContent = selectedOption.dataset.email;
+-                clientDetailsDiv.style.display = 'block';
+-            } else {
+-                clientNameDiv.textContent = '';
+-                clientAddressDiv.textContent = '';
+-                clientEmailDiv.textContent = '';
+-                clientDetailsDiv.style.display = 'none';
+-            }
+-        }
+-
+-        // Call on load to set initial client details if a client is pre-selected
+-        updateClientDetails();
+-        // Listen for changes in the client dropdown
+-        clientIdSelect.addEventListener('change', updateClientDetails);
+-
+-        // Set default invoice date if not already set (e.g., for a brand new invoice)
+-        if (!document.getElementById('invoice_date').value) {
+-            document.getElementById('invoice_date').valueAsDate = new Date();
+-        }
+-
+-        // Set default due date if not already set
+-        if (!document.getElementById('due_date').value) {
+-            const dueDate = new Date();
+-            dueDate.setDate(dueDate.getDate() + 30); // Default to 30 days from today
+-            document.getElementById('due_date').valueAsDate = dueDate;
+-        }
+-
+-        // Load tax rates first, then populate all selects and perform initial calculation
+-        loadTaxRates().then(() => {
+-            calculateTotals();
+-        });
+-    });
+-
+     /**
+      * Adds a new row to the items table, cloning the structure of the first row
+      * and resetting its input values for a new item.
+@@ -377,7 +351,7 @@
+             </td>
+             <td>
+-                <select class="form-select item-tax-rate tax-rate-select" name="item_tax_rate_${itemCounter}" onchange="calculateItemTotal(this)">
++                <select class="form-select item-tax-rate tax-rate-select" name="item_tax_rate_${itemCounter}" onchange="calculateItemTotal(this)">
+                     <option value="0">None (0%)</option>
+                     <!-- Options will be populated by JavaScript -->
+                 </select>
+@@ -394,7 +368,7 @@
+         `;
+         tbody.appendChild(newRow);
+         // Populate tax rate select for the new row
+-        const newTaxSelect = newRow.querySelector('.item-tax-rate');
++        const newTaxSelect = newRow.querySelector('.tax-rate-select');
+         fillTaxRateSelect(newTaxSelect, taxRates, 0);
+         itemCounter++; // Increment the counter for the next new row
+         document.getElementById('items_count').value = tbody.rows.length; // Update hidden count based on actual rows
+@@ -470,6 +444,7 @@
+         rows.forEach(row => {
+             const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
+             const price = parseFloat(row.querySelector('.item-price').value) || 0;
+             const discount = parseFloat(row.querySelector('.item-discount').value) || 0;
++            const taxRate = parseFloat(row.querySelector('.item-tax-rate').value) || 0;
+ 
+             let itemRowSubtotal = (quantity * price);
+             let itemRowDiscountAmount = discount; // Assuming item-discount is an absolute value for now
+@@ -477,6 +452,7 @@
+             let itemRowTaxableAmount = itemRowSubtotal - itemRowDiscountAmount;
+             if (itemRowTaxableAmount < 0) itemRowTaxableAmount = 0;
+ 
++            const currentItemTax = itemRowTaxableAmount * (taxRate / 100);
+ 
+             subtotal += itemRowSubtotal;
+             itemTax += currentItemTax;
+@@ -515,4 +491,42 @@
+         const balance = total - paid;
+         document.getElementById('balance').textContent = `$${balance.toFixed(2)}`;
+     }
++
++    // Initialize itemCounter and set up page
++    let itemCounter = parseInt('{{ quote.items|length if quote.items else 1 }}', 10) || 1;
++
++    document.addEventListener('DOMContentLoaded', function() {
++        const clientIdSelect = document.getElementById('client_id');
++        const clientDetailsDiv = document.getElementById('client_details');
++        const clientNameDiv = document.getElementById('client_name');
++        const clientAddressDiv = document.getElementById('client_address');
++        const clientEmailDiv = document.getElementById('client_email');
++
++        // Function to update client details in the UI
++        function updateClientDetails() {
++            const selectedOption = clientIdSelect.options[clientIdSelect.selectedIndex];
++            if (selectedOption && selectedOption.value) {
++                clientNameDiv.textContent = selectedOption.dataset.name;
++                clientAddressDiv.textContent = selectedOption.dataset.address;
++                clientEmailDiv.textContent = selectedOption.dataset.email;
++                clientDetailsDiv.style.display = 'block';
++            } else {
++                clientNameDiv.textContent = '';
++                clientAddressDiv.textContent = '';
++                clientEmailDiv.textContent = '';
++                clientDetailsDiv.style.display = 'none';
++            }
++        }
++
++        // Call on load to set initial client details if a client is pre-selected
++        updateClientDetails();
++        // Listen for changes in the client dropdown
++        clientIdSelect.addEventListener('change', updateClientDetails);
++
++        // Set default invoice date if not already set (e.g., for a brand new invoice)
++        if (!document.getElementById('invoice_date').value) {
++            document.getElementById('invoice_date').valueAsDate = new Date();
++        }
++
++        // Set default due date if not already set
++        if (!document.getElementById('due_date').value) {
++            const dueDate = new Date();
++            dueDate.setDate(dueDate.getDate() + 30); // Default to 30 days from today
++            document.getElementById('due_date').valueAsDate = dueDate;
++        }
++
++        // Load tax rates first, then populate all selects and perform initial calculation
++        loadTaxRates().then(() => {
++            calculateTotals();
++        });
++    });
+ </script>
+ {% endblock %}

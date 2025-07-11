@@ -129,11 +129,9 @@
                 <input type="number" class="form-control item-discount" name="item_discount_{{ loop.index0 }}" min="0" step="0.01" value="{{ item.discount if item.discount else 0 }}" onchange="calculateItemTotal(this)">
             </td>
             <td>
-                <!-- Tax rate select will be populated dynamically by JS -->
                 <select class="form-select item-tax-rate tax-rate-select" name="item_tax_rate_{{ loop.index0 }}" onchange="calculateItemTotal(this)">
                     <option value="0">None (0%)</option>
-                    <!-- Options will be populated by JavaScript -->
-                </select>
+                    </select>
                 <input type="hidden" class="initial-tax-rate" value="{{ item.tax_rate if item.tax_rate is not none else 0 }}">
             </td>
             <td>
@@ -170,11 +168,9 @@
                 <input type="number" class="form-control item-discount" name="item_discount_0" min="0" step="0.01" placeholder="0.00" value="0" onchange="calculateItemTotal(this)">
             </td>
             <td>
-                <!-- Tax rate select will be populated dynamically by JS -->
                 <select class="form-select item-tax-rate tax-rate-select" name="item_tax_rate_0" onchange="calculateItemTotal(this)">
                     <option value="0">None (0%)</option>
-                    <!-- Options will be populated by JavaScript -->
-                </select>
+                    </select>
                 <input type="hidden" class="initial-tax-rate" value="0">
             </td>
             <td>
@@ -284,12 +280,7 @@
 </div>
 
 <script>
-    /**
-     * Fetches tax rates from the backend API and returns them as a Promise.
-     * @returns {Promise<Array>} Array of tax rate objects
-     */
-
-// ...existing code...
+    let taxRates = []; // Will be populated from database
 
     // Load tax rates from database
     async function loadTaxRates() {
@@ -298,6 +289,7 @@
             if (!response.ok) throw new Error('Failed to load tax rates');
             const data = await response.json();
             taxRates = data.tax_rates || data;
+            
             // Populate all existing tax rate dropdowns
             populateAllTaxRateDropdowns();
         } catch (error) {
@@ -322,8 +314,10 @@
         // Get initial value from hidden input if it exists
         const initialValueInput = selectElement.closest('td').querySelector('.initial-tax-rate');
         const initialValue = initialValueInput ? parseFloat(initialValueInput.value) : 0;
+        
         // Clear existing options
         selectElement.innerHTML = '<option value="0">None (0%)</option>';
+        
         // Add tax rates from database
         taxRates.forEach(taxRate => {
             const option = document.createElement('option');
@@ -332,6 +326,7 @@
             option.setAttribute('data-tax-id', taxRate.id);
             selectElement.appendChild(option);
         });
+        
         // Set the initial value
         const matchingOption = Array.from(selectElement.options).find(opt => 
             parseFloat(opt.value) === initialValue
@@ -346,108 +341,162 @@
     // Create tax rate dropdown HTML for new rows
     function createTaxRateDropdownHTML(itemIndex, selectedRate = 0) {
         let optionsHTML = '<option value="0">None (0%)</option>';
-        taxRates.forEach(taxRate => {
-            const selected = taxRate.rate == selectedRate ? 'selected' : '';
-            optionsHTML += `<option value="${taxRate.rate}" data-tax-id="${taxRate.id}" ${selected}>${taxRate.name} (${taxRate.rate.toFixed(2)}%)</option>`;
-        });
-        return `<select class="form-select item-tax-rate tax-rate-select" name="item_tax_rate_${itemIndex}">${optionsHTML}</select>`;
-    }
-
-    /**
-     * Populates a given select element with tax rate options.
-     * @param {HTMLSelectElement} selectElement
-     * @param {Array} rates Array of tax rate objects
-     * @param {number} selectedRate Value to preselect
-     */
-    function fillTaxRateSelect(selectElement, rates, selectedRate = 0) {
-        selectElement.innerHTML = '<option value="0">None (0%)</option>';
-        rates.forEach(rate => {
-            const option = document.createElement('option');
-            option.value = rate.rate;
-            option.textContent = `${rate.name} (${parseFloat(rate.rate).toFixed(2)}%)`;
-            option.setAttribute('data-tax-id', rate.id);
-            if (parseFloat(rate.rate) === parseFloat(selectedRate)) option.selected = true;
-            selectElement.appendChild(option);
-        });
-        if (!selectElement.value) selectElement.value = '0';
-    }
-    // Initialize itemCounter based on the number of existing items or 1 if none
-let itemCounter = parseInt('{{ quote.items|length if quote.items else 1 }}', 10) || 1;
-// ...existing code...
-
-    /**
-     * Asynchronously loads tax rates from the backend API.
-     */
-    async function loadTaxRates() {
-        try {
-            const response = await fetch('/tax_rates/api'); // Ensure this endpoint exists and returns JSON
-            if (!response.ok) throw new Error('Failed to load tax rates');
-            const data = await response.json();
-            taxRates = data.tax_rates || data; // Assume data might be direct array or in a 'tax_rates' key
-            
-            // Populate all existing tax rate dropdowns after loading
-            populateAllTaxRateDropdowns();
-        } catch (error) {
-            console.error('Error loading tax rates:', error);
-            taxRates = []; // Fallback to empty array if server fails
-        }
-    }
-
-    /**
-     * Populates all tax rate dropdowns on the page with available tax rates.
-     */
-    function populateAllTaxRateDropdowns() {
-        document.querySelectorAll('.item-tax-rate').forEach(select => {
-            populateTaxRateDropdown(select);
-        });
-    }
-
-    /**
-     * Populates a single tax rate dropdown with options from the loaded taxRates.
-     * @param {HTMLSelectElement} selectElement The select element to populate.
-     */
-    function populateTaxRateDropdown(selectElement) {
-        // Get initial value from hidden input if it exists
-        const initialValueInput = selectElement.closest('td').querySelector('.initial-tax-rate');
-        const initialValue = initialValueInput ? parseFloat(initialValueInput.value) : 0;
-        // Clear existing options
-        selectElement.innerHTML = '<option value="0">None (0%)</option>';
-        // Add tax rates from database
-        taxRates.forEach(taxRate => {
-            const option = document.createElement('option');
-            option.value = taxRate.rate;
-            option.textContent = `${taxRate.name} (${taxRate.rate.toFixed(2)}%)`;
-            option.setAttribute('data-tax-id', taxRate.id);
-            selectElement.appendChild(option);
-        });
-        // Set the initial value
-        const matchingOption = Array.from(selectElement.options).find(opt => 
-            parseFloat(opt.value) === initialValue
-        );
-        if (matchingOption) {
-            matchingOption.selected = true;
-        } else {
-            selectElement.value = '0';
-        }
-    }
-
-    /**
-     * Creates the HTML string for a new tax rate dropdown.
-     * @param {number} itemIndex The index for the new item's name attribute.
-     * @param {number} selectedRate The default selected tax rate.
-     * @returns {string} The HTML string for the select element.
-     */
-    function createTaxRateDropdownHTML(itemIndex, selectedRate = 0) {
-        let optionsHTML = '<option value="0">None (0%)</option>';
         
         taxRates.forEach(taxRate => {
             const selected = parseFloat(taxRate.rate) === parseFloat(selectedRate) ? 'selected' : '';
             optionsHTML += `<option value="${taxRate.rate}" data-tax-id="${taxRate.id}" ${selected}>${taxRate.name} (${taxRate.rate.toFixed(2)}%)</option>`;
         });
         
-        return `<select class="form-select item-tax-rate" name="item_tax_rate_${itemIndex}" onchange="calculateItemTotal(this)">${optionsHTML}</select>`;
+        return `<select class="form-select item-tax-rate tax-rate-select" name="item_tax_rate_${itemIndex}" onchange="calculateItemTotal(this)">${optionsHTML}</select>`;
     }
 
+    // Initialize itemCounter based on the number of existing items or 1 if none
+    let itemCounter = parseInt('{{ quote.items|length if quote.items else 1 }}', 10) || 1;
+
+    /**
+     * Adds a new row to the items table, cloning the structure of the first row
+     * and resetting its input values for a new item.
+     */
+    function addNewRow() {
+        const tbody = document.querySelector('#items_table tbody');
+        const newRow = document.createElement('tr'); // Create new row from scratch for consistency
+
+        newRow.innerHTML = `
+            <td>
+                <input type="hidden" name="item_id_${itemCounter}" value="">
+                <input type="text" class="form-control item-name" name="item_name_${itemCounter}" placeholder="Item name" onchange="calculateItemTotal(this)">
+                <textarea class="form-control mt-2 item-description" name="item_description_${itemCounter}" rows="2" placeholder="Description"></textarea>
+            </td>
+            <td>
+                <input type="number" class="form-control item-quantity" name="item_quantity_${itemCounter}" min="1" value="1" onchange="calculateItemTotal(this)">
+                <select class="form-select mt-2 item-unit" name="item_unit_${itemCounter}">
+                    <option value="none">None</option>
+                    <option value="piece">Piece</option>
+                    <option value="hour">Hour</option>
+                    <option value="day">Day</option>
+                    <option value="month">Month</option>
+                </select>
+            </td>
+            <td>
+                <input type="number" class="form-control item-price" name="item_price_${itemCounter}" min="0" step="0.01" placeholder="0.00" value="0.00" onchange="calculateItemTotal(this)">
+            </td>
+            <td>
+                <input type="number" class="form-control item-discount" name="item_discount_${itemCounter}" min="0" step="0.01" placeholder="0.00" value="0.00" onchange="calculateItemTotal(this)">
+            </td>
+            <td>
+                ${createTaxRateDropdownHTML(itemCounter)}
+                <input type="hidden" class="initial-tax-rate" value="0">
+            </td>
+            <td>
+                <input type="number" class="form-control item-total" name="item_total_${itemCounter}" value="0.00" readonly>
+            </td>
+            <td>
+                <button type="button" class="btn btn-sm btn-danger remove-row-btn" onclick="removeRow(this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(newRow);
+        // Populate tax rate select for the new row (redundant if using createTaxRateDropdownHTML but good for clarity)
+        const newTaxSelect = newRow.querySelector('.item-tax-rate');
+        populateTaxRateDropdown(newTaxSelect); // Use populateTaxRateDropdown for consistency
+        itemCounter++; // Increment the counter
+        document.getElementById('items_count').value = itemCounter; // Update hidden input
+        calculateTotals(); // Recalculate totals after adding a new row
+    }
+
+    function removeRow(button) {
+        const row = button.closest('tr');
+        row.remove();
+        calculateTotals(); // Recalculate totals after removing a row
+        // Reindex rows to maintain correct naming if necessary, or handle it server-side
+        updateRowIndexes();
+    }
+
+    function updateRowIndexes() {
+        const rows = document.querySelectorAll('#items_table tbody tr');
+        itemCounter = rows.length; // Update itemCounter to the current number of rows
+        document.getElementById('items_count').value = itemCounter;
+
+        rows.forEach((row, index) => {
+            // Update name attributes for inputs
+            row.querySelectorAll('[name^="item_"]').forEach(input => {
+                const nameParts = input.name.split('_');
+                nameParts[nameParts.length - 1] = index; // Replace the old index with the new one
+                input.name = nameParts.join('_');
+            });
+
+            // Update initial-tax-rate hidden input name
+            const initialTaxRateInput = row.querySelector('.initial-tax-rate');
+            if (initialTaxRateInput) {
+                initialTaxRateInput.name = `initial_tax_rate_${index}`;
+            }
+
+            // Update onclick functions for buttons if they reference the index
+            const removeBtn = row.querySelector('.remove-row-btn');
+            if (removeBtn) {
+                removeBtn.setAttribute('onclick', 'removeRow(this)'); // Simple removal, no index needed here
+            }
+        });
+    }
+
+    function calculateItemTotal(element) {
+        const row = element.closest('tr');
+        const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
+        const price = parseFloat(row.querySelector('.item-price').value) || 0;
+        const discount = parseFloat(row.querySelector('.item-discount').value) || 0;
+        const taxRate = parseFloat(row.querySelector('.item-tax-rate').value) || 0;
+
+        let itemSubtotal = (quantity * price) - discount;
+        let itemTaxAmount = itemSubtotal * (taxRate / 100);
+        let itemTotal = itemSubtotal + itemTaxAmount;
+
+        row.querySelector('.item-total').value = itemTotal.toFixed(2);
+        calculateTotals();
+    }
+
+    function calculateTotals() {
+        let subtotal = 0;
+        let itemTax = 0;
+        let invoiceTax = 0; // Not currently used based on the template logic
+        let discountAmount = 0;
+        let total = 0;
+
+        document.querySelectorAll('#items_table tbody tr').forEach(row => {
+            const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
+            const price = parseFloat(row.querySelector('.item-price').value) || 0;
+            const itemDiscount = parseFloat(row.querySelector('.item-discount').value) || 0;
+            const taxRate = parseFloat(row.querySelector('.item-tax-rate').value) || 0;
+
+            let itemSubtotal = (quantity * price) - itemDiscount;
+            subtotal += itemSubtotal;
+            itemTax += itemSubtotal * (taxRate / 100);
+        });
+
+        const discountPercentage = parseFloat(document.getElementById('discount_percentage').value) || 0;
+        const manualDiscountAmount = parseFloat(document.getElementById('discount_amount_input').value) || 0;
+
+        if (discountPercentage > 0) {
+            discountAmount = subtotal * (discountPercentage / 100);
+            document.getElementById('discount_amount_input').value = discountAmount.toFixed(2); // Update manual input with calculated
+        } else {
+            discountAmount = manualDiscountAmount;
+        }
+        
+        total = subtotal + itemTax - discountAmount + invoiceTax; // invoiceTax is 0 based on current logic
+
+        document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+        document.getElementById('item_tax').textContent = `$${itemTax.toFixed(2)}`;
+        document.getElementById('invoice_tax').textContent = `$${invoiceTax.toFixed(2)}`;
+        document.getElementById('discount_amount').textContent = `$${discountAmount.toFixed(2)}`;
+        document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+
+        // Calculate balance (assuming 'paid' is a value from the backend, not dynamically input here)
+        const paidAmount = parseFloat('{{ quote.paid if quote.paid is not none else 0 }}') || 0;
+        const balance = total - paidAmount;
+        document.getElementById('paid').textContent = `$${paidAmount.toFixed(2)}`;
+        document.getElementById('balance').textContent = `$${balance.toFixed(2)}`;
+    }
 
     document.addEventListener('DOMContentLoaded', function() {
         const clientIdSelect = document.getElementById('client_id');
@@ -495,192 +544,5 @@ let itemCounter = parseInt('{{ quote.items|length if quote.items else 1 }}', 10)
         });
     });
 
-    /**
-     * Adds a new row to the items table, cloning the structure of the first row
-     * and resetting its input values for a new item.
-     */
-    function addNewRow() {
-        const tbody = document.querySelector('#items_table tbody');
-        const newRow = document.createElement('tr'); // Create new row from scratch for consistency
-
-        newRow.innerHTML = `
-            <td>
-                <input type="hidden" name="item_id_${itemCounter}" value="">
-                <input type="text" class="form-control item-name" name="item_name_${itemCounter}" placeholder="Item name" onchange="calculateItemTotal(this)">
-                <textarea class="form-control mt-2 item-description" name="item_description_${itemCounter}" rows="2" placeholder="Description"></textarea>
-            </td>
-            <td>
-                <input type="number" class="form-control item-quantity" name="item_quantity_${itemCounter}" min="1" value="1" onchange="calculateItemTotal(this)">
-                <select class="form-select mt-2 item-unit" name="item_unit_${itemCounter}">
-                    <option value="none">None</option>
-                    <option value="piece">Piece</option>
-                    <option value="hour">Hour</option>
-                    <option value="day">Day</option>
-                    <option value="month">Month</option>
-                </select>
-            </td>
-            <td>
-                <input type="number" class="form-control item-price" name="item_price_${itemCounter}" min="0" step="0.01" placeholder="0.00" value="0.00" onchange="calculateItemTotal(this)">
-            </td>
-            <td>
-                <input type="number" class="form-control item-discount" name="item_discount_${itemCounter}" min="0" step="0.01" placeholder="0.00" value="0.00" onchange="calculateItemTotal(this)">
-            </td>
-            <td>
-                <select class="form-select item-tax-rate tax-rate-select" name="item_tax_rate_${itemCounter}" onchange="calculateItemTotal(this)">
-                    <option value="0">None (0%)</option>
-                    <!-- Options will be populated by JavaScript -->
-                </select>
-                <input type="hidden" class="initial-tax-rate" value="0">
-            </td>
-            <td>
-                <input type="number" class="form-control item-total" name="item_total_${itemCounter}" value="0.00" readonly>
-            </td>
-            <td>
-                <button type="button" class="btn btn-sm btn-danger remove-row-btn" onclick="removeRow(this)">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </td>
-        `;
-        tbody.appendChild(newRow);
-        // Populate tax rate select for the new row
-        const newTaxSelect = newRow.querySelector('.item-tax-rate');
-        fillTaxRateSelect(newTaxSelect, taxRates, 0);
-        itemCounter++; // Increment the counter for the next new row
-        document.getElementById('items_count').value = tbody.rows.length; // Update hidden count based on actual rows
-        calculateTotals(); // Recalculate totals after adding a new row
-    }
-
-    /**
-     * Removes an item row from the table. Prevents removal if only one row remains.
-     * @param {HTMLElement} button The button element that triggered the removal.
-     */
-    function removeRow(button) {
-        const tbody = document.querySelector('#items_table tbody');
-        if (tbody.rows.length > 1) {
-            button.closest('tr').remove();
-            reindexRows(); // Reindex input names to maintain correct sequential numbering
-            calculateTotals(); // Recalculate totals after removing a row
-        } else {
-            alert('Cannot remove the last item row from an invoice.');
-        }
-    }
-
-    /**
-     * Reindexes the 'name' attributes of all inputs, textareas, and selects
-     * within the item rows after a row has been removed. This ensures
-     * sequential numbering (e.g., item_name_0, item_name_1).
-     */
-    function reindexRows() {
-        const tbody = document.querySelector('#items_table tbody');
-        const rows = tbody.querySelectorAll('tr');
-        rows.forEach((row, index) => {
-            row.querySelectorAll('input, textarea, select').forEach(input => {
-                if (input.name) {
-                    const baseName = input.name.replace(/_\d+$/, '');
-                    input.name = `${baseName}_${index}`;
-                }
-                if (input.id) { // Update ID if it exists (though not strictly necessary for name[])
-                    const baseId = input.id.replace(/_\d+$/, '');
-                    input.id = `${baseId}_${index}`;
-                }
-            });
-        });
-        itemCounter = rows.length; // Update the global counter to reflect the current number of rows
-        document.getElementById('items_count').value = itemCounter;
-    }
-
-    /**
-     * Calculates and updates the total for a single item row.
-     * @param {HTMLElement} input The input element that triggered the calculation.
-     */
-    function calculateItemTotal(input) {
-        const row = input.closest('tr');
-        const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
-        const price = parseFloat(row.querySelector('.item-price').value) || 0;
-        const discount = parseFloat(row.querySelector('.item-discount').value) || 0; // Item-level discount
-        const taxRate = Number(row.querySelector('.item-tax-rate').value) || 0;
-
-        let itemSubtotal = (quantity * price);
-        let itemDiscountAmount = discount; // Assuming item-discount is an absolute value
-
-        // If item-discount is intended as a percentage, change this:
-        // let itemDiscountAmount = itemSubtotal * (discount / 100);
-
-        let taxableAmount = itemSubtotal - itemDiscountAmount;
-        if (taxableAmount < 0) taxableAmount = 0; // Ensure taxable amount is not negative
-
-        const currentItemTax = taxableAmount * (taxRate / 100);
-        const currentItemCalculatedTotal = taxableAmount + currentItemTax;
-
-        row.querySelector('.item-total').value = currentItemCalculatedTotal.toFixed(2);
-        calculateTotals(); // Recalculate global totals
-    }
-
-    /**
-     * Calculates and updates the invoice totals (subtotal, item tax, invoice tax, discount, total, paid, balance).
-     */
-    function calculateTotals() {
-        let subtotal = 0;
-        let itemTax = 0;
-        const rows = document.querySelectorAll('#items_table tbody tr');
-
-        rows.forEach(row => {
-            const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
-            const price = parseFloat(row.querySelector('.item-price').value) || 0;
-            const discount = parseFloat(row.querySelector('.item-discount').value) || 0;
-            const taxRate = parseFloat(row.querySelector('.item-tax-rate').value) || 0;
-
-            let itemRowSubtotal = (quantity * price);
-            let itemRowDiscountAmount = discount; // Assuming item-discount is an absolute value for now
-
-            let itemRowTaxableAmount = itemRowSubtotal - itemRowDiscountAmount;
-            if (itemRowTaxableAmount < 0) itemRowTaxableAmount = 0;
-
-            const currentItemTax = itemRowTaxableAmount * (taxRate / 100);
-
-            subtotal += itemRowSubtotal;
-            itemTax += currentItemTax;
-        });
-
-        document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
-        document.getElementById('item_tax').textContent = `$${itemTax.toFixed(2)}`;
-
-        // Invoice Tax: Currently fixed based on `quote.invoice_tax`. If this should be an input, add one.
-        const invoiceTax = parseFloat("{{ quote.invoice_tax if quote.invoice_tax is not none else 0 }}") || 0;
-        document.getElementById('invoice_tax').textContent = `$${invoiceTax.toFixed(2)}`;
-
-        // Discount calculations
-        const discountPercentageInput = document.getElementById('discount_percentage');
-        const discountAmountInput = document.getElementById('discount_amount_input');
-
-        let totalDiscountAmount = 0;
-        const enteredPercentage = parseFloat(discountPercentageInput.value) || 0;
-        const enteredAmount = parseFloat(discountAmountInput.value) || 0;
-
-        // Logic: If a specific amount is entered, it takes precedence. Otherwise, apply percentage.
-        if (enteredAmount > 0) {
-            totalDiscountAmount = enteredAmount;
-            discountPercentageInput.value = ''; // Clear percentage if amount is used (optional)
-        } else {
-            totalDiscountAmount = (subtotal + itemTax + invoiceTax) * (enteredPercentage / 100);
-            discountAmountInput.value = ''; // Clear amount if percentage is used (optional)
-        }
-        
-        document.getElementById('discount_amount').textContent = `$${totalDiscountAmount.toFixed(2)}`;
-
-        // Final Total Calculation
-        let total = subtotal + itemTax + invoiceTax - totalDiscountAmount;
-        if (total < 0) total = 0; // Ensure total is not negative
-
-        document.getElementById('total').textContent = `$${total.toFixed(2)}`;
-
-        // Paid and Balance
-        // Assuming 'paid' is a static value from the database. If user can input payments, add an input field for 'paid'.
-        const paid = parseFloat("{{ quote.paid if quote.paid is not none else 0 }}") || 0;
-        document.getElementById('paid').textContent = `$${paid.toFixed(2)}`;
-        
-        const balance = total - paid;
-        document.getElementById('balance').textContent = `$${balance.toFixed(2)}`;
-    }
 </script>
 {% endblock %}
