@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS payments (
 );
 
 -- Tax Rates table
-CREATE TABLE IF NOT EXISTS tax_rates (
+CREATE TABLE IF NOT EXISTS tax_rate (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) UNIQUE NOT NULL,
     rate NUMERIC(5, 2) NOT NULL,
