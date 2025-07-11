@@ -1,294 +1,388 @@
 #!/usr/bin/env python3
 """
-Enhanced Tax Rate API Debug Script - 422 Error Analysis
+Tax Rate API Debug Script with Authentication
 
-This script helps debug the 422 Unprocessable Entity error by:
-1. Testing different payload formats
-2. Examining API schema/documentation
-3. Providing detailed error analysis
+This script tests the persistence and functionality of a tax rate API with login support.
+It performs comprehensive tests including authentication, data persistence, error handling,
+and cleanup operations.
 """
 
 import requests
-import json
+import os
 import sys
-from typing import Dict, Any, Optional
+import time
+from typing import Dict, List, Optional, Any
+from dataclasses import dataclass
+from urllib.parse import urljoin
 
 
-class TaxRateDebugger:
-    """Debug 422 errors in tax rate API endpoints."""
+@dataclass
+class TaxRate:
+    """Represents a tax rate entry."""
+    name: str
+    rate: float
     
-    def __init__(self, base_url: str, session: requests.Session):
-        self.base_url = base_url.rstrip('/')
-        self.session = session
-        self.api_url = f"{base_url}/tax_rates/api"
-        self.save_url = f"{base_url}/tax_rates/api/save"
-        
-    def test_different_payloads(self) -> None:
-        """Test various payload formats to identify the correct one."""
-        print("\n🔍 Testing different payload formats...")
-        
-        # Test cases with different payload structures
-        test_cases = [
-            {
-                "name": "Direct object",
-                "payload": {"name": "DebugTest", "rate": 42.0},
-                "description": "Simple tax rate object"
-            },
-            {
-                "name": "Wrapped in tax_rate",
-                "payload": {"tax_rate": {"name": "DebugTest", "rate": 42.0}},
-                "description": "Tax rate wrapped in tax_rate key"
-            },
-            {
-                "name": "With additional fields",
-                "payload": {
-                    "name": "DebugTest", 
-                    "rate": 42.0,
-                    "description": "Test tax rate",
-                    "active": True
-                },
-                "description": "Tax rate with extra fields"
-            },
-            {
-                "name": "Rate as string",
-                "payload": {"name": "DebugTest", "rate": "42.0"},
-                "description": "Rate as string instead of float"
-            },
-            {
-                "name": "Rate as integer",
-                "payload": {"name": "DebugTest", "rate": 42},
-                "description": "Rate as integer instead of float"
-            },
-            {
-                "name": "Different field names",
-                "payload": {"tax_name": "DebugTest", "tax_rate": 42.0},
-                "description": "Alternative field names"
-            }
-        ]
-        
-        for i, test_case in enumerate(test_cases, 1):
-            print(f"\n📋 Test {i}: {test_case['name']}")
-            print(f"   Description: {test_case['description']}")
-            print(f"   Payload: {json.dumps(test_case['payload'], indent=2)}")
-            
-            response = self._make_request('POST', self.api_url, json=test_case['payload'])
-            
-            if response and response.status_code == 200:
-                print(f"   ✅ SUCCESS! This payload format works")
-                return test_case['payload']
-            else:
-                self._analyze_error_response(response)
-        
-        print("\n❌ None of the test payloads worked")
-        return None
+    def to_dict(self) -> Dict[str, Any]:
+        return {"name": self.name, "rate": self.rate}
+
+
+class TaxRateAPITester:
+    """Handles tax rate API testing operations with authentication."""
     
-    def check_api_documentation(self) -> None:
-        """Check if API provides OpenAPI documentation."""
-        print("\n📚 Checking API documentation...")
+    def __init__(self, timeout: int = 10):
+        self.base_url = os.environ.get("TAX_RATE_BASE_URL", "http://simple.local:8080")
+        self.login_url = urljoin(self.base_url, "/auth/login")
+        self.api_url = urljoin(self.base_url, "/tax_rates/api")
+        self.save_url = urljoin(self.base_url, "/tax_rates/api/save")
+        self.username = os.environ.get("LOGIN_USERNAME", "admin")
+        self.password = os.environ.get("LOGIN_PASSWORD", "admin123")
+        self.timeout = timeout
+        self.test_tax_rate = TaxRate("DebugTest", 42.0)
+        self.session = requests.Session()
+        self.logged_in = False
         
-        # Try common FastAPI documentation endpoints
-        doc_endpoints = [
-            ("/docs", "Swagger UI"),
-            ("/redoc", "ReDoc"),
-            ("/openapi.json", "OpenAPI Schema")
-        ]
+    def login(self) -> bool:
+        """Authenticate with the application."""
+        print(f"🔐 Logging in as {self.username}...")
         
-        for endpoint, name in doc_endpoints:
-            url = f"{self.base_url}{endpoint}"
-            try:
-                response = self.session.get(url, timeout=10)
-                if response.status_code == 200:
-                    print(f"✅ {name} available at: {url}")
-                    if endpoint == "/openapi.json":
-                        self._analyze_openapi_schema(response.json())
-                else:
-                    print(f"❌ {name} not available at: {url}")
-            except Exception as e:
-                print(f"❌ Error accessing {name}: {e}")
-    
-    def _analyze_openapi_schema(self, schema: Dict[str, Any]) -> None:
-        """Analyze OpenAPI schema for tax rate endpoints."""
-        print("\n🔍 Analyzing OpenAPI schema for tax rate endpoints...")
-        
-        paths = schema.get("paths", {})
-        components = schema.get("components", {})
-        
-        # Look for tax rate related endpoints
-        tax_rate_paths = {
-            path: details for path, details in paths.items() 
-            if "tax_rate" in path.lower()
+        login_data = {
+            "username": self.username,
+            "password": self.password
         }
         
-        if tax_rate_paths:
-            print(f"Found {len(tax_rate_paths)} tax rate endpoints:")
-            for path, details in tax_rate_paths.items():
-                print(f"\n📍 {path}:")
-                for method, method_details in details.items():
-                    if method.upper() in ['GET', 'POST', 'PUT', 'DELETE']:
-                        print(f"   {method.upper()}: {method_details.get('summary', 'No summary')}")
-                        
-                        # Check request body schema
-                        if 'requestBody' in method_details:
-                            request_body = method_details['requestBody']
-                            content = request_body.get('content', {})
-                            if 'application/json' in content:
-                                schema_ref = content['application/json'].get('schema', {})
-                                print(f"   Request Schema: {json.dumps(schema_ref, indent=6)}")
-        
-        # Look for tax rate models in components
-        schemas = components.get("schemas", {})
-        tax_rate_schemas = {
-            name: schema for name, schema in schemas.items()
-            if "tax" in name.lower() or "rate" in name.lower()
-        }
-        
-        if tax_rate_schemas:
-            print(f"\n📋 Found {len(tax_rate_schemas)} tax rate related schemas:")
-            for name, schema in tax_rate_schemas.items():
-                print(f"\n🏷️  {name}:")
-                properties = schema.get("properties", {})
-                required = schema.get("required", [])
-                
-                for prop_name, prop_details in properties.items():
-                    prop_type = prop_details.get("type", "unknown")
-                    is_required = prop_name in required
-                    print(f"   - {prop_name}: {prop_type} {'(required)' if is_required else '(optional)'}")
+        try:
+            login_resp = self.session.post(self.login_url, data=login_data, timeout=self.timeout)
+            
+            if login_resp.status_code != 200 or "login" in login_resp.url.lower():
+                print(f"❌ Login failed! Status: {login_resp.status_code}")
+                print(f"Response URL: {login_resp.url}")
+                if login_resp.text:
+                    print(f"Response content: {login_resp.text[:500]}...")
+                return False
+            
+            print("✅ Login successful")
+            self.logged_in = True
+            return True
+            
+        except Exception as e:
+            print(f"❌ Login request failed: {e}")
+            return False
     
     def _make_request(self, method: str, url: str, **kwargs) -> Optional[requests.Response]:
-        """Make HTTP request with the authenticated session."""
+        """Make HTTP request with error handling and timeout."""
+        if not self.logged_in:
+            print("❌ Not logged in - cannot make authenticated requests")
+            return None
+            
         try:
-            response = self.session.request(method, url, timeout=10, **kwargs)
+            kwargs.setdefault('timeout', self.timeout)
+            response = self.session.request(method, url, **kwargs)
+            response.raise_for_status()
             return response
-        except Exception as e:
-            print(f"   ❌ Request failed: {e}")
+        except requests.exceptions.Timeout:
+            print(f"❌ Request timed out after {self.timeout} seconds")
+            return None
+        except requests.exceptions.ConnectionError:
+            print(f"❌ Connection error: Could not connect to {url}")
+            return None
+        except requests.exceptions.HTTPError as e:
+            print(f"❌ HTTP error: {e}")
+            if e.response.status_code == 401:
+                print("❌ Authentication failed - session may have expired")
+                self.logged_in = False
+            return None
+        except requests.exceptions.RequestException as e:
+            print(f"❌ Request error: {e}")
             return None
     
-    def _analyze_error_response(self, response: Optional[requests.Response]) -> None:
-        """Analyze error response for detailed information."""
-        if not response:
-            print("   ❌ No response received")
-            return
+    def fetch_tax_rates(self) -> Optional[List[Dict[str, Any]]]:
+        """Fetch current tax rates from API."""
+        print("📋 Fetching current tax rates from API...")
         
-        print(f"   ❌ Status: {response.status_code}")
-        
-        # Try to get detailed error information
-        try:
-            error_data = response.json()
-            print(f"   📋 Response: {json.dumps(error_data, indent=6)}")
-            
-            # FastAPI validation errors usually contain 'detail' field
-            if 'detail' in error_data:
-                detail = error_data['detail']
-                if isinstance(detail, list):
-                    print("   🔍 Validation errors:")
-                    for error in detail:
-                        if isinstance(error, dict):
-                            loc = error.get('loc', [])
-                            msg = error.get('msg', 'Unknown error')
-                            error_type = error.get('type', 'Unknown type')
-                            print(f"      - Field: {'.'.join(map(str, loc))}")
-                            print(f"        Error: {msg}")
-                            print(f"        Type: {error_type}")
-                else:
-                    print(f"   📋 Detail: {detail}")
-        except Exception as e:
-            print(f"   ❌ Could not parse response as JSON: {e}")
-            print(f"   📋 Raw response: {response.text[:500]}...")
-    
-    def compare_working_vs_failing(self) -> None:
-        """Compare working bulk save vs failing individual create."""
-        print("\n🔄 Comparing working vs failing operations...")
-        
-        # Get current tax rates (this works)
-        print("\n✅ Working operation - GET tax rates:")
         response = self._make_request('GET', self.api_url)
-        if response and response.status_code == 200:
-            current_rates = response.json()
-            print(f"   Response: {json.dumps(current_rates, indent=6)}")
+        if not response:
+            return None
             
-            if current_rates:
-                print(f"\n📋 Structure of existing tax rate:")
-                first_rate = current_rates[0]
-                print(f"   Fields: {list(first_rate.keys())}")
-                print(f"   Types: {[(k, type(v).__name__) for k, v in first_rate.items()]}")
-                
-                # Try to create a tax rate with the same structure
-                print(f"\n🔄 Attempting to create tax rate with same structure...")
-                test_payload = {
-                    key: f"DebugTest" if isinstance(value, str) else 42.0 if isinstance(value, (int, float)) else value
-                    for key, value in first_rate.items()
-                }
-                # Override with test values
-                if 'name' in test_payload:
-                    test_payload['name'] = 'DebugTest'
-                if 'rate' in test_payload:
-                    test_payload['rate'] = 42.0
-                
-                print(f"   Test payload: {json.dumps(test_payload, indent=6)}")
-                response = self._make_request('POST', self.api_url, json=test_payload)
-                self._analyze_error_response(response)
+        try:
+            data = response.json()
+            if isinstance(data, list):
+                print(f"✅ Found {len(data)} tax rates")
+                for rate in data:
+                    if isinstance(rate, dict) and 'name' in rate and 'rate' in rate:
+                        print(f"   - {rate['name']}: {rate['rate']}%")
+                return data
+            else:
+                print(f"⚠️  Unexpected data format: {type(data)}")
+                return None
+        except ValueError as e:
+            print(f"❌ Invalid JSON response: {e}")
+            return None
     
-    def run_debug_analysis(self) -> None:
-        """Run comprehensive debug analysis."""
-        print("🔍 Starting comprehensive 422 error analysis...")
+    def save_tax_rates(self, tax_rates: List[Dict[str, Any]]) -> bool:
+        """Save tax rates to API."""
+        print(f"💾 Saving {len(tax_rates)} tax rates...")
+        
+        payload = {"tax_rates": tax_rates}
+        response = self._make_request('POST', self.save_url, json=payload)
+        
+        if response:
+            print(f"✅ Save successful: {response.status_code}")
+            return True
+        else:
+            print("❌ Save failed")
+            return False
+    
+    def create_tax_rate(self, tax_rate: TaxRate) -> Optional[Dict[str, Any]]:
+        """Create a single tax rate using the POST API."""
+        print(f"➕ Creating tax rate: {tax_rate.name} ({tax_rate.rate}%)")
+        
+        response = self._make_request('POST', self.api_url, json=tax_rate.to_dict())
+        if response:
+            try:
+                created_rate = response.json()
+                print(f"✅ Tax rate created successfully")
+                return created_rate
+            except ValueError as e:
+                print(f"❌ Invalid JSON response: {e}")
+                return None
+        else:
+            print("❌ Failed to create tax rate")
+            return None
+    
+    def delete_tax_rate(self, tax_rate_id: int) -> bool:
+        """Delete a tax rate by ID."""
+        print(f"🗑️  Deleting tax rate with ID: {tax_rate_id}")
+        
+        delete_url = f"{self.api_url}/{tax_rate_id}"
+        response = self._make_request('DELETE', delete_url)
+        
+        if response:
+            print(f"✅ Delete successful: {response.status_code}")
+            return True
+        else:
+            print("❌ Delete failed")
+            return False
+    
+    def validate_tax_rate_exists(self, tax_rates: List[Dict[str, Any]], target_rate: TaxRate) -> bool:
+        """Check if a specific tax rate exists in the list."""
+        for rate in tax_rates:
+            if (rate.get("name") == target_rate.name and 
+                rate.get("rate") == target_rate.rate):
+                return True
+        return False
+    
+    def find_tax_rate_by_name(self, tax_rates: List[Dict[str, Any]], name: str) -> Optional[Dict[str, Any]]:
+        """Find a tax rate by name."""
+        for rate in tax_rates:
+            if rate.get("name") == name:
+                return rate
+        return None
+    
+    def check_database_configuration(self) -> None:
+        """Check database configuration for persistence warnings."""
+        print("\n🔍 Checking database configuration...")
+        
+        database_url = os.environ.get("DATABASE_URL")
+        if database_url:
+            print(f"📊 DATABASE_URL: {database_url}")
+            if ":memory:" in database_url.lower():
+                print("⚠️  WARNING: Using in-memory database - data will not persist between restarts!")
+            else:
+                print("✅ Database appears to be persistent")
+        else:
+            print("⚠️  DATABASE_URL not set - check your application configuration")
+        
+        # Check other common database environment variables
+        db_vars = ["DB_HOST", "DB_NAME", "DB_USER", "POSTGRES_URL", "SQLITE_DB"]
+        found_vars = {var: os.environ.get(var) for var in db_vars if os.environ.get(var)}
+        
+        if found_vars:
+            print("📋 Other database-related environment variables:")
+            for var, value in found_vars.items():
+                # Mask sensitive information
+                if any(keyword in var.lower() for keyword in ['password', 'secret', 'key']):
+                    value = "***masked***"
+                print(f"   - {var}: {value}")
+    
+    def test_crud_operations(self) -> bool:
+        """Test Create, Read, Update, Delete operations."""
+        print("\n🧪 Testing CRUD operations...")
+        
+        # Step 1: Create a new tax rate
+        created_rate = self.create_tax_rate(self.test_tax_rate)
+        if not created_rate:
+            print("❌ Failed to create tax rate - aborting CRUD test")
+            return False
+        
+        # Extract ID from created rate
+        tax_rate_id = created_rate.get('id')
+        if not tax_rate_id:
+            print("❌ No ID returned from created tax rate")
+            return False
+        
+        # Step 2: Verify creation by fetching all rates
+        print("\n🔍 Verifying creation...")
+        time.sleep(1)  # Brief pause to ensure data is committed
+        
+        current_rates = self.fetch_tax_rates()
+        if current_rates is None:
+            print("❌ Could not fetch tax rates after creation")
+            return False
+        
+        test_exists = self.validate_tax_rate_exists(current_rates, self.test_tax_rate)
+        if test_exists:
+            print("✅ CREATE test PASSED - tax rate found")
+        else:
+            print("❌ CREATE test FAILED - tax rate not found")
+            return False
+        
+        # Step 3: Cleanup - Delete the test rate
+        print("\n🧹 Cleaning up test data...")
+        if self.delete_tax_rate(tax_rate_id):
+            print("✅ DELETE test PASSED")
+            
+            # Verify deletion
+            final_rates = self.fetch_tax_rates()
+            if final_rates and not self.validate_tax_rate_exists(final_rates, self.test_tax_rate):
+                print("✅ Delete verification passed")
+            else:
+                print("⚠️  Delete verification failed - test data may still exist")
+        else:
+            print("❌ DELETE test FAILED")
+        
+        return test_exists
+    
+    def test_bulk_save_workflow(self) -> bool:
+        """Test the bulk save persistence workflow."""
+        print("\n🧪 Testing bulk save workflow...")
+        
+        # Step 1: Fetch original tax rates
+        original_rates = self.fetch_tax_rates()
+        if original_rates is None:
+            print("❌ Could not fetch original tax rates - aborting test")
+            return False
+        
+        # Step 2: Add test tax rate
+        print(f"\n➕ Adding test tax rate to bulk save: {self.test_tax_rate.name} ({self.test_tax_rate.rate}%)")
+        updated_rates = original_rates + [self.test_tax_rate.to_dict()]
+        
+        if not self.save_tax_rates(updated_rates):
+            print("❌ Failed to save updated tax rates")
+            return False
+        
+        # Step 3: Verify persistence
+        print("\n🔍 Verifying bulk save persistence...")
+        time.sleep(1)  # Brief pause to ensure data is committed
+        
+        current_rates = self.fetch_tax_rates()
+        if current_rates is None:
+            print("❌ Could not fetch tax rates after bulk save")
+            return False
+        
+        test_exists = self.validate_tax_rate_exists(current_rates, self.test_tax_rate)
+        if test_exists:
+            print("✅ Bulk save persistence test PASSED - test tax rate found")
+        else:
+            print("❌ Bulk save persistence test FAILED - test tax rate not found")
+        
+        # Step 4: Cleanup
+        print("\n🧹 Cleaning up bulk save test data...")
+        cleaned_rates = [rate for rate in current_rates 
+                        if rate.get("name") != self.test_tax_rate.name]
+        
+        if self.save_tax_rates(cleaned_rates):
+            print("✅ Bulk save cleanup successful")
+            
+            # Verify cleanup
+            final_rates = self.fetch_tax_rates()
+            if final_rates and not self.validate_tax_rate_exists(final_rates, self.test_tax_rate):
+                print("✅ Bulk save cleanup verification passed")
+            else:
+                print("⚠️  Bulk save cleanup verification failed - test data may still exist")
+        else:
+            print("❌ Bulk save cleanup failed - test data may persist")
+        
+        return test_exists
+    
+    def run_connectivity_test(self) -> bool:
+        """Test basic API connectivity."""
+        print("\n🌐 Testing API connectivity...")
+        
+        # Test GET endpoint
+        print(f"Testing GET: {self.api_url}")
+        get_response = self._make_request('GET', self.api_url)
+        get_success = get_response is not None
+        
+        if get_success:
+            print("✅ GET endpoint accessible")
+        else:
+            print("❌ GET endpoint failed")
+        
+        return get_success
+    
+    def run_all_tests(self) -> bool:
+        """Run all tests and return overall success."""
+        print("🚀 Starting Tax Rate API Tests with Authentication")
         print("=" * 60)
         
-        # Step 1: Check API documentation
-        self.check_api_documentation()
+        # Authentication
+        if not self.login():
+            print("❌ Authentication failed - aborting all tests")
+            return False
         
-        # Step 2: Compare working vs failing operations
-        self.compare_working_vs_failing()
+        # Configuration check
+        self.check_database_configuration()
         
-        # Step 3: Test different payload formats
-        self.test_different_payloads()
+        # Connectivity test
+        if not self.run_connectivity_test():
+            print("\n❌ Connectivity test failed - aborting remaining tests")
+            return False
         
+        # CRUD operations test
+        crud_success = self.test_crud_operations()
+        
+        # Bulk save test
+        bulk_save_success = self.test_bulk_save_workflow()
+        
+        # Summary
         print("\n" + "=" * 60)
-        print("🎯 Debug analysis complete!")
-        print("\n💡 Recommendations:")
-        print("1. Check the OpenAPI schema at /docs or /openapi.json")
-        print("2. Compare the structure of existing tax rates with your payload")
-        print("3. Ensure all required fields are included")
-        print("4. Verify data types match the API expectations")
-        print("5. Check if the API expects different field names")
+        overall_success = crud_success and bulk_save_success
+        
+        if overall_success:
+            print("🎉 All tests PASSED!")
+        else:
+            print("❌ Some tests FAILED!")
+            print(f"   - Authentication: {'✅ PASSED' if self.logged_in else '❌ FAILED'}")
+            print(f"   - CRUD operations: {'✅ PASSED' if crud_success else '❌ FAILED'}")
+            print(f"   - Bulk save: {'✅ PASSED' if bulk_save_success else '❌ FAILED'}")
+        
+        return overall_success
 
 
 def main():
-    """Main debug function."""
-    import os
-    
+    """Main entry point."""
     # Configuration
-    base_url = os.environ.get("BASE_URL", "http://simple.local:8080")
-    username = os.environ.get("USERNAME", "admin")
-    password = os.environ.get("PASSWORD", "admin")
+    timeout = int(os.environ.get("API_TIMEOUT", "10"))
     
-    print("🔍 Tax Rate API 422 Error Debug Analysis")
-    print("=" * 50)
+    print("Tax Rate API Debug Script with Authentication")
+    print(f"Timeout: {timeout} seconds")
+    print("-" * 50)
+    
+    # Environment variables info
+    base_url = os.environ.get("TAX_RATE_BASE_URL", "http://simple.local:8080")
+    username = os.environ.get("LOGIN_USERNAME", "admin")
+    
     print(f"Base URL: {base_url}")
     print(f"Username: {username}")
-    print("=" * 50)
+    print(f"Password: {'***set***' if os.environ.get('LOGIN_PASSWORD') else 'using default'}")
+    print("-" * 50)
     
-    # Create session and login
-    session = requests.Session()
+    # Run tests
+    tester = TaxRateAPITester(timeout=timeout)
+    success = tester.run_all_tests()
     
-    print("🔐 Logging in...")
-    login_data = {"username": username, "password": password}
-    login_response = session.post(
-        f"{base_url}/auth/login",
-        data=login_data,
-        timeout=10
-    )
-    
-    if login_response.status_code == 200:
-        print("✅ Login successful")
-        
-        # Run debug analysis
-        debugger = TaxRateDebugger(base_url, session)
-        debugger.run_debug_analysis()
-    else:
-        print(f"❌ Login failed: {login_response.status_code}")
-        if login_response.text:
-            print(f"Response: {login_response.text}")
-        sys.exit(1)
+    # Exit with appropriate code
+    sys.exit(0 if success else 1)
 
 
 if __name__ == "__main__":
