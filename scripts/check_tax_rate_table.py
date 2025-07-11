@@ -39,6 +39,22 @@ if exists:
     print("Sample data:")
     for row in rows:
         print(row)
+    # Check row count
+    cur.execute("SELECT COUNT(*) FROM tax_rate;")
+    count = cur.fetchone()[0]
+    print(f"Total rows in tax_rate: {count}")
+    # Try to insert a test row
+    try:
+        cur.execute("INSERT INTO tax_rate (name, rate) VALUES (%s, %s) RETURNING id;", ("__debug_test__", 99.99))
+        test_id = cur.fetchone()[0]
+        conn.commit()
+        print(f"Inserted test row with id {test_id}")
+        # Delete test row
+        cur.execute("DELETE FROM tax_rate WHERE id = %s;", (test_id,))
+        conn.commit()
+        print("Deleted test row.")
+    except Exception as e:
+        print(f"Insert/delete test row failed: {e}")
 else:
     print("tax_rate table does NOT exist.")
 
