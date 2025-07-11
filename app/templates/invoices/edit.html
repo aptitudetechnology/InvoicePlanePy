@@ -130,7 +130,10 @@
             </td>
             <td>
                 <!-- Tax rate select will be populated dynamically by JS -->
-                <select class="form-select item-tax-rate tax-rate-select" name="item_tax_rate_{{ loop.index0 }}" onchange="calculateItemTotal(this)"></select>
+                <select class="form-select item-tax-rate tax-rate-select" name="item_tax_rate_{{ loop.index0 }}" onchange="calculateItemTotal(this)">
+                    <option value="0">None (0%)</option>
+                    <!-- Options will be populated by JavaScript -->
+                </select>
                 <input type="hidden" class="initial-tax-rate" value="{{ item.tax_rate if item.tax_rate is not none else 0 }}">
             </td>
             <td>
@@ -168,7 +171,10 @@
             </td>
             <td>
                 <!-- Tax rate select will be populated dynamically by JS -->
-                <select class="form-select item-tax-rate tax-rate-select" name="item_tax_rate_0" onchange="calculateItemTotal(this)"></select>
+                <select class="form-select item-tax-rate tax-rate-select" name="item_tax_rate_0" onchange="calculateItemTotal(this)">
+                    <option value="0">None (0%)</option>
+                    <!-- Options will be populated by JavaScript -->
+                </select>
                 <input type="hidden" class="initial-tax-rate" value="0">
             </td>
             <td>
@@ -348,33 +354,28 @@ let itemCounter = parseInt('{{ quote.items|length if quote.items else 1 }}', 10)
      * @param {HTMLSelectElement} selectElement The select element to populate.
      */
     function populateTaxRateDropdown(selectElement) {
+        // Get initial value from hidden input if it exists
         const initialValueInput = selectElement.closest('td').querySelector('.initial-tax-rate');
-        const currentValue = parseFloat(initialValueInput ? initialValueInput.value : 0);
-        
-        // Clear existing options except the "None" option if it's the first
+        const initialValue = initialValueInput ? parseFloat(initialValueInput.value) : 0;
+        // Clear existing options
         selectElement.innerHTML = '<option value="0">None (0%)</option>';
-        
         // Add tax rates from database
         taxRates.forEach(taxRate => {
             const option = document.createElement('option');
-            option.value = taxRate.rate; // Assuming taxRate.rate is the numerical value (e.g., 10.0 for 10%)
+            option.value = taxRate.rate;
             option.textContent = `${taxRate.name} (${taxRate.rate.toFixed(2)}%)`;
             option.setAttribute('data-tax-id', taxRate.id);
             selectElement.appendChild(option);
         });
-        
-        // Restore selected value from initial data or set to 0
-        const selectedOption = Array.from(selectElement.options).find(opt => parseFloat(opt.value) === currentValue);
-        if (selectedOption) {
-            selectedOption.selected = true;
+        // Set the initial value
+        const matchingOption = Array.from(selectElement.options).find(opt => 
+            parseFloat(opt.value) === initialValue
+        );
+        if (matchingOption) {
+            matchingOption.selected = true;
         } else {
-            selectElement.value = '0'; // Default to None if initial value not found
+            selectElement.value = '0';
         }
-
-        // Add event listener (if not already added by addNewRow)
-        selectElement.addEventListener('change', function() {
-            calculateItemTotal(this);
-        });
     }
 
     /**
@@ -436,14 +437,7 @@ let itemCounter = parseInt('{{ quote.items|length if quote.items else 1 }}', 10)
         }
 
         // Load tax rates first, then populate all selects and perform initial calculation
-        fetchTaxRates().then(rates => {
-            taxRates = rates;
-            document.querySelectorAll('.item-tax-rate').forEach((select, idx) => {
-                // Get initial value from hidden input
-                const initialValueInput = select.closest('td').querySelector('.initial-tax-rate');
-                const initialValue = initialValueInput ? parseFloat(initialValueInput.value) : 0;
-                fillTaxRateSelect(select, taxRates, initialValue);
-            });
+        loadTaxRates().then(() => {
             calculateTotals();
         });
     });
@@ -479,7 +473,10 @@ let itemCounter = parseInt('{{ quote.items|length if quote.items else 1 }}', 10)
                 <input type="number" class="form-control item-discount" name="item_discount_${itemCounter}" min="0" step="0.01" placeholder="0.00" value="0.00" onchange="calculateItemTotal(this)">
             </td>
             <td>
-                <select class="form-select item-tax-rate tax-rate-select" name="item_tax_rate_${itemCounter}" onchange="calculateItemTotal(this)"></select>
+                <select class="form-select item-tax-rate tax-rate-select" name="item_tax_rate_${itemCounter}" onchange="calculateItemTotal(this)">
+                    <option value="0">None (0%)</option>
+                    <!-- Options will be populated by JavaScript -->
+                </select>
                 <input type="hidden" class="initial-tax-rate" value="0">
             </td>
             <td>
@@ -492,8 +489,9 @@ let itemCounter = parseInt('{{ quote.items|length if quote.items else 1 }}', 10)
             </td>
         `;
         tbody.appendChild(newRow);
-        // Populate tax rate select dynamically
-        fillTaxRateSelect(newRow.querySelector('.item-tax-rate'), taxRates, 0);
+        // Populate tax rate select for the new row
+        const newTaxSelect = newRow.querySelector('.item-tax-rate');
+        fillTaxRateSelect(newTaxSelect, taxRates, 0);
         itemCounter++; // Increment the counter for the next new row
         document.getElementById('items_count').value = tbody.rows.length; // Update hidden count based on actual rows
         calculateTotals(); // Recalculate totals after adding a new row
