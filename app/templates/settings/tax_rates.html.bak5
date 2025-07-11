@@ -100,36 +100,20 @@
 
 {% block scripts %}
 <script>
-    // Replace hardcoded taxRates array with dynamic loading
-    let taxRates = [];
+    // Initial data structure for tax rates
+    let taxRates = [
+        { id: 1, name: 'VAT', rate: 20.00 },
+        { id: 2, name: 'Sales Tax', rate: 8.25 },
+        { id: 3, name: 'GST', rate: 10.00 }
+    ];
     let editingId = null;
-    let nextId = 1;
-
-    // Function to load tax rates from server
-    async function loadTaxRates() {
-        try {
-            const response = await fetch('/tax_rates/api');
-            if (!response.ok) throw new Error('Failed to load tax rates');
-            const data = await response.json();
-            taxRates = data.tax_rates || data; // Adjust based on your API response structure
-            // Update nextId based on existing data
-            if (taxRates.length > 0) {
-                nextId = Math.max(...taxRates.map(tr => tr.id)) + 1;
-            }
-            renderTable();
-        } catch (error) {
-            console.error('Error loading tax rates:', error);
-            // Fallback to empty array if server fails
-            taxRates = [];
-            renderTable();
-        }
-    }
+    let nextId = 4; // For assigning unique IDs to new tax rates
 
     // Get modal instance
     const taxRateModal = new bootstrap.Modal(document.getElementById('taxRateModal'));
 
     // Event Listeners
-    document.addEventListener('DOMContentLoaded', loadTaxRates);
+    document.addEventListener('DOMContentLoaded', renderTable);
     document.getElementById('addTaxRateBtn').addEventListener('click', addTaxRate);
     document.getElementById('saveTaxRateBtn').addEventListener('click', saveTaxRate);
 
@@ -144,12 +128,6 @@
     //});
 
     document.getElementById('mainSaveBtn').addEventListener('click', () => {
-    // Show loading state
-    const saveBtn = document.getElementById('mainSaveBtn');
-    const originalText = saveBtn.innerHTML;
-    saveBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving...';
-    saveBtn.disabled = true;
-
     fetch('/tax_rates/api/save', {
         method: 'POST',
         headers: {
@@ -162,41 +140,24 @@
         return response.json();
     })
     .then(data => {
-        // Success - now fetch fresh data from server
-        return fetch('/tax_rates/api');
-    })
-    .then(response => {
-        if (!response.ok) throw new Error('Failed to fetch updated tax rates');
-        return response.json();
-    })
-    .then(freshData => {
-        // Update local array with fresh server data
-        taxRates = freshData.tax_rates || freshData; // Adjust based on your API response structure
-        // Update nextId to ensure no conflicts
-        if (taxRates.length > 0) {
-            nextId = Math.max(...taxRates.map(tr => tr.id)) + 1;
-        }
-        // Re-render the table with fresh data
-        renderTable();
         alert('Tax rates saved successfully!');
+        // Optionally, update UI or state here
     })
     .catch(error => {
-        console.error('Error:', error);
         alert('Error saving tax rates: ' + error.message);
-    })
-    .finally(() => {
-        // Reset button state
-        saveBtn.innerHTML = originalText;
-        saveBtn.disabled = false;
     });
     });
 
 
     document.getElementById('mainCancelBtn').addEventListener('click', () => {
-        if (confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
-            // Reload fresh data from server to discard local changes
-            loadTaxRates();
-        }
+        // This is where you would implement logic to revert changes or navigate away.
+        // For example, reloading the initial 'taxRates' data from a stored original state
+        // or making an AJAX call to fetch the original state from the server.
+        console.log('Cancelling changes...');
+        alert('Main page Cancel button clicked! (Implement revert/navigation logic)');
+        // Example: If you had a mechanism to store original state, you might restore it here
+        // taxRates = JSON.parse(JSON.stringify(originalTaxRates));
+        // renderTable();
     });
 
     /**
