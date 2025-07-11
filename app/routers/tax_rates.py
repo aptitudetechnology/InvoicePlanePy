@@ -1,3 +1,20 @@
+# --- DEBUG ENDPOINT ---
+from sqlalchemy import text
+
+@router.get("/api/debug", response_class=JSONResponse)
+async def debug_tax_rate_db(
+    db: Session = Depends(get_db)
+):
+    """
+    Returns database URL and a sample of tax_rate table rows for debugging.
+    """
+    db_url = str(db.bind.url) if db.bind else "Unknown"
+    sample = db.execute(text("SELECT * FROM tax_rate LIMIT 5")).fetchall()
+    sample_data = [dict(row._mapping) for row in sample]
+    return {
+        "database_url": db_url,
+        "sample_tax_rates": sample_data
+    }
 # app/routers/tax_rates.py
 from fastapi import APIRouter, Depends, Request, Form, HTTPException, status, Body
 from fastapi.responses import HTMLResponse, JSONResponse

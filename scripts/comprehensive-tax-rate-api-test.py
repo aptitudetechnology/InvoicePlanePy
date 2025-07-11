@@ -352,6 +352,21 @@ class ComprehensiveTaxRateTester:
             print(f"❌ Failed to get current tax rates: {e}")
         return None
     
+    def log_debug_database_info(self):
+        """Call debug endpoint and log database info."""
+        print("\n🔍 Debugging Database Info")
+        try:
+            response = self.session.get(f"{self.base_url}/tax_rates/api/debug", timeout=30)
+            print(f"   Status: {response.status_code}")
+            if response.status_code == 200:
+                info = response.json()
+                print(f"   Database URL: {info.get('database_url')}")
+                print(f"   Sample tax_rate rows: {json.dumps(info.get('sample_tax_rates'), indent=6)}")
+            else:
+                print(f"   Failed to get debug info: {response.text}")
+        except Exception as e:
+            print(f"   ❌ Error fetching debug info: {e}")
+    
     def run_comprehensive_analysis(self) -> None:
         """Run the complete comprehensive analysis."""
         print("🔍 Comprehensive Tax Rate API Analysis")
@@ -359,6 +374,9 @@ class ComprehensiveTaxRateTester:
         print(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         print(f"Base URL: {self.base_url}")
         print("=" * 70)
+        
+        # Log database info
+        self.log_debug_database_info()
         
         # Get current state
         print("\n📊 Current Tax Rates:")
