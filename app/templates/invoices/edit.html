@@ -131,8 +131,6 @@
                                             <td>
                                                 {# Tax rate options will be populated by JavaScript #}
                                                 <select class="form-select item-tax-rate" name="item_tax_rate_{{ loop.index0 }}" onchange="calculateItemTotal(this)">
-                                                    <option value="0">None (0%)</option> {# Default option #}
-                                                    {# Other options filled by JS based on DB #}
                                                 </select>
                                                 <input type="hidden" class="initial-tax-rate" value="{{ item.tax_rate if item.tax_rate is not none else 0 }}">
                                             </td>
@@ -173,7 +171,6 @@
                                             <td>
                                                 {# Tax rate options will be populated by JavaScript #}
                                                 <select class="form-select item-tax-rate" name="item_tax_rate_0" onchange="calculateItemTotal(this)">
-                                                    <option value="0">None (0%)</option> {# Default option #}
                                                 </select>
                                                 <input type="hidden" class="initial-tax-rate" value="0">
                                             </td>
@@ -285,7 +282,7 @@
 
 <script>
     // Initialize itemCounter based on the number of existing items or 1 if none
-    let itemCounter = {{ quote.items|length if quote.items else 1 }};
+    let itemCounter = {{ (quote.items|length if quote.items else 1) | tojson }};
     let taxRates = []; // Will be populated from database
 
     /**
