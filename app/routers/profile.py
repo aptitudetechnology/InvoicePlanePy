@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from typing import Optional
+from datetime import datetime
 
 from app.database import get_db
 from app.dependencies import get_current_user
@@ -118,6 +119,7 @@ async def account_settings(
     return templates.TemplateResponse("profile/account.html", {
         "request": request,
         "user": current_user,
+        "current_time": datetime.now()
         "title": "Account Settings"
     })
 
