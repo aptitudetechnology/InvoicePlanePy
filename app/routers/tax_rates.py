@@ -41,8 +41,13 @@ async def bulk_save_tax_rates(
     Bulk save endpoint for tax rates. Accepts a list of tax rates and updates/inserts/deletes as needed.
     Expects JSON: { "tax_rates": [ {id, name, rate}, ... ] }
     """
+    import logging
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger("tax_rates_bulk_save")
+    logger.info(f"Bulk save called. Payload: {payload}")
     tax_rates_in = payload.get("tax_rates", [])
     if not isinstance(tax_rates_in, list):
+        logger.error("tax_rates is not a list!")
         raise HTTPException(status_code=400, detail="tax_rates must be a list")
 
     # Fetch all existing tax rates from DB
@@ -55,12 +60,14 @@ async def bulk_save_tax_rates(
         tr_id = tr_in.get("id")
         name = tr_in.get("name", "").strip()
         rate = tr_in.get("rate")
+        logger.info(f"Processing: id={tr_id}, name={name}, rate={rate}")
         if not name or rate is None or not (0 <= rate <= 100):
-            continue  # skip invalid
+            logger.warning(f"Skipping invalid entry: {tr_in}")
+            continue
         # Try to find by id first
         tr = db_tax_rates_by_id.get(tr_id) if tr_id else None
         if tr:
-            # Update by id
+            logger.info(f"Updating by id: {tr_id}")
             tr.name = name
             tr.rate = rate
             db.add(tr)
@@ -69,25 +76,31 @@ async def bulk_save_tax_rates(
             # Try to find by name
             existing_by_name = db.query(TaxRate).filter(TaxRate.name == name).first()
             if existing_by_name:
-                # Update by name
+                logger.info(f"Updating by name: {name}")
                 existing_by_name.rate = rate
                 db.add(existing_by_name)
                 incoming_ids.add(existing_by_name.id)
             else:
-                # Create new
+                logger.info(f"Creating new tax rate: {name}")
                 new_tr = TaxRate(name=name, rate=rate)
                 db.add(new_tr)
-                db.flush()  # assign id
+                db.flush()
                 incoming_ids.add(new_tr.id)
 
     # Delete tax rates not present in incoming list
     for tr in db_tax_rates:
         if tr.id not in incoming_ids:
+            logger.info(f"Deleting tax rate id={tr.id}, name={tr.name}")
             db.delete(tr)
 
-    db.commit()
-
-    return {"message": "Tax rates saved successfully!"}
+    try:
+        db.commit()
+        logger.info("Bulk save committed successfully.")
+        return {"message": "Tax rates saved successfully!"}
+    except Exception as e:
+        logger.error(f"Bulk save failed: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Bulk save failed: {e}")
 
 # --- HTML Page Route ---
 @router.get("/", response_class=HTMLResponse)
