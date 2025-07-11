@@ -164,9 +164,10 @@
 <input type="number" class="form-control form-control-sm" name="items[{{ loop.index0 }}][discount]" value="{{ item.discount }}" step="0.01" onchange="calculateItemTotal(this)">
 </td>
 <td>
-<select class="form-select form-select-sm tax-rate-select" name="items[{{ loop.index0 }}][tax_rate]" onchange="calculateItemTotal(this)">
-<option value="0" {% if item.tax_rate == 0 %}selected{% endif %}>None (0%)</option>
-<!-- Dynamic tax rates will be populated here -->
+<select class="form-select form-select-sm" name="items[{{ loop.index0 }}][tax_rate]" onchange="calculateItemTotal(this)">
+<option value="0" {% if item.tax_rate == 0 %}selected{% endif %}>None</option>
+<option value="10" {% if item.tax_rate == 10 %}selected{% endif %}>10%</option>
+<option value="15" {% if item.tax_rate == 15 %}selected{% endif %}>15%</option>
 </select>
 </td>
 <td class="item-subtotal">{{ "${:.2f}".format(item.subtotal) }}</td>
@@ -254,64 +255,6 @@
 
 <script>
 let itemCounter = {{ (quote.items|length) if quote.items else 0 }};
-let taxRates = []; // Will be populated from database
-
-// Load tax rates from database
-async function loadTaxRates() {
-    try {
-        const response = await fetch('/tax_rates/api');
-        if (!response.ok) throw new Error('Failed to load tax rates');
-        const data = await response.json();
-        taxRates = data.tax_rates || data;
-        
-        // Populate all existing tax rate dropdowns
-        populateAllTaxRateDropdowns();
-    } catch (error) {
-        console.error('Error loading tax rates:', error);
-        // Fallback to empty array if server fails
-        taxRates = [];
-    }
-}
-
-// Populate all tax rate dropdowns with current tax rates
-function populateAllTaxRateDropdowns() {
-    const taxRateSelects = document.querySelectorAll('.tax-rate-select');
-    taxRateSelects.forEach(select => {
-        populateTaxRateDropdown(select);
-    });
-}
-
-// Populate a single tax rate dropdown
-function populateTaxRateDropdown(selectElement) {
-    const currentValue = selectElement.value;
-    
-    // Clear existing options except the "None" option
-    selectElement.innerHTML = '<option value="0">None (0%)</option>';
-    
-    // Add tax rates from database
-    taxRates.forEach(taxRate => {
-        const option = document.createElement('option');
-        option.value = taxRate.rate;
-        option.textContent = `${taxRate.name} (${taxRate.rate.toFixed(2)}%)`;
-        option.setAttribute('data-tax-id', taxRate.id);
-        selectElement.appendChild(option);
-    });
-    
-    // Restore selected value
-    selectElement.value = currentValue;
-}
-
-// Create tax rate dropdown HTML for new rows
-function createTaxRateDropdownHTML(itemIndex, selectedRate = 0) {
-    let optionsHTML = '<option value="0">None (0%)</option>';
-    
-    taxRates.forEach(taxRate => {
-        const selected = taxRate.rate == selectedRate ? 'selected' : '';
-        optionsHTML += `<option value="${taxRate.rate}" data-tax-id="${taxRate.id}" ${selected}>${taxRate.name} (${taxRate.rate.toFixed(2)}%)</option>`;
-    });
-    
-    return `<select class="form-select form-select-sm tax-rate-select" name="items[${itemIndex}][tax_rate]" onchange="calculateItemTotal(this)">${optionsHTML}</select>`;
-}
 
 function addNewRow() {
     const tbody = document.getElementById('quote-items');
@@ -336,7 +279,11 @@ function addNewRow() {
             <input type="number" class="form-control form-control-sm" name="items[${itemCounter}][discount]" value="0.00" step="0.01" onchange="calculateItemTotal(this)">
         </td>
         <td>
-            ${createTaxRateDropdownHTML(itemCounter)}
+            <select class="form-select form-select-sm" name="items[${itemCounter}][tax_rate]" onchange="calculateItemTotal(this)">
+                <option value="0" selected>None</option>
+                <option value="10">10%</option>
+                <option value="15">15%</option>
+            </select>
         </td>
         <td class="item-subtotal">$0.00</td>
         <td class="item-discount-amount">$0.00</td>
@@ -453,12 +400,9 @@ function deleteQuote() {
     }
 }
 
-// Initialize page
+// Initialize calculations on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Load tax rates first, then calculate totals
-    loadTaxRates().then(() => {
-        calculateTotals();
-    });
+    calculateTotals();
 });
 </script>
 {% endblock %}
