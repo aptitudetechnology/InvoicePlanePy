@@ -29,8 +29,8 @@ class TaxRateAPITester:
     """Handles tax rate API testing operations."""
     
     def __init__(self, timeout: int = 10):
-        self.api_url = os.environ.get("TAX_RATE_API_URL", "http://localhost:8000/tax_rates/api")
-        self.save_url = os.environ.get("TAX_RATE_SAVE_URL", "http://localhost:8000/tax_rates/api/save")
+        self.api_url = os.environ.get("TAX_RATE_API_URL", "http://localhost:8000/settings/tax_rates/api")
+        self.save_url = os.environ.get("TAX_RATE_SAVE_URL", "http://localhost:8000/sttiings/tax_rates/api/save")
         self.timeout = timeout
         self.test_tax_rate = TaxRate("DebugTest", 42.0)
         
