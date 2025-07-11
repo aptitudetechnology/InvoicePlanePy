@@ -29,8 +29,9 @@ class TaxRateAPITester:
     """Handles tax rate API testing operations."""
     
     def __init__(self, timeout: int = 10):
-        self.api_url = os.environ.get("TAX_RATE_API_URL", "http://localhost:8000/settings/tax_rates/api")
-        self.save_url = os.environ.get("TAX_RATE_SAVE_URL", "http://localhost:8000/sttiings/tax_rates/api/save")
+        self.base_url = os.environ.get("TAX_RATE_BASE_URL", "http://localhost:8000")
+        self.api_url = f"{self.base_url}/tax_rates/api"
+        self.save_url = f"{self.base_url}/tax_rates/api/save"
         self.timeout = timeout
         self.test_tax_rate = TaxRate("DebugTest", 42.0)
         
@@ -91,6 +92,37 @@ class TaxRateAPITester:
             print("❌ Save failed")
             return False
     
+    def create_tax_rate(self, tax_rate: TaxRate) -> Optional[Dict[str, Any]]:
+        """Create a single tax rate using the POST API."""
+        print(f"➕ Creating tax rate: {tax_rate.name} ({tax_rate.rate}%)")
+        
+        response = self._make_request('POST', self.api_url, json=tax_rate.to_dict())
+        if response:
+            try:
+                created_rate = response.json()
+                print(f"✅ Tax rate created successfully")
+                return created_rate
+            except ValueError as e:
+                print(f"❌ Invalid JSON response: {e}")
+                return None
+        else:
+            print("❌ Failed to create tax rate")
+            return None
+    
+    def delete_tax_rate(self, tax_rate_id: int) -> bool:
+        """Delete a tax rate by ID."""
+        print(f"🗑️  Deleting tax rate with ID: {tax_rate_id}")
+        
+        delete_url = f"{self.api_url}/{tax_rate_id}"
+        response = self._make_request('DELETE', delete_url)
+        
+        if response:
+            print(f"✅ Delete successful: {response.status_code}")
+            return True
+        else:
+            print("❌ Delete failed")
+            return False
+    
     def validate_tax_rate_exists(self, tax_rates: List[Dict[str, Any]], target_rate: TaxRate) -> bool:
         """Check if a specific tax rate exists in the list."""
         for rate in tax_rates:
@@ -98,6 +130,13 @@ class TaxRateAPITester:
                 rate.get("rate") == target_rate.rate):
                 return True
         return False
+    
+    def find_tax_rate_by_name(self, tax_rates: List[Dict[str, Any]], name: str) -> Optional[Dict[str, Any]]:
+        """Find a tax rate by name."""
+        for rate in tax_rates:
+            if rate.get("name") == name:
+                return rate
+        return None
     
     def check_database_configuration(self) -> None:
         """Check database configuration for persistence warnings."""
@@ -125,9 +164,57 @@ class TaxRateAPITester:
                     value = "***masked***"
                 print(f"   - {var}: {value}")
     
-    def test_persistence_workflow(self) -> bool:
-        """Test the complete persistence workflow."""
-        print("\n🧪 Testing save and persistence workflow...")
+    def test_crud_operations(self) -> bool:
+        """Test Create, Read, Update, Delete operations."""
+        print("\n🧪 Testing CRUD operations...")
+        
+        # Step 1: Create a new tax rate
+        created_rate = self.create_tax_rate(self.test_tax_rate)
+        if not created_rate:
+            print("❌ Failed to create tax rate - aborting CRUD test")
+            return False
+        
+        # Extract ID from created rate
+        tax_rate_id = created_rate.get('id')
+        if not tax_rate_id:
+            print("❌ No ID returned from created tax rate")
+            return False
+        
+        # Step 2: Verify creation by fetching all rates
+        print("\n🔍 Verifying creation...")
+        time.sleep(1)  # Brief pause to ensure data is committed
+        
+        current_rates = self.fetch_tax_rates()
+        if current_rates is None:
+            print("❌ Could not fetch tax rates after creation")
+            return False
+        
+        test_exists = self.validate_tax_rate_exists(current_rates, self.test_tax_rate)
+        if test_exists:
+            print("✅ CREATE test PASSED - tax rate found")
+        else:
+            print("❌ CREATE test FAILED - tax rate not found")
+            return False
+        
+        # Step 3: Cleanup - Delete the test rate
+        print("\n🧹 Cleaning up test data...")
+        if self.delete_tax_rate(tax_rate_id):
+            print("✅ DELETE test PASSED")
+            
+            # Verify deletion
+            final_rates = self.fetch_tax_rates()
+            if final_rates and not self.validate_tax_rate_exists(final_rates, self.test_tax_rate):
+                print("✅ Delete verification passed")
+            else:
+                print("⚠️  Delete verification failed - test data may still exist")
+        else:
+            print("❌ DELETE test FAILED")
+        
+        return test_exists
+    
+    def test_bulk_save_workflow(self) -> bool:
+        """Test the bulk save persistence workflow."""
+        print("\n🧪 Testing bulk save workflow...")
         
         # Step 1: Fetch original tax rates
         original_rates = self.fetch_tax_rates()
@@ -136,7 +223,7 @@ class TaxRateAPITester:
             return False
         
         # Step 2: Add test tax rate
-        print(f"\n➕ Adding test tax rate: {self.test_tax_rate.name} ({self.test_tax_rate.rate}%)")
+        print(f"\n➕ Adding test tax rate to bulk save: {self.test_tax_rate.name} ({self.test_tax_rate.rate}%)")
         updated_rates = original_rates + [self.test_tax_rate.to_dict()]
         
         if not self.save_tax_rates(updated_rates):
@@ -144,36 +231,36 @@ class TaxRateAPITester:
             return False
         
         # Step 3: Verify persistence
-        print("\n🔍 Verifying persistence...")
+        print("\n🔍 Verifying bulk save persistence...")
         time.sleep(1)  # Brief pause to ensure data is committed
         
         current_rates = self.fetch_tax_rates()
         if current_rates is None:
-            print("❌ Could not fetch tax rates after save")
+            print("❌ Could not fetch tax rates after bulk save")
             return False
         
         test_exists = self.validate_tax_rate_exists(current_rates, self.test_tax_rate)
         if test_exists:
-            print("✅ Persistence test PASSED - test tax rate found")
+            print("✅ Bulk save persistence test PASSED - test tax rate found")
         else:
-            print("❌ Persistence test FAILED - test tax rate not found")
+            print("❌ Bulk save persistence test FAILED - test tax rate not found")
         
         # Step 4: Cleanup
-        print("\n🧹 Cleaning up test data...")
+        print("\n🧹 Cleaning up bulk save test data...")
         cleaned_rates = [rate for rate in current_rates 
                         if rate.get("name") != self.test_tax_rate.name]
         
         if self.save_tax_rates(cleaned_rates):
-            print("✅ Cleanup successful")
+            print("✅ Bulk save cleanup successful")
             
             # Verify cleanup
             final_rates = self.fetch_tax_rates()
             if final_rates and not self.validate_tax_rate_exists(final_rates, self.test_tax_rate):
-                print("✅ Cleanup verification passed")
+                print("✅ Bulk save cleanup verification passed")
             else:
-                print("⚠️  Cleanup verification failed - test data may still exist")
+                print("⚠️  Bulk save cleanup verification failed - test data may still exist")
         else:
-            print("❌ Cleanup failed - test data may persist")
+            print("❌ Bulk save cleanup failed - test data may persist")
         
         return test_exists
     
@@ -206,17 +293,24 @@ class TaxRateAPITester:
             print("\n❌ Connectivity test failed - aborting remaining tests")
             return False
         
-        # Persistence test
-        persistence_success = self.test_persistence_workflow()
+        # CRUD operations test
+        crud_success = self.test_crud_operations()
+        
+        # Bulk save test
+        bulk_save_success = self.test_bulk_save_workflow()
         
         # Summary
         print("\n" + "=" * 50)
-        if persistence_success:
+        overall_success = crud_success and bulk_save_success
+        
+        if overall_success:
             print("🎉 All tests PASSED!")
         else:
             print("❌ Some tests FAILED!")
+            print(f"   - CRUD operations: {'✅ PASSED' if crud_success else '❌ FAILED'}")
+            print(f"   - Bulk save: {'✅ PASSED' if bulk_save_success else '❌ FAILED'}")
         
-        return persistence_success
+        return overall_success
 
 
 def main():
