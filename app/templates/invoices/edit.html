@@ -170,8 +170,7 @@
                                             </td>
                                             <td>
                                                 {# Tax rate options will be populated by JavaScript #}
-                                                <select class="form-select item-tax-rate" name="item_tax_rate_0" onchange="calculateItemTotal(this)">
-                                                </select>
+                                                <select class="form-select item-tax-rate" name="item_tax_rate_0" onchange="calculateItemTotal(this)"></select>
                                                 <input type="hidden" class="initial-tax-rate" value="0">
                                             </td>
                                             <td>
@@ -282,7 +281,7 @@
 
 <script>
     // Initialize itemCounter based on the number of existing items or 1 if none
-    let itemCounter = {{ (quote.items|length if quote.items else 1)|int }};
+let itemCounter = parseInt("{{ quote.items|length if quote.items else 1 }}", 10);
     let taxRates = []; // Will be populated from database
 
     /**
