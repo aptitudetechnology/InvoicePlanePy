@@ -50,26 +50,35 @@ async def bulk_save_tax_rates(
     db_tax_rates_by_id = {tr.id: tr for tr in db_tax_rates}
     incoming_ids = set()
 
-    # Update or create
+    # Update or create (by id or by name)
     for tr_in in tax_rates_in:
         tr_id = tr_in.get("id")
         name = tr_in.get("name", "").strip()
         rate = tr_in.get("rate")
         if not name or rate is None or not (0 <= rate <= 100):
             continue  # skip invalid
-        if tr_id and tr_id in db_tax_rates_by_id:
-            # Update existing
-            tr = db_tax_rates_by_id[tr_id]
+        # Try to find by id first
+        tr = db_tax_rates_by_id.get(tr_id) if tr_id else None
+        if tr:
+            # Update by id
             tr.name = name
             tr.rate = rate
             db.add(tr)
-            incoming_ids.add(tr_id)
+            incoming_ids.add(tr.id)
         else:
-            # Create new
-            new_tr = TaxRate(name=name, rate=rate)
-            db.add(new_tr)
-            db.flush()  # assign id
-            incoming_ids.add(new_tr.id)
+            # Try to find by name
+            existing_by_name = db.query(TaxRate).filter(TaxRate.name == name).first()
+            if existing_by_name:
+                # Update by name
+                existing_by_name.rate = rate
+                db.add(existing_by_name)
+                incoming_ids.add(existing_by_name.id)
+            else:
+                # Create new
+                new_tr = TaxRate(name=name, rate=rate)
+                db.add(new_tr)
+                db.flush()  # assign id
+                incoming_ids.add(new_tr.id)
 
     # Delete tax rates not present in incoming list
     for tr in db_tax_rates:
