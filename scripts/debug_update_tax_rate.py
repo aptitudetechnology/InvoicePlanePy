@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Tax Rate API Test Script
+Tax Rate API Debug Script with Authentication
 
-This script tests the persistence and functionality of a tax rate API.
-It performs comprehensive tests including data persistence, error handling,
+This script tests the persistence and functionality of a tax rate API with login support.
+It performs comprehensive tests including authentication, data persistence, error handling,
 and cleanup operations.
 """
 
@@ -13,6 +13,7 @@ import sys
 import time
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
+from urllib.parse import urljoin
 
 
 @dataclass
@@ -26,20 +27,56 @@ class TaxRate:
 
 
 class TaxRateAPITester:
-    """Handles tax rate API testing operations."""
+    """Handles tax rate API testing operations with authentication."""
     
     def __init__(self, timeout: int = 10):
-        self.base_url = os.environ.get("TAX_RATE_BASE_URL", "http://localhost:8000")
-        self.api_url = f"{self.base_url}/tax_rates/api"
-        self.save_url = f"{self.base_url}/tax_rates/api/save"
+        self.base_url = os.environ.get("TAX_RATE_BASE_URL", "http://simple.local:8080")
+        self.login_url = urljoin(self.base_url, "/auth/login")
+        self.api_url = urljoin(self.base_url, "/tax_rates/api")
+        self.save_url = urljoin(self.base_url, "/tax_rates/api/save")
+        self.username = os.environ.get("LOGIN_USERNAME", "admin")
+        self.password = os.environ.get("LOGIN_PASSWORD", "admin123")
         self.timeout = timeout
         self.test_tax_rate = TaxRate("DebugTest", 42.0)
+        self.session = requests.Session()
+        self.logged_in = False
         
+    def login(self) -> bool:
+        """Authenticate with the application."""
+        print(f"🔐 Logging in as {self.username}...")
+        
+        login_data = {
+            "username": self.username,
+            "password": self.password
+        }
+        
+        try:
+            login_resp = self.session.post(self.login_url, data=login_data, timeout=self.timeout)
+            
+            if login_resp.status_code != 200 or "login" in login_resp.url.lower():
+                print(f"❌ Login failed! Status: {login_resp.status_code}")
+                print(f"Response URL: {login_resp.url}")
+                if login_resp.text:
+                    print(f"Response content: {login_resp.text[:500]}...")
+                return False
+            
+            print("✅ Login successful")
+            self.logged_in = True
+            return True
+            
+        except Exception as e:
+            print(f"❌ Login request failed: {e}")
+            return False
+    
     def _make_request(self, method: str, url: str, **kwargs) -> Optional[requests.Response]:
         """Make HTTP request with error handling and timeout."""
+        if not self.logged_in:
+            print("❌ Not logged in - cannot make authenticated requests")
+            return None
+            
         try:
             kwargs.setdefault('timeout', self.timeout)
-            response = requests.request(method, url, **kwargs)
+            response = self.session.request(method, url, **kwargs)
             response.raise_for_status()
             return response
         except requests.exceptions.Timeout:
@@ -50,6 +87,9 @@ class TaxRateAPITester:
             return None
         except requests.exceptions.HTTPError as e:
             print(f"❌ HTTP error: {e}")
+            if e.response.status_code == 401:
+                print("❌ Authentication failed - session may have expired")
+                self.logged_in = False
             return None
         except requests.exceptions.RequestException as e:
             print(f"❌ Request error: {e}")
@@ -282,8 +322,13 @@ class TaxRateAPITester:
     
     def run_all_tests(self) -> bool:
         """Run all tests and return overall success."""
-        print("🚀 Starting Tax Rate API Tests")
-        print("=" * 50)
+        print("🚀 Starting Tax Rate API Tests with Authentication")
+        print("=" * 60)
+        
+        # Authentication
+        if not self.login():
+            print("❌ Authentication failed - aborting all tests")
+            return False
         
         # Configuration check
         self.check_database_configuration()
@@ -300,13 +345,14 @@ class TaxRateAPITester:
         bulk_save_success = self.test_bulk_save_workflow()
         
         # Summary
-        print("\n" + "=" * 50)
+        print("\n" + "=" * 60)
         overall_success = crud_success and bulk_save_success
         
         if overall_success:
             print("🎉 All tests PASSED!")
         else:
             print("❌ Some tests FAILED!")
+            print(f"   - Authentication: {'✅ PASSED' if self.logged_in else '❌ FAILED'}")
             print(f"   - CRUD operations: {'✅ PASSED' if crud_success else '❌ FAILED'}")
             print(f"   - Bulk save: {'✅ PASSED' if bulk_save_success else '❌ FAILED'}")
         
@@ -318,9 +364,18 @@ def main():
     # Configuration
     timeout = int(os.environ.get("API_TIMEOUT", "10"))
     
-    print("Tax Rate API Test Script")
+    print("Tax Rate API Debug Script with Authentication")
     print(f"Timeout: {timeout} seconds")
-    print("-" * 30)
+    print("-" * 50)
+    
+    # Environment variables info
+    base_url = os.environ.get("TAX_RATE_BASE_URL", "http://simple.local:8080")
+    username = os.environ.get("LOGIN_USERNAME", "admin")
+    
+    print(f"Base URL: {base_url}")
+    print(f"Username: {username}")
+    print(f"Password: {'***set***' if os.environ.get('LOGIN_PASSWORD') else 'using default'}")
+    print("-" * 50)
     
     # Run tests
     tester = TaxRateAPITester(timeout=timeout)
