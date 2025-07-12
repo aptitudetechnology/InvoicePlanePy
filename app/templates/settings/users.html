@@ -8,7 +8,7 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1>Users</h1>
-                <a href="/users/create" class="btn btn-primary">
+                <a href="/settings/users/create" class="btn btn-primary">
                     <i class="fas fa-plus"></i> New Account
                 </a>
             </div>
@@ -37,7 +37,7 @@
                                     <td>hsimpson@springfieldnpp.com</td>
                                     <td>Springfield Nuclear Power Plant</td>
                                     <td>
-                                        <a href="/users/1/edit" class="btn btn-sm btn-outline-primary" title="Edit User">
+                                        <a href="/settings/users/1/edit" class="btn btn-sm btn-outline-primary" title="Edit User">
                                             <i class="fas fa-edit"></i> Edit
                                         </a>
                                         <button type="button" class="btn btn-sm btn-outline-danger ml-1" 
@@ -57,7 +57,7 @@
                                     <td>marge@springfieldmail.com</td>
                                     <td>The Pretzel Wagon</td>
                                     <td>
-                                        <a href="/users/2/edit" class="btn btn-sm btn-outline-primary" title="Edit User">
+                                        <a href="/settings/users/2/edit" class="btn btn-sm btn-outline-primary" title="Edit User">
                                             <i class="fas fa-edit"></i> Edit
                                         </a>
                                         <button type="button" class="btn btn-sm btn-outline-danger ml-1" 
@@ -77,7 +77,7 @@
                                     <td>bart@springfieldelem.edu</td>
                                     <td>Springfield Elementary</td>
                                     <td>
-                                        <a href="/users/3/edit" class="btn btn-sm btn-outline-primary" title="Edit User">
+                                        <a href="/settings/users/3/edit" class="btn btn-sm btn-outline-primary" title="Edit User">
                                             <i class="fas fa-edit"></i> Edit
                                         </a>
                                         <button type="button" class="btn btn-sm btn-outline-danger ml-1" 
@@ -97,7 +97,7 @@
                                     <td>lisa@springfieldelem.edu</td>
                                     <td>Springfield Elementary</td>
                                     <td>
-                                        <a href="/users/4/edit" class="btn btn-sm btn-outline-primary" title="Edit User">
+                                        <a href="/settings/users/4/edit" class="btn btn-sm btn-outline-primary" title="Edit User">
                                             <i class="fas fa-edit"></i> Edit
                                         </a>
                                         <button type="button" class="btn btn-sm btn-outline-danger ml-1" 
@@ -117,7 +117,7 @@
                                     <td>ned@leftoriumstore.com</td>
                                     <td>The Leftorium</td>
                                     <td>
-                                        <a href="/users/5/edit" class="btn btn-sm btn-outline-primary" title="Edit User">
+                                        <a href="/settings/users/5/edit" class="btn btn-sm btn-outline-primary" title="Edit User">
                                             <i class="fas fa-edit"></i> Edit
                                         </a>
                                         <button type="button" class="btn btn-sm btn-outline-danger ml-1" 
@@ -137,7 +137,7 @@
                                     <td>moe@moestavern.com</td>
                                     <td>Moe's Tavern</td>
                                     <td>
-                                        <a href="/users/6/edit" class="btn btn-sm btn-outline-primary" title="Edit User">
+                                        <a href="/settings/users/6/edit" class="btn btn-sm btn-outline-primary" title="Edit User">
                                             <i class="fas fa-edit"></i> Edit
                                         </a>
                                         <button type="button" class="btn btn-sm btn-outline-danger ml-1" 
@@ -157,7 +157,7 @@
                                     <td>apu@kwikemart.com</td>
                                     <td>Kwik-E-Mart</td>
                                     <td>
-                                        <a href="/users/7/edit" class="btn btn-sm btn-outline-primary" title="Edit User">
+                                        <a href="/settings/users/7/edit" class="btn btn-sm btn-outline-primary" title="Edit User">
                                             <i class="fas fa-edit"></i> Edit
                                         </a>
                                         <button type="button" class="btn btn-sm btn-outline-danger ml-1" 
@@ -188,7 +188,7 @@
                                     <td>{{ user.email }}</td>
                                     <td>{{ user.company if user.company else '-' }}</td>
                                     <td>
-                                        <a href="/users/{{ user.id }}/edit" class="btn btn-sm btn-outline-primary" title="Edit User">
+                                        <a href="/settings/users/{{ user.id }}/edit" class="btn btn-sm btn-outline-primary" title="Edit User">
                                             <i class="fas fa-edit"></i> Edit
                                         </a>
                                         <button type="button" class="btn btn-sm btn-outline-danger ml-1" 
@@ -201,7 +201,7 @@
                                 {% else %}
                                 <tr>
                                     <td colspan="5" class="text-center text-muted">
-                                        No users found. <a href="/users/create">Create your first user</a>.
+                                        No users found. <a href="/settings/users/create">Create your first user</a>.
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -243,7 +243,7 @@
 <script>
 function confirmDelete(userId, userName) {
     document.getElementById('deleteUserName').textContent = userName;
-    document.getElementById('deleteForm').action = '/users/' + userId + '/delete';
+    document.getElementById('deleteForm').action = '/settings/users/' + userId + '/delete';
     $('#deleteModal').modal('show');
 }
 </script>

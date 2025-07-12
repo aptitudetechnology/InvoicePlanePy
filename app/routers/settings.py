@@ -102,6 +102,22 @@ async def user_settings(
         "title": "User Management"
     })
 
+
+@router.get("/users/create", response_class=HTMLResponse)
+async def create_user(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # Pass an empty user object and any other required context (e.g., languages)
+    return templates.TemplateResponse("settings/create.html", {
+        "request": request,
+        "user": None,
+        "languages": [],  # or your actual languages list
+        "title": "Create User"
+    })
+
+
 @router.get("/invoice", response_class=HTMLResponse)
 async def invoice_settings(
     request: Request,
