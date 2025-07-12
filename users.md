@@ -2,7 +2,7 @@
 
 ## 1. Add a FastAPI API Endpoint to Return Users as JSON
 
-In your FastAPI users router (e.g., `app/routers/users.py`), add:
+In your FastAPI settings router (e.g., `app/routers/settings.py`), add:
 
 ```python
 from fastapi import APIRouter, Depends
@@ -57,6 +57,6 @@ Make sure your `User` model includes the fields you want to display:
 ---
 
 **Summary:**
-- Add a GET API endpoint that returns users as JSON.
+- Add a GET API endpoint that returns users as JSON in `app/routers/settings.py`.
 - Ensure your frontend fetches from this endpoint and renders the data.
 - Test to confirm users are displayed.
