@@ -30,7 +30,9 @@
                                 <tr>
                                     <td>Homer Simpson</td>
                                     <td>
-                                        <span class="badge badge-primary">Administrator</span>
+                                        <span class="text-dark font-weight-bold">
+                                            <i class="fas fa-user-shield text-primary"></i> Administrator
+                                        </span>
                                     </td>
                                     <td>hsimpson@springfieldnpp.com</td>
                                     <td>Springfield Nuclear Power Plant</td>
@@ -48,7 +50,9 @@
                                 <tr>
                                     <td>Marge Simpson</td>
                                     <td>
-                                        <span class="badge badge-secondary">User</span>
+                                        <span class="text-dark font-weight-bold">
+                                            <i class="fas fa-user text-secondary"></i> User
+                                        </span>
                                     </td>
                                     <td>marge@springfieldmail.com</td>
                                     <td>The Pretzel Wagon</td>
@@ -66,7 +70,9 @@
                                 <tr>
                                     <td>Bart Simpson</td>
                                     <td>
-                                        <span class="badge badge-secondary">User</span>
+                                        <span class="text-dark font-weight-bold">
+                                            <i class="fas fa-user text-secondary"></i> User
+                                        </span>
                                     </td>
                                     <td>bart@springfieldelem.edu</td>
                                     <td>Springfield Elementary</td>
@@ -84,7 +90,9 @@
                                 <tr>
                                     <td>Lisa Simpson</td>
                                     <td>
-                                        <span class="badge badge-secondary">User</span>
+                                        <span class="text-dark font-weight-bold">
+                                            <i class="fas fa-user text-secondary"></i> User
+                                        </span>
                                     </td>
                                     <td>lisa@springfieldelem.edu</td>
                                     <td>Springfield Elementary</td>
@@ -102,7 +110,9 @@
                                 <tr>
                                     <td>Ned Flanders</td>
                                     <td>
-                                        <span class="badge badge-primary">Administrator</span>
+                                        <span class="text-dark font-weight-bold">
+                                            <i class="fas fa-user-shield text-primary"></i> Administrator
+                                        </span>
                                     </td>
                                     <td>ned@leftoriumstore.com</td>
                                     <td>The Leftorium</td>
@@ -120,7 +130,9 @@
                                 <tr>
                                     <td>Moe Szyslak</td>
                                     <td>
-                                        <span class="badge badge-secondary">User</span>
+                                        <span class="text-dark font-weight-bold">
+                                            <i class="fas fa-user text-secondary"></i> User
+                                        </span>
                                     </td>
                                     <td>moe@moestavern.com</td>
                                     <td>Moe's Tavern</td>
@@ -138,7 +150,9 @@
                                 <tr>
                                     <td>Apu Nahasapeemapetilon</td>
                                     <td>
-                                        <span class="badge badge-primary">Administrator</span>
+                                        <span class="text-dark font-weight-bold">
+                                            <i class="fas fa-user-shield text-primary"></i> Administrator
+                                        </span>
                                     </td>
                                     <td>apu@kwikemart.com</td>
                                     <td>Kwik-E-Mart</td>
@@ -158,11 +172,17 @@
                                     <td>{{ user.name }}</td>
                                     <td>
                                         {% if user.type == 1 %}
-                                            <span class="badge badge-primary">Administrator</span>
+                                            <span class="text-dark font-weight-bold">
+                                                <i class="fas fa-user-shield text-primary"></i> Administrator
+                                            </span>
                                         {% elif user.type == 2 %}
-                                            <span class="badge badge-secondary">User</span>
+                                            <span class="text-dark font-weight-bold">
+                                                <i class="fas fa-user text-secondary"></i> User
+                                            </span>
                                         {% else %}
-                                            <span class="badge badge-light">User</span>
+                                            <span class="text-dark font-weight-bold">
+                                                <i class="fas fa-user text-secondary"></i> User
+                                            </span>
                                         {% endif %}
                                     </td>
                                     <td>{{ user.email }}</td>
