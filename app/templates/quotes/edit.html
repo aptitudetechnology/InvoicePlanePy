@@ -252,9 +252,30 @@
 </div>
 </div>
 
+<!-- Product Selection Modal -->
+<div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
+<div class="modal-dialog modal-lg">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title">Select Product</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body">
+<div class="mb-3">
+<input type="text" class="form-control" id="productSearch" placeholder="Search products..." onkeyup="filterProducts()">
+</div>
+<div id="productList" class="row">
+<!-- Products will be loaded here -->
+</div>
+</div>
+</div>
+</div>
+</div>
+
 <script>
 let itemCounter = {{ (quote.items|length) if quote.items else 0 }};
 let taxRates = []; // Will be populated from database
+let products = []; // Will be populated from API
 
 // Load tax rates from database
 async function loadTaxRates() {
@@ -270,6 +291,19 @@ async function loadTaxRates() {
         console.error('Error loading tax rates:', error);
         // Fallback to empty array if server fails
         taxRates = [];
+    }
+}
+
+// Load products from API
+async function loadProducts() {
+    try {
+        const response = await fetch('/products/api');
+        if (!response.ok) throw new Error('Failed to load products');
+        const data = await response.json();
+        products = data.products || data;
+    } catch (error) {
+        console.error('Error loading products:', error);
+        products = [];
     }
 }
 
@@ -401,9 +435,103 @@ function calculateTotals() {
     document.getElementById('quote-total').textContent = `$${total.toFixed(2)}`;
 }
 
+// Product selection functions
 function addProduct() {
-    // This would open a product selection modal
-    console.log('Add product clicked');
+    if (products.length === 0) {
+        loadProducts().then(() => {
+            displayProductModal();
+        });
+    } else {
+        displayProductModal();
+    }
+}
+
+function displayProductModal() {
+    const productList = document.getElementById('productList');
+    productList.innerHTML = '';
+    
+    products.forEach(product => {
+        const productCard = document.createElement('div');
+        productCard.className = 'col-md-6 mb-3';
+        productCard.innerHTML = `
+            <div class="card product-card" style="cursor: pointer;" onclick="selectProduct(${product.id})">
+                <div class="card-body">
+                    <h6 class="card-title">${product.name}</h6>
+                    <p class="card-text text-muted small">${product.description || 'No description'}</p>
+                    <div class="d-flex justify-content-between">
+                        <span class="fw-bold text-success">$${parseFloat(product.price || 0).toFixed(2)}</span>
+                        <small class="text-muted">SKU: ${product.sku || 'N/A'}</small>
+                    </div>
+                </div>
+            </div>
+        `;
+        productList.appendChild(productCard);
+    });
+    
+    // Show modal (Bootstrap 5 syntax)
+    const modal = new bootstrap.Modal(document.getElementById('productModal'));
+    modal.show();
+}
+
+function selectProduct(productId) {
+    const selectedProduct = products.find(p => p.id === productId);
+    if (!selectedProduct) return;
+    
+    // Add product as new row
+    const tbody = document.getElementById('quote-items');
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+        <td>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem(this)">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>
+        <td>
+            <input type="text" class="form-control form-control-sm" name="items[${itemCounter}][name]" value="${selectedProduct.name}" placeholder="Item">
+            <textarea class="form-control form-control-sm mt-1" name="items[${itemCounter}][description]" rows="2" placeholder="Description">${selectedProduct.description || ''}</textarea>
+        </td>
+        <td>
+            <input type="number" class="form-control form-control-sm" name="items[${itemCounter}][quantity]" value="1" step="0.01" onchange="calculateItemTotal(this)">
+        </td>
+        <td>
+            <input type="number" class="form-control form-control-sm" name="items[${itemCounter}][price]" value="${parseFloat(selectedProduct.price || 0).toFixed(2)}" step="0.01" onchange="calculateItemTotal(this)">
+        </td>
+        <td>
+            <input type="number" class="form-control form-control-sm" name="items[${itemCounter}][discount]" value="0.00" step="0.01" onchange="calculateItemTotal(this)">
+        </td>
+        <td>
+            ${createTaxRateDropdownHTML(itemCounter)}
+        </td>
+        <td class="item-subtotal">$${parseFloat(selectedProduct.price || 0).toFixed(2)}</td>
+        <td class="item-discount-amount">$0.00</td>
+        <td class="item-tax-amount">$0.00</td>
+        <td class="item-total">$${parseFloat(selectedProduct.price || 0).toFixed(2)}</td>
+    `;
+    tbody.appendChild(newRow);
+    itemCounter++;
+    
+    // Calculate totals
+    calculateTotals();
+    
+    // Hide modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('productModal'));
+    modal.hide();
+}
+
+function filterProducts() {
+    const searchTerm = document.getElementById('productSearch').value.toLowerCase();
+    const productCards = document.querySelectorAll('.product-card');
+    
+    productCards.forEach(card => {
+        const productName = card.querySelector('.card-title').textContent.toLowerCase();
+        const productDescription = card.querySelector('.card-text').textContent.toLowerCase();
+        
+        if (productName.includes(searchTerm) || productDescription.includes(searchTerm)) {
+            card.closest('.col-md-6').style.display = 'block';
+        } else {
+            card.closest('.col-md-6').style.display = 'none';
+        }
+    });
 }
 
 function addQuoteTax() {
@@ -459,6 +587,9 @@ document.addEventListener('DOMContentLoaded', function() {
     loadTaxRates().then(() => {
         calculateTotals();
     });
+    
+    // Load products for later use
+    loadProducts();
 });
 </script>
 {% endblock %}
