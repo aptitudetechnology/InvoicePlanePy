@@ -47,7 +47,7 @@ class Product(BaseModel):
     unit_id = Column(ForeignKey("product_units.id"), nullable=True)
     
     # Status
-    active = Column(Boolean, default=True, nullable=False)  # Changed from is_active to active
+    is_active = Column(Boolean, default=True, nullable=False)  # Changed from is_active to active
     
     # Relationships
     user = relationship("User", back_populates="products")
