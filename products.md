@@ -69,9 +69,9 @@ async def get_products_api(
         raise HTTPException(status_code=500, detail="An unexpected error occurred")
 ```
 
-## 2. Update products.html JavaScript for Error Handling and Consistency
+## 2. Update products list.html JavaScript for Error Handling and Consistency
 
-Update the JavaScript in `products.html` to handle product status and errors consistently:
+Update the JavaScript in `list.html` to handle product status and errors consistently:
 
 ```javascript
 // In the renderProductsTable function, update the product status logic:

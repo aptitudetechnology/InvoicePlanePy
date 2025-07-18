@@ -21,8 +21,16 @@
                 </div>
             </div>
 
-            {% if products %}
-            <div class="card">
+            <!-- Loading indicator -->
+            <div id="loadingIndicator" class="card" style="display: none;">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-spinner fa-spin fa-2x text-primary mb-3"></i>
+                    <h5 class="text-muted">Loading products...</h5>
+                </div>
+            </div>
+
+            <!-- Products table -->
+            <div id="productsContainer" class="card">
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-hover">
@@ -37,65 +45,16 @@
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                {% for product in products %}
-                                <tr>
-                                    <td>
-                                        <strong>{{ product.name }}</strong>
-                                        {% if product.description %}
-                                        <br><small class="text-muted">{{ product.description[:50] }}{% if product.description|length > 50 %}...{% endif %}</small>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if product.sku %}
-                                            <code>{{ product.sku }}</code>
-                                        {% else %}
-                                            <span class="text-muted">-</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if product.family %}
-                                            <span class="badge badge-secondary">{{ product.family.name }}</span>
-                                        {% else %}
-                                            <span class="text-muted">-</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if product.unit %}
-                                            {{ product.unit.abbreviation }}
-                                        {% else %}
-                                            <span class="text-muted">-</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <strong>${{ "%.2f"|format(product.price) }}</strong>
-                                    </td>
-                                    <td>
-                                        {% if product.is_active %}
-                                            <span class="badge badge-success">Active</span>
-                                        {% else %}
-                                            <span class="badge badge-secondary">Inactive</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <a href="/products/{{ product.id }}" class="btn btn-outline-primary">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            <a href="/products/{{ product.id }}/edit" class="btn btn-outline-secondary">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
+                            <tbody id="productsTable">
+                                <!-- Products will be populated via JavaScript -->
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-            {% else %}
-            <div class="card">
+
+            <!-- Empty state (initially hidden) -->
+            <div id="emptyState" class="card" style="display: none;">
                 <div class="card-body text-center py-5">
                     <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
                     <h3 class="text-muted">No Products</h3>
@@ -105,9 +64,160 @@
                     </a>
                 </div>
             </div>
-            {% endif %}
         </div>
     </div>
 </div>
-{% endblock %}
 
+<script>
+let products = [];
+
+// Function to render products table
+function renderProductsTable() {
+    const tbody = document.getElementById('productsTable');
+    const productsContainer = document.getElementById('productsContainer');
+    const emptyState = document.getElementById('emptyState');
+    
+    if (products.length === 0) {
+        productsContainer.style.display = 'none';
+        emptyState.style.display = 'block';
+        return;
+    }
+    
+    productsContainer.style.display = 'block';
+    emptyState.style.display = 'none';
+    
+    let html = '';
+    
+    products.forEach(product => {
+        // Product status logic with improved styling
+        let statusHtml = '';
+        if (product.active) {
+            statusHtml = `
+                <span class="text-success font-weight-bold">
+                    <i class="fas fa-check-circle"></i> Active
+                </span>
+            `;
+        } else {
+            statusHtml = `
+                <span class="text-danger font-weight-bold">
+                    <i class="fas fa-times-circle"></i> Inactive
+                </span>
+            `;
+        }
+        
+        // Build table row
+        html += `
+            <tr>
+                <td>
+                    <strong>${escapeHtml(product.name)}</strong>
+                    ${product.description ? `<br><small class="text-muted">${escapeHtml(product.description.substring(0, 50))}${product.description.length > 50 ? '...' : ''}</small>` : ''}
+                </td>
+                <td>
+                    ${product.sku ? `<code>${escapeHtml(product.sku)}</code>` : '<span class="text-muted">-</span>'}
+                </td>
+                <td>
+                    ${product.family ? `<span class="badge badge-secondary">${escapeHtml(product.family.name)}</span>` : '<span class="text-muted">-</span>'}
+                </td>
+                <td>
+                    ${product.unit ? escapeHtml(product.unit.abbreviation) : '<span class="text-muted">-</span>'}
+                </td>
+                <td>
+                    <strong>$${parseFloat(product.price).toFixed(2)}</strong>
+                </td>
+                <td>
+                    ${statusHtml}
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <a href="/products/${product.id}" class="btn btn-outline-primary">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="/products/${product.id}/edit" class="btn btn-outline-secondary">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+}
+
+// Function to load products with improved error handling
+async function loadProducts(page = 1) {
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const productsContainer = document.getElementById('productsContainer');
+    const emptyState = document.getElementById('emptyState');
+    
+    // Show loading indicator
+    loadingIndicator.style.display = 'block';
+    productsContainer.style.display = 'none';
+    emptyState.style.display = 'none';
+    
+    try {
+        const response = await fetch(`/products/api?page=${page}&limit=100`);
+        
+        if (!response.ok) {
+            if (response.status === 401) {
+                throw new Error('Authentication required');
+            } else if (response.status === 403) {
+                throw new Error('Admin access required');
+            } else {
+                throw new Error(`Server error: ${response.status}`);
+            }
+        }
+        
+        const data = await response.json();
+        products = data.products || [];
+        
+        if (data.pagination) {
+            console.log(`Loaded ${products.length} products (page ${data.pagination.page} of ${data.pagination.total_pages})`);
+        }
+        
+        // Hide loading indicator
+        loadingIndicator.style.display = 'none';
+        
+        renderProductsTable();
+        
+    } catch (error) {
+        console.error('Error loading products:', error);
+        
+        // Hide loading indicator
+        loadingIndicator.style.display = 'none';
+        
+        // Show error state
+        const tbody = document.getElementById('productsTable');
+        productsContainer.style.display = 'block';
+        emptyState.style.display = 'none';
+        
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center text-danger py-4">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Error loading products: ${escapeHtml(error.message)}
+                    <br>
+                    <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadProducts()">
+                        <i class="fas fa-redo"></i> Retry
+                    </button>
+                </td>
+            </tr>
+        `;
+    }
+}
+
+// Utility function to escape HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    loadProducts();
+});
+</script>
+
+{% endblock %}

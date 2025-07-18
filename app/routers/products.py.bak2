@@ -1,155 +1,15 @@
-from fastapi import APIRouter, Request, Depends, HTTPException, Form, Query
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi import APIRouter, Request, Depends, HTTPException, Form
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import or_, asc, desc
-import logging
 
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.user import User
 from app.models.product import Product, ProductFamily, ProductUnit
-# from app.auth import get_current_admin_user  # Adjust import based on your auth structure
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
-
-# Add the new API endpoint
-@router.get("/api")
-async def get_products_api(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),  # Using existing auth for now
-    page: int = Query(1, ge=1, description="Page number"),
-    limit: int = Query(100, ge=1, le=1000, description="Items per page"),
-    search: str = Query(None, description="Search products by name or SKU"),
-    sort_by: str = Query("name", description="Sort by: name, price, created_at, sku"),
-    sort_order: str = Query("asc", description="Sort order: asc or desc")
-):
-    """
-    Get paginated list of products for the admin interface.
-    Includes related family and unit information.
-    """
-    try:
-        offset = (page - 1) * limit
-        
-        # Base query with eager loading of related data
-        products_query = db.query(Product).join(
-            ProductFamily, Product.family_id == ProductFamily.id, isouter=True
-        ).join(
-            ProductUnit, Product.unit_id == ProductUnit.id, isouter=True
-        )
-        
-        # Apply search filter if provided
-        if search:
-            search_term = f"%{search}%"
-            products_query = products_query.filter(
-                or_(
-                    Product.name.ilike(search_term),
-                    Product.sku.ilike(search_term),
-                    Product.description.ilike(search_term)
-                )
-            )
-        
-        # Apply sorting
-        sort_column = None
-        if sort_by == "name":
-            sort_column = Product.name
-        elif sort_by == "price":
-            sort_column = Product.price
-        elif sort_by == "sku":
-            sort_column = Product.sku
-        elif sort_by == "created_at":
-            # Assuming you have a created_at field, adjust if different
-            sort_column = getattr(Product, 'created_at', Product.id)
-        else:
-            sort_column = Product.name  # Default fallback
-        
-        if sort_order.lower() == "desc":
-            products_query = products_query.order_by(desc(sort_column))
-        else:
-            products_query = products_query.order_by(asc(sort_column))
-        
-        # Get paginated results
-        products = products_query.offset(offset).limit(limit).all()
-        
-        # Get total count for pagination
-        total_query = db.query(Product)
-        if search:
-            search_term = f"%{search}%"
-            total_query = total_query.filter(
-                or_(
-                    Product.name.ilike(search_term),
-                    Product.sku.ilike(search_term),
-                    Product.description.ilike(search_term)
-                )
-            )
-        total_products = total_query.count()
-        
-        # Format products data with related information
-        products_data = []
-        for product in products:
-            # Get related family and unit data
-            family_data = None
-            if product.family:
-                family_data = {
-                    "id": product.family.id,
-                    "name": product.family.name
-                }
-            
-            unit_data = None
-            if product.unit:
-                unit_data = {
-                    "id": product.unit.id,
-                    "name": product.unit.name,
-                    "abbreviation": product.unit.abbreviation
-                }
-            
-            product_data = {
-                "id": product.id,
-                "name": product.name,
-                "sku": product.sku,
-                "price": float(product.price) if product.price is not None else None,
-                "description": product.description if product.description else None,
-                "family": family_data,
-                "unit": unit_data,
-                # Additional fields from your model
-                "tax_rate_id": product.tax_rate_id,
-                "provider_name": product.provider_name,
-                "purchase_price": float(product.purchase_price) if product.purchase_price is not None else None,
-                "sumex": product.sumex,
-                "tariff": float(product.tariff) if product.tariff is not None else None,
-                "user_id": product.user_id,
-                # Add created_at if it exists in your model
-                "created_at": product.created_at.isoformat() if hasattr(product, 'created_at') and product.created_at else None,
-                # Add is_active field if it exists, otherwise assume active
-                "is_active": getattr(product, 'is_active', True)
-            }
-            products_data.append(product_data)
-        
-        return {
-            "products": products_data,
-            "pagination": {
-                "page": page,
-                "limit": limit,
-                "total": total_products,
-                "total_pages": (total_products + limit - 1) // limit
-            },
-            "filters": {
-                "search": search,
-                "sort_by": sort_by,
-                "sort_order": sort_order
-            }
-        }
-        
-    except SQLAlchemyError as e:
-        logging.error(f"Database error in get_products_api: {str(e)}")
-        raise HTTPException(status_code=500, detail="Database error occurred")
-    except Exception as e:
-        logging.error(f"Unexpected error in get_products_api: {str(e)}")
-        raise HTTPException(status_code=500, detail="An unexpected error occurred")
-
-# Existing endpoints continue below...
 
 @router.get("/", response_class=HTMLResponse)
 async def products_list(

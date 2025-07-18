@@ -2,6 +2,7 @@ from sqlalchemy import Column, String, Text, Numeric, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from app.models.base import BaseModel
 
+
 class ProductFamily(BaseModel):
     __tablename__ = "product_families"
     
@@ -14,6 +15,7 @@ class ProductFamily(BaseModel):
     
     # Relationships
     products = relationship("Product", back_populates="family")
+
 
 class ProductUnit(BaseModel):
     __tablename__ = "product_units"
@@ -29,14 +31,15 @@ class ProductUnit(BaseModel):
     # Relationships
     products = relationship("Product", back_populates="unit")
 
+
 class Product(BaseModel):
     __tablename__ = "products"
     
     # Product details
-    name = Column(String(100), nullable=False)
-    description = Column(Text)
-    price = Column(Numeric(10, 2), nullable=False)
-    sku = Column(String(50), unique=True)
+    name = Column(String(255), nullable=False)  # Updated length to 255
+    description = Column(Text, nullable=True)
+    price = Column(Numeric(10, 2), nullable=True)  # Changed to nullable=True
+    sku = Column(String(100), unique=True, nullable=False)  # Updated length and made required
     
     # Foreign keys
     user_id = Column(ForeignKey("users.id"), nullable=True)
@@ -44,7 +47,7 @@ class Product(BaseModel):
     unit_id = Column(ForeignKey("product_units.id"), nullable=True)
     
     # Status
-    is_active = Column(Boolean, default=True)
+    active = Column(Boolean, default=True, nullable=False)  # Changed from is_active to active
     
     # Relationships
     user = relationship("User", back_populates="products")
