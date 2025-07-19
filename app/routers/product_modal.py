@@ -4,7 +4,7 @@
 
 #**File:** `app/routers/product_modal.py`
 
-```python
+
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 from app.database import get_db
