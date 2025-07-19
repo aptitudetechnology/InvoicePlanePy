@@ -114,7 +114,7 @@ async def get_products_api(
                 "family": family_data,
                 "unit": unit_data,
                 # Additional fields from your model
-                "tax_rate_id": product.tax_rate_id,
+                "tax_rate": product.tax_rate,
                 "provider_name": product.provider_name,
                 "purchase_price": float(product.purchase_price) if product.purchase_price is not None else None,
                 "sumex": product.sumex,
@@ -381,7 +381,7 @@ async def update_product(
     product.sku = sku if sku else None
     product.family_id = family_id if family_id else None
     product.unit_id = unit_id if unit_id else None
-    product.tax_rate_id = tax_rate_id if tax_rate_id else None
+    product.tax_rate = tax_rate if tax_rate else None
     product.provider_name = provider_name if provider_name else None
     product.purchase_price = purchase_price if purchase_price is not None else None
     product.sumex = sumex if sumex else None
