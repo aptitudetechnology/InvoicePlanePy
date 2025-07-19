@@ -193,7 +193,7 @@
                                     <button type="button" class="btn btn-sm btn-outline-primary me-2" onclick="addNewRow()">
                                         <i class="bi bi-plus"></i> Add new row
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addProduct()">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="displayProductModal()">
                                         <i class="bi bi-box"></i> Add product
                                     </button>
                                 </div>
@@ -435,90 +435,72 @@
     }
 
     // Product selection functions
-    function addProduct() {
-        if (products.length === 0) {
-            loadProducts().then(() => {
-                displayProductModal();
-            });
-        } else {
-            displayProductModal();
-        }
-    }
+
+    // Clean JavaScript functions for product modal
+    // Works with existing HTML template structure
 
     function displayProductModal() {
-        const productList = document.getElementById('productList');
-        productList.innerHTML = '';
-
-        products.forEach(product => {
-            const productCard = document.createElement('div');
-            productCard.className = 'col-md-6 mb-3';
-            productCard.innerHTML = `
-                <div class="card product-card" style="cursor: pointer;" onclick="selectProduct(${product.id})">
-                    <div class="card-body">
-                        <h6 class="card-title">${product.name}</h6>
-                        <p class="card-text text-muted small">${product.description || 'No description'}</p>
-                        <div class="d-flex justify-content-between">
-                            <span class="fw-bold text-success">$${parseFloat(product.price || 0).toFixed(2)}</span>
-                            <small class="text-muted">SKU: ${product.sku || 'N/A'}</small>
-                        </div>
-                    </div>
-                </div>
-            `;
-            productList.appendChild(productCard);
-        });
-
-        // Show modal (Bootstrap 5 syntax)
+        // Simply show the modal - all HTML is already in the template
         const modal = new bootstrap.Modal(document.getElementById('productModal'));
         modal.show();
+        // Reset any filters
+        if (typeof resetProductSearch === 'function') resetProductSearch();
+        if (typeof updateSelectionSummary === 'function') updateSelectionSummary();
     }
 
-    function selectProduct(productId) {
-        const selectedProduct = products.find(p => p.id === productId);
-        if (!selectedProduct) return;
-
-        // Add product as new row
-        const tbody = document.getElementById('quote-items');
-        const newRow = document.createElement('tr');
-
-        // Store the generated HTML for the dropdown in a variable first
-        const taxRateDropdownContent = createTaxRateDropdownHTML(itemCounter);
-
-        newRow.innerHTML = `
-            <td>
-                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem(this)">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </td>
-            <td>
-                <input type="text" class="form-control form-control-sm" name="items[${itemCounter}][name]" value="${selectedProduct.name}" placeholder="Item">
-                <textarea class="form-control form-control-sm mt-1" name="items[${itemCounter}][description]" rows="2" placeholder="Description">${selectedProduct.description || ''}</textarea>
-            </td>
-            <td>
-                <input type="number" class="form-control form-control-sm" name="items[${itemCounter}][quantity]" value="1" step="0.01" onchange="calculateItemTotal(this)">
-            </td>
-            <td>
-                <input type="number" class="form-control form-control-sm" name="items[${itemCounter}][price]" value="${parseFloat(selectedProduct.price || 0).toFixed(2)}" step="0.01" onchange="calculateItemTotal(this)">
-            </td>
-            <td>
-                <input type="number" class="form-control form-control-sm" name="items[${itemCounter}][discount]" value="0.00" step="0.01" onchange="calculateItemTotal(this)">
-            </td>
-            <td>
-                ${taxRateDropdownContent}
-            </td>
-            <td class="item-subtotal">$${parseFloat(selectedProduct.price || 0).toFixed(2)}</td>
-            <td class="item-discount-amount">$0.00</td>
-            <td class="item-tax-amount">$0.00</td>
-            <td class="item-total">$${parseFloat(selectedProduct.price || 0).toFixed(2)}</td>
-        `;
-        tbody.appendChild(newRow);
-        itemCounter++;
-
-        // Calculate totals
-        calculateTotals();
-
-        // Hide modal
+    function addSelectedProducts() {
+        const selectedCheckboxes = document.querySelectorAll('.product-checkbox:checked');
+        if (selectedCheckboxes.length === 0) {
+            alert('Please select at least one product.');
+            return;
+        }
+        // For each selected product, trigger the existing addNewRow functionality
+        selectedCheckboxes.forEach(checkbox => {
+            const row = checkbox.closest('.product-row');
+            const productName = row.cells[3].textContent.trim();
+            const priceText = row.cells[5].textContent.replace('$', '').trim();
+            const price = parseFloat(priceText) || 0;
+            // Call your existing addNewRow function and then populate the new row
+            addNewRowWithProduct(productName, price);
+        });
+        // Clear selections and hide modal
+        selectedCheckboxes.forEach(checkbox => checkbox.checked = false);
+        if (typeof updateSelectionSummary === 'function') updateSelectionSummary();
         const modal = bootstrap.Modal.getInstance(document.getElementById('productModal'));
-        modal.hide();
+        if (modal) modal.hide();
+    }
+
+    function addNewRowWithProduct(productName, price) {
+        // First, add a new empty row using your existing function
+        if (typeof addNewRow === 'function') {
+            addNewRow();
+            // Then populate the last added row with product data
+            const tbody = document.querySelector('#quote-items tbody, #quote-items');
+            const lastRow = tbody.lastElementChild;
+            if (lastRow) {
+                // Find the name input and set the product name
+                const nameInput = lastRow.querySelector('input[name*="[name]"]');
+                if (nameInput) {
+                    nameInput.value = productName;
+                }
+                // Find the price input and set the price
+                const priceInput = lastRow.querySelector('input[name*="[price]"]');
+                if (priceInput) {
+                    priceInput.value = price.toFixed(2);
+                    // Trigger calculation if the function exists
+                    if (typeof calculateItemTotal === 'function') {
+                        calculateItemTotal(priceInput);
+                    }
+                }
+                // Set quantity to 1
+                const quantityInput = lastRow.querySelector('input[name*="[quantity]"]');
+                if (quantityInput) {
+                    quantityInput.value = '1';
+                }
+            }
+        } else {
+            console.error('addNewRow function not found. Make sure it is defined.');
+        }
     }
 
     function filterProducts() {
