@@ -88,6 +88,11 @@ def run_test():
             modified_form_data[date_field] = future_date
             print(f"  Auto-filled missing date field '{date_field}' with: {future_date}")
 
+        # Force-set issue_date if missing or empty
+        if not modified_form_data.get("issue_date"):
+            modified_form_data["issue_date"] = time.strftime('%Y-%m-%d')
+            print(f"  Set missing 'issue_date' to: {modified_form_data['issue_date']}")
+
     # Ensure required core fields
     required_defaults = {
         'client_id': '1',
