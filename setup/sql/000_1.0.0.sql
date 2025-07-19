@@ -79,22 +79,26 @@ CREATE TABLE IF NOT EXISTS quotes (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Quote items table
-CREATE TABLE IF NOT EXISTS quote_items (
-    id SERIAL PRIMARY KEY,
-    quote_id INTEGER REFERENCES quotes(id) NOT NULL,
-    product_id INTEGER REFERENCES products(id),
-    name VARCHAR(100) NOT NULL,
-    description TEXT,
-    quantity NUMERIC(10, 2) NOT NULL,
-    price NUMERIC(10, 2) NOT NULL,
-    "order" INTEGER DEFAULT 0, -- "order" is a reserved keyword in SQL, quoting it is good practice
-    subtotal NUMERIC(10, 2),
-    tax_amount NUMERIC(10, 2),
-    total NUMERIC(10, 2),
-    -- Assuming BaseModel adds created_at and updated_at
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS quotes (
+ id SERIAL PRIMARY KEY,
+ user_id INTEGER REFERENCES users(id) NOT NULL,
+ client_id INTEGER REFERENCES clients(id) NOT NULL,
+ quote_number VARCHAR(20) UNIQUE NOT NULL,
+-- Using VARCHAR for Enum status to match typical SQL ENUM representation or string storage
+-- If using PostgreSQL, you could define a custom TYPE ENUM('DRAFT', 'SENT', ...)
+status VARCHAR(20) DEFAULT 'DRAFT',
+ issue_date DATE NOT NULL,
+ valid_until DATE,
+ terms TEXT,
+ notes TEXT,
+ quote_pdf_password VARCHAR(255),
+ url_key VARCHAR(32) UNIQUE,
+ subtotal NUMERIC(10, 2) DEFAULT 0.00,
+ tax_total NUMERIC(10, 2) DEFAULT 0.00,
+ total NUMERIC(10, 2) DEFAULT 0.00,
+-- Assuming BaseModel adds created_at and updated_at
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 
