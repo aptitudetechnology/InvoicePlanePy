@@ -139,6 +139,10 @@ def run_test():
     try:
         post_resp = session.post(EDIT_URL, data=modified_form_data, allow_redirects=True)
         post_resp.raise_for_status()
+        print("POST response status:", post_resp.status_code)
+        print("POST response headers:", post_resp.headers)
+        print("POST response content snippet:", post_resp.text[:500])  # print first 500 chars
+
         print(f"✅ POST successful. Status Code: {post_resp.status_code}")
         if post_resp.history:
             print(f"  Redirected: {post_resp.history[0].url} → {post_resp.url}")
