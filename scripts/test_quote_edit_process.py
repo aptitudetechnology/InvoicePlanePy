@@ -5,7 +5,7 @@ import time
 BASE_URL = "http://localhost:8080"
 LOGIN_ENDPOINT = "/auth/login"
 USERNAME = "admin"
-PASSWORD = "admin"
+PASSWORD = "admin123"
 
 QUOTE_ID = 74
 EDIT_ENDPOINT = f"/quotes/{QUOTE_ID}/edit"
