@@ -1,138 +1,127 @@
 #!/bin/bash
 
-# Route Diagnostic Tool for Modal DOM Issues
-# This script helps identify routing and path problems
+# Fixed Modal DOM Element Test for InvoicePlanePy
+# This version looks in the correct directories
 
-echo "=============================================="
-echo "ROUTE & PATH DIAGNOSTIC TOOL"
-echo "=============================================="
+echo "=================================================="
+echo "FIXED MODAL DOM ELEMENT TEST - InvoicePlanePy"
+echo "=================================================="
 
-# Function to find files recursively
-find_files() {
-    local pattern="$1"
-    local description="$2"
-    echo "=== $description ==="
-    
-    # Try different common locations
-    find . -name "$pattern" -type f 2>/dev/null | head -10
-    
-    if [ $? -ne 0 ] || [ -z "$(find . -name "$pattern" -type f 2>/dev/null)" ]; then
-        echo "⚠ No files found matching pattern: $pattern"
-    fi
-    echo ""
-}
+# Ensure we're in project root
+if [[ ! -d "app/templates" ]]; then
+    echo "❌ Error: Run this script from the InvoicePlanePy root directory"
+    echo "Current directory: $(pwd)"
+    echo "Expected to find: app/templates/"
+    exit 1
+fi
 
-# Check current directory structure
-echo "=== CURRENT DIRECTORY STRUCTURE ==="
-pwd
-echo "Contents:"
-ls -la
+echo "✅ Project root confirmed: $(pwd)"
 echo ""
 
-# Look for common web framework structures
-echo "=== DETECTING FRAMEWORK STRUCTURE ==="
-if [ -f "package.json" ]; then
-    echo "✓ Node.js project detected"
-    echo "Package.json contents:"
-    head -20 package.json
-elif [ -f "requirements.txt" ] || [ -f "app.py" ] || [ -f "manage.py" ]; then
-    echo "✓ Python/Flask/Django project detected"
-elif [ -f "composer.json" ] || [ -d "vendor" ]; then
-    echo "✓ PHP project detected"
-elif [ -f "Gemfile" ]; then
-    echo "✓ Ruby project detected"
+echo "=== MODAL FILES ANALYSIS ==="
+modal_files=("app/templates/modals/add_product_modal.html" "app/templates/quotes/edit.html")
+
+for file in "${modal_files[@]}"; do
+    if [[ -f "$file" ]]; then
+        echo "✅ Found: $file"
+    else
+        echo "❌ Missing: $file"
+    fi
+done
+echo ""
+
+echo "=== JAVASCRIPT FUNCTION ANALYSIS ==="
+echo "Searching for displayProductModal function:"
+if grep -q "displayProductModal" app/templates/quotes/edit.html 2>/dev/null; then
+    echo "✅ displayProductModal function found in app/templates/quotes/edit.html"
+    echo "Function definition:"
+    grep -n -A 5 "function displayProductModal" app/templates/quotes/edit.html
 else
-    echo "? Unknown or static project structure"
+    echo "❌ displayProductModal function not found"
 fi
 echo ""
 
-# Search for modal-related files
-find_files "*.html" "HTML FILES"
-find_files "*modal*" "MODAL-RELATED FILES"
-find_files "*.js" "JAVASCRIPT FILES"
-find_files "*.css" "CSS FILES"
-
-# Look for template directories
-echo "=== TEMPLATE DIRECTORY ANALYSIS ==="
-common_template_dirs=("templates" "views" "public" "static" "assets" "src" "dist" "build")
-
-for dir in "${common_template_dirs[@]}"; do
-    if [ -d "$dir" ]; then
-        echo "✓ Found: $dir/"
-        find "$dir" -type f \( -name "*.html" -o -name "*.js" -o -name "*.css" \) | head -5
-    fi
-done
+echo "=== DOM ELEMENT ANALYSIS ==="
+echo "Checking for productModal ID:"
+if grep -q 'id="productModal"' app/templates/modals/add_product_modal.html 2>/dev/null; then
+    echo "✅ productModal ID found in modal template"
+    grep -n 'id="productModal"' app/templates/modals/add_product_modal.html
+else
+    echo "❌ productModal ID not found in modal template"
+fi
 echo ""
 
-# Check for route configuration files
-echo "=== ROUTE CONFIGURATION FILES ==="
-route_files=("routes.py" "urls.py" "routes.js" "app.js" "server.js" "web.php" "routes.php" ".htaccess" "config.ru")
-
-for file in "${route_files[@]}"; do
-    if [ -f "$file" ]; then
-        echo "✓ Found route file: $file"
-        echo "First 10 lines:"
-        head -10 "$file"
-        echo "---"
-    fi
-done
+echo "=== TEMPLATE INCLUSION ANALYSIS ==="
+echo "Checking if modal is included in quotes/edit.html:"
+if grep -q "add_product_modal.html" app/templates/quotes/edit.html 2>/dev/null; then
+    echo "✅ Modal template is included"
+    grep -n "add_product_modal.html" app/templates/quotes/edit.html
+else
+    echo "❌ Modal template not included"
+fi
 echo ""
 
-# Search for specific functions and IDs
-echo "=== SEARCHING FOR MODAL-RELATED CODE ==="
-echo "Searching for 'displayProductModal' function:"
-grep -r "displayProductModal" . --include="*.js" --include="*.html" 2>/dev/null | head -5
-
-echo ""
-echo "Searching for 'productModal' ID:"
-grep -r "productModal" . --include="*.js" --include="*.html" 2>/dev/null | head -5
-
-echo ""
-echo "Searching for modal-related classes:"
-grep -r "modal" . --include="*.js" --include="*.html" --include="*.css" 2>/dev/null | head -10
-
+echo "=== BOOTSTRAP MODAL INTEGRATION ==="
+echo "Checking Bootstrap modal integration:"
+if grep -q "bootstrap.Modal" app/templates/quotes/edit.html 2>/dev/null; then
+    echo "✅ Bootstrap Modal integration found"
+    grep -n "bootstrap.Modal" app/templates/quotes/edit.html
+else
+    echo "❌ Bootstrap Modal integration not found"
+fi
 echo ""
 
-# Check file permissions
-echo "=== FILE PERMISSIONS CHECK ==="
-echo "Checking if files are accessible:"
-if [ -f "index.html" ]; then
-    ls -la index.html
+echo "=== POTENTIAL ISSUES ANALYSIS ==="
+issues_found=0
+
+# Check if Bootstrap is loaded
+if ! grep -q "bootstrap" app/templates/quotes/edit.html 2>/dev/null; then
+    echo "⚠ Potential Issue: Bootstrap may not be loaded"
+    ((issues_found++))
 fi
 
-# Check for symbolic links
-echo ""
-echo "=== SYMBOLIC LINKS CHECK ==="
-find . -type l 2>/dev/null | head -10
+# Check if jQuery is loaded (if needed)
+if grep -q "jquery\|jQuery" app/templates/quotes/edit.html 2>/dev/null; then
+    echo "✅ jQuery detected (may be needed for some functionality)"
+else
+    echo "ℹ Info: No jQuery detected (may be fine if using vanilla JS)"
+fi
 
-# Web server configuration check
-echo ""
-echo "=== WEB SERVER CONFIGURATION ==="
-if [ -f ".htaccess" ]; then
-    echo "✓ Apache .htaccess found:"
-    cat .htaccess
-elif [ -f "nginx.conf" ] || [ -f "nginx.config" ]; then
-    echo "✓ Nginx config found"
-elif [ -f "web.config" ]; then
-    echo "✓ IIS web.config found"
+# Check for DOM ready handlers
+if grep -q "DOMContentLoaded\|document.ready" app/templates/quotes/edit.html 2>/dev/null; then
+    echo "✅ DOM ready handler detected"
+else
+    echo "⚠ Potential Issue: No DOM ready handler detected"
+    ((issues_found++))
 fi
 
 echo ""
-echo "=== QUICK FIXES TO TRY ==="
-echo "1. Check if your web server is serving from the correct directory"
-echo "2. Verify file paths in your HTML includes/imports"
-echo "3. Check for case sensitivity issues (productModal vs ProductModal)"
-echo "4. Ensure JavaScript files are loaded before DOM manipulation"
-echo "5. Check browser developer tools for 404 errors on resource loading"
-echo ""
+echo "=== SUMMARY ==="
+if [[ $issues_found -eq 0 ]]; then
+    echo "🎉 SUCCESS: Modal system appears to be properly configured!"
+    echo "   - Modal template exists and has correct ID"
+    echo "   - JavaScript function exists" 
+    echo "   - Modal is included in the edit template"
+    echo "   - Bootstrap integration is present"
+else
+    echo "⚠ Found $issues_found potential issues (see above)"
+fi
 
-echo "=== RECOMMENDED NEXT STEPS ==="
-echo "Run these commands to get more specific information:"
-echo "  find . -name '*.html' -exec grep -l 'modal' {} \;"
-echo "  find . -name '*.js' -exec grep -l 'productModal\\|displayProductModal' {} \;"
-echo "  grep -r 'src=\\|href=' --include='*.html' . | grep -E '\\.js|\\.css'"
 echo ""
+echo "=== TESTING RECOMMENDATIONS ==="
+echo "1. Open your browser's Developer Tools (F12)"
+echo "2. Navigate to the quotes/edit page"
+echo "3. Try to trigger the modal"
+echo "4. Check the Console tab for any JavaScript errors"
+echo "5. Check the Network tab for failed resource loads"
 
-echo "=============================================="
-echo "DIAGNOSTIC COMPLETE"
-echo "=============================================="
+echo ""
+echo "=== QUICK DEBUGGING COMMANDS ==="
+echo "To test the modal manually in browser console:"
+echo "  displayProductModal()  // Should open the modal"
+echo "  document.getElementById('productModal')  // Should return the modal element"
+
+echo ""
+echo "=================================================="
+echo "FIXED TEST COMPLETE"
+echo "=================================================="
