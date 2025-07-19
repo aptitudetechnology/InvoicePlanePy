@@ -147,7 +147,7 @@ def run_test():
         if post_resp.history:
             print(f"  Redirected: {post_resp.history[0].url} → {post_resp.url}")
             except requests.exceptions.HTTPError as e:
-              print(f"❌ Error during POST: {e}")
+            print(f"❌ Error during POST: {e}")
             print("POST response status:", post_resp.status_code)
             print("POST response headers:", post_resp.headers)
             print("POST response content snippet:")
