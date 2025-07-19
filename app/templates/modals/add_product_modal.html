@@ -1,0 +1,330 @@
+<!-- Product Selection Modal -->
+<div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add product</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Search and Filter Section -->
+        <div class="row mb-3">
+          <div class="col-md-3">
+            <select class="form-select" id="familyFilter" onchange="filterProductsByFamily()">
+              <option value="">Any family</option>
+              <option value="ram">RAM</option>
+              <option value="storage">Storage</option>
+              <option value="cables">Cables</option>
+              <option value="systems">Complete Systems</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <input type="text" class="form-control" id="productNameSearch" placeholder="Product name" onkeyup="filterProductsByName()">
+          </div>
+          <div class="col-md-3">
+            <div class="btn-group" role="group">
+              <button type="button" class="btn btn-outline-primary btn-sm" onclick="searchProducts()">Search product</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" onclick="resetProductSearch()">Reset</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Products Table -->
+        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+          <table class="table table-sm table-hover">
+            <thead class="table-light sticky-top">
+              <tr>
+                <th width="5%"></th>
+                <th width="10%">SKU</th>
+                <th width="15%">Family name</th>
+                <th width="25%">Product name</th>
+                <th width="35%">Product description</th>
+                <th width="10%">Price</th>
+              </tr>
+            </thead>
+            <tbody id="productTableBody">
+              <!-- RAM Product -->
+              <tr class="product-row" data-family="ram">
+                <td>
+                  <input type="checkbox" class="form-check-input product-checkbox" value="1" data-product-id="1">
+                </td>
+                <td>CM508GX3M1C1600C11</td>
+                <td></td>
+                <td>Corsair 8GB (1x8GB) CM508GX3M1C1600C11 1600MHz Value Select DDR3L SODIMM RAM</td>
+                <td>High-performance DDR3L SODIMM memory module</td>
+                <td>$54.90</td>
+              </tr>
+
+              <!-- Cable Product -->
+              <tr class="product-row" data-family="cables">
+                <td>
+                  <input type="checkbox" class="form-check-input product-checkbox" value="2" data-product-id="2">
+                </td>
+                <td></td>
+                <td></td>
+                <td>dvi to display port cable</td>
+                <td>DVI-D to DisplayPort adapter cable for video connections</td>
+                <td>$10.00</td>
+              </tr>
+
+              <!-- Storage Product -->
+              <tr class="product-row" data-family="storage">
+                <td>
+                  <input type="checkbox" class="form-check-input product-checkbox" value="3" data-product-id="3">
+                </td>
+                <td></td>
+                <td></td>
+                <td>Kingston 1TB NV2 2280 NVMe SSD</td>
+                <td>High-speed NVMe solid state drive for enhanced performance</td>
+                <td>$70.00</td>
+              </tr>
+
+              <!-- Complete System Product (Expandable) -->
+              <tr class="product-row" data-family="systems" style="cursor: pointer;" onclick="toggleProductDetails(this)">
+                <td>
+                  <input type="checkbox" class="form-check-input product-checkbox" value="4" data-product-id="4" onclick="event.stopPropagation()">
+                </td>
+                <td></td>
+                <td></td>
+                <td>
+                  <i class="bi bi-chevron-right expand-icon"></i>
+                  Leader Corporate S44-i5 Slim Desktop, Intel i5-13400,16GB DDR5 RAM, 500GB M.2 NVMe SSD, 300W GOLD PSU, Win 11 Pro, 3 Years "4 Hour" Onsite Warranty
+                </td>
+                <td>Complete business desktop solution with warranty</td>
+                <td>$1,500.00</td>
+              </tr>
+
+              <!-- Expandable Details Row (Hidden by default) -->
+              <tr class="product-details-row" id="details-4" style="display: none;">
+                <td></td>
+                <td colspan="5">
+                  <div class="p-3 bg-light">
+                    <div class="row">
+                      <div class="col-12">
+                        <h6>DESCRIPTION</h6>
+                        
+                        <div class="mb-2">
+                          <strong>CPU</strong><br>
+                          Intel Core i5 13400 CPU 3.3GHz (4.6GHz Turbo) 13th Gen LGA1700 10-Cores 16-Threads 20MB 65W
+                        </div>
+
+                        <div class="mb-2">
+                          <strong>Mainboard</strong><br>
+                          ASUS Pro CSM Corporate Motherboard B760M
+                        </div>
+
+                        <div class="mb-2">
+                          <strong>Graphics</strong><br>
+                          Intel UHD graphics 730
+                        </div>
+
+                        <div class="mb-2">
+                          <strong>Memory</strong><br>
+                          Crucial 16GB (1x16GB) DDR5 UDIMM 4800MHz CL40 Desktop PC Memory
+                        </div>
+
+                        <div class="mb-2">
+                          <strong>Optical</strong><br>
+                          24X DVD+/-R/RW DVD Burner with software.
+                        </div>
+
+                        <div class="mb-2">
+                          <strong>Storage</strong><br>
+                          500GB M.2 NVMe SSD
+                        </div>
+
+                        <div class="mb-2">
+                          <strong>Case</strong><br>
+                          Leader Intel Certified mATX slimline Silver/Black Thermal case. Advanced cooling and noise reduction features. Gold 80+ 300W PSU
+                        </div>
+
+                        <div class="mb-2">
+                          <strong>Keyboard</strong><br>
+                          Wired Full Size Keyboard
+                        </div>
+
+                        <div class="mb-2">
+                          <strong>Mouse</strong><br>
+                          Wired Full Size Mouse
+                        </div>
+
+                        <div class="mb-2">
+                          <strong>Operating System</strong><br>
+                          Windows 11 Professional
+                        </div>
+
+                        <div class="mb-2">
+                          <strong>LAN</strong><br>
+                          Gigabit Ethernet
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Selection Summary -->
+        <div class="mt-3">
+          <div id="selectionSummary" class="text-muted">
+            <small>No products selected</small>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="addSelectedProducts()" disabled id="addProductsBtn">Add Selected Products</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Placeholder functions for product modal functionality
+
+function filterProductsByFamily() {
+    const selectedFamily = document.getElementById('familyFilter').value;
+    const rows = document.querySelectorAll('.product-row');
+    
+    rows.forEach(row => {
+        const family = row.getAttribute('data-family');
+        if (!selectedFamily || family === selectedFamily) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function filterProductsByName() {
+    const searchTerm = document.getElementById('productNameSearch').value.toLowerCase();
+    const rows = document.querySelectorAll('.product-row');
+    
+    rows.forEach(row => {
+        const productName = row.cells[3].textContent.toLowerCase();
+        if (productName.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function searchProducts() {
+    // Placeholder - combine family and name filters
+    filterProductsByFamily();
+    filterProductsByName();
+}
+
+function resetProductSearch() {
+    document.getElementById('familyFilter').value = '';
+    document.getElementById('productNameSearch').value = '';
+    
+    // Show all rows
+    const rows = document.querySelectorAll('.product-row');
+    rows.forEach(row => {
+        row.style.display = '';
+    });
+}
+
+function toggleProductDetails(row) {
+    const productId = row.querySelector('.product-checkbox').getAttribute('data-product-id');
+    const detailsRow = document.getElementById('details-' + productId);
+    const expandIcon = row.querySelector('.expand-icon');
+    
+    if (detailsRow.style.display === 'none') {
+        detailsRow.style.display = '';
+        expandIcon.className = 'bi bi-chevron-down expand-icon';
+    } else {
+        detailsRow.style.display = 'none';
+        expandIcon.className = 'bi bi-chevron-right expand-icon';
+    }
+}
+
+function updateSelectionSummary() {
+    const selectedCheckboxes = document.querySelectorAll('.product-checkbox:checked');
+    const summaryDiv = document.getElementById('selectionSummary');
+    const addButton = document.getElementById('addProductsBtn');
+    
+    if (selectedCheckboxes.length === 0) {
+        summaryDiv.innerHTML = '<small>No products selected</small>';
+        addButton.disabled = true;
+    } else {
+        summaryDiv.innerHTML = `<small>${selectedCheckboxes.length} product(s) selected</small>`;
+        addButton.disabled = false;
+    }
+}
+
+function addSelectedProducts() {
+    const selectedCheckboxes = document.querySelectorAll('.product-checkbox:checked');
+    
+    selectedCheckboxes.forEach(checkbox => {
+        const row = checkbox.closest('.product-row');
+        const productName = row.cells[3].textContent.trim();
+        const price = row.cells[5].textContent.replace('$', '');
+        
+        // TODO: Add to quote items table using existing addNewRow logic
+        console.log('Adding product:', productName, 'Price:', price);
+        
+        // For now, just add a new row with the product info
+        addProductToQuote(productName, price);
+    });
+    
+    // Clear selections
+    selectedCheckboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    updateSelectionSummary();
+    
+    // Hide modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('productModal'));
+    modal.hide();
+}
+
+function addProductToQuote(productName, price) {
+    // Placeholder - integrate with existing addNewRow functionality
+    // This would add the product to the quote items table
+    const tbody = document.getElementById('quote-items');
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+        <td>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem(this)">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>
+        <td>
+            <input type="text" class="form-control form-control-sm" name="items[${itemCounter}][name]" value="${productName}" placeholder="Item">
+            <textarea class="form-control form-control-sm mt-1" name="items[${itemCounter}][description]" rows="2" placeholder="Description"></textarea>
+        </td>
+        <td>
+            <input type="number" class="form-control form-control-sm" name="items[${itemCounter}][quantity]" value="1" step="0.01" onchange="calculateItemTotal(this)">
+        </td>
+        <td>
+            <input type="number" class="form-control form-control-sm" name="items[${itemCounter}][price]" value="${price}" step="0.01" onchange="calculateItemTotal(this)">
+        </td>
+        <td>
+            <input type="number" class="form-control form-control-sm" name="items[${itemCounter}][discount]" value="0.00" step="0.01" onchange="calculateItemTotal(this)">
+        </td>
+        <td>
+            ${createTaxRateDropdownHTML(itemCounter)}
+        </td>
+        <td class="item-subtotal">$${parseFloat(price).toFixed(2)}</td>
+        <td class="item-discount-amount">$0.00</td>
+        <td class="item-tax-amount">$0.00</td>
+        <td class="item-total">$${parseFloat(price).toFixed(2)}</td>
+    `;
+    tbody.appendChild(newRow);
+    itemCounter++;
+    calculateTotals();
+}
+
+// Event listeners for checkboxes
+document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners to checkboxes for selection summary
+    document.querySelectorAll('.product-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectionSummary);
+    });
+});
+</script>
