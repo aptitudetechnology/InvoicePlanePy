@@ -265,33 +265,28 @@ function addQuoteTax() {
 }
 
 function downloadPDF() {
-    const quoteId = '{{ quote.id }}';
-    window.location.href = `/quotes/${quoteId}/pdf`;
+    window.location.href = '/quotes/{{ quote.id }}/pdf';
 }
 
 function sendEmail() {
-    const quoteId = '{{ quote.id }}';
-    window.location.href = `/quotes/${quoteId}/email`;
+    window.location.href = '/quotes/{{ quote.id }}/email';
 }
 
 function quoteToInvoice() {
     if (confirm('Convert this quote to an invoice?')) {
-        const quoteId = '{{ quote.id }}';
-        window.location.href = `/quotes/${quoteId}/convert-to-invoice`;
+        window.location.href = '/quotes/{{ quote.id }}/convert-to-invoice';
     }
 }
 
 function copyQuote() {
     if (confirm('Create a copy of this quote?')) {
-        const quoteId = '{{ quote.id }}';
-        window.location.href = `/quotes/${quoteId}/copy`;
+        window.location.href = '/quotes/{{ quote.id }}/copy';
     }
 }
 
 function deleteQuote() {
     if (confirm('Are you sure you want to delete this quote? This action cannot be undone.')) {
-        const quoteId = '{{ quote.id }}';
-        fetch(`/quotes/${quoteId}/delete`, {
+        fetch('/quotes/{{ quote.id }}/delete', {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
