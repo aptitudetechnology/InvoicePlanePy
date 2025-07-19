@@ -58,26 +58,6 @@ CREATE TABLE IF NOT EXISTS products (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS quotes (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) NOT NULL,
-    client_id INTEGER REFERENCES clients(id) NOT NULL,
-    quote_number VARCHAR(20) UNIQUE NOT NULL,
-    -- Using VARCHAR for Enum status to match typical SQL ENUM representation or string storage
-    -- If using PostgreSQL, you could define a custom TYPE ENUM('DRAFT', 'SENT', ...)
-    status VARCHAR(20) DEFAULT 'DRAFT',
-    issue_date DATE NOT NULL,
-    valid_until DATE,
-    terms TEXT,
-    notes TEXT,
-    url_key VARCHAR(32) UNIQUE,
-    subtotal NUMERIC(10, 2) DEFAULT 0.00,
-    tax_total NUMERIC(10, 2) DEFAULT 0.00,
-    total NUMERIC(10, 2) DEFAULT 0.00,
-    -- Assuming BaseModel adds created_at and updated_at
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
 
 CREATE TABLE IF NOT EXISTS quotes (
  id SERIAL PRIMARY KEY,
