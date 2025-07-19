@@ -16,6 +16,7 @@ Integration between product selection and quote item addition
 If You Want the Feature:
 You'll need to implement these changes to connect your existing products API to the quote editing interface.
 
-so far we have created the template for the model under 
+so far we have created the template for the model under:
+ 
 
 templates/modals/add_product_modal.html
