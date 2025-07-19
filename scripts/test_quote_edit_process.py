@@ -119,7 +119,7 @@ def run_test():
         modified_form_data['items[0][description]'] = "Added via script"
         modified_form_data['items[0][quantity]'] = "1"
         modified_form_data['items[0][price]'] = "50.00"
-        modified_form_data['items[0][tax_rate_id]'] = "0"
+        modified_form_data['items[0][tax_rate]'] = "0"
 
     print("\n2. Sending POST request with modified form data...")
     try:
