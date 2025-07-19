@@ -146,9 +146,14 @@ def run_test():
         print(f"✅ POST successful. Status Code: {post_resp.status_code}")
         if post_resp.history:
             print(f"  Redirected: {post_resp.history[0].url} → {post_resp.url}")
-    except Exception as e:
-        print(f"❌ Error during POST: {e}")
-        return
+    except requests.exceptions.HTTPError as e:
+    print(f"❌ Error during POST: {e}")
+    print("POST response status:", post_resp.status_code)
+    print("POST response headers:", post_resp.headers)
+    print("POST response content snippet:")
+    print(post_resp.text[:1000])  # First 1000 chars of response body for debugging
+    return
+
 
     print(f"\n3. Verifying changes at {BASE_URL}/quotes/{QUOTE_ID}...")
     verify_resp = session.get(f"{BASE_URL}/quotes/{QUOTE_ID}")
