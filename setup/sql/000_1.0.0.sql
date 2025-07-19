@@ -77,7 +77,16 @@ status VARCHAR(20) DEFAULT 'DRAFT',
  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
+CREATE TABLE quote_items (
+    id SERIAL PRIMARY KEY,
+    quote_id INTEGER REFERENCES quotes(id) NOT NULL,
+    product_name VARCHAR(255) NOT NULL,
+    description TEXT,
+    quantity NUMERIC(10, 3) DEFAULT 1.000,
+    unit_price NUMERIC(10, 2) NOT NULL,
+    line_total NUMERIC(10, 2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 -- Invoices table
 CREATE TABLE IF NOT EXISTS invoices (
@@ -155,3 +164,4 @@ CREATE INDEX IF NOT EXISTS idx_quotes_user ON quotes(user_id);
 CREATE INDEX IF NOT EXISTS idx_quotes_client ON quotes(client_id);
 CREATE INDEX IF NOT EXISTS idx_quote_items_quote ON quote_items(quote_id);
 CREATE INDEX IF NOT EXISTS idx_quote_items_product ON quote_items(product_id);
+CREATE INDEX IF NOT EXISTS idx_quote_items_quote_id ON quote_items(quote_id);
