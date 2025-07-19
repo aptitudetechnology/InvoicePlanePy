@@ -362,7 +362,7 @@ async def update_product(
     sku: str = Form(""),
     family_id: int = Form(None),
     unit_id: int = Form(None),
-    tax_rate_id: int = Form(None),
+    tax_rate: int = Form(None),
     provider_name: str = Form(""),
     purchase_price: float = Form(None),
     sumex: str = Form(""),
