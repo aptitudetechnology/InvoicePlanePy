@@ -1,6 +1,5 @@
 import requests
 from bs4 import BeautifulSoup
-import json
 from urllib.parse import urljoin
 import os
 import sys
@@ -65,7 +64,6 @@ def test_quote_edit_process(session: requests.Session):
         return
 
     initial_form_data = extract_form_data(response_get.text, QUOTE_ID_TO_TEST)
-
     if not initial_form_data:
         print("Failed to extract initial form data. Exiting.")
         return
@@ -81,17 +79,26 @@ def test_quote_edit_process(session: requests.Session):
     new_notes = f"This is an automated test note added at {time.strftime('%Y-%m-%d %H:%M:%S')}. Original notes: {initial_form_data.get('notes', '')}"
     modified_form_data['notes'] = new_notes
 
-    # Auto-fill empty or invalid date fields
+    # Auto-fill missing or invalid date fields
     today = time.strftime('%Y-%m-%d')
     future_date = time.strftime('%Y-%m-%d', time.localtime(time.time() + 7 * 86400))
 
-    for date_field in ['quote_date', 'expires_at', 'invoice_date']:
+    for date_field in ['quote_date', 'expires_at', 'invoice_date', 'valid_until']:
         if date_field in modified_form_data:
             if modified_form_data[date_field] in [None, '', 'None']:
-                modified_form_data[date_field] = today if 'quote' in date_field or 'invoice' in date_field else future_date
-                print(f"  Auto-filled missing date field '{date_field}' with: {modified_form_data[date_field]}")
+                modified_form_data[date_field] = future_date
+                print(f"  Auto-filled missing date field '{date_field}' with: {future_date}")
 
-    # Modify first item's quantity
+    # Fill in optional fields with safe defaults
+    if 'discount_percentage' in modified_form_data and modified_form_data['discount_percentage'] in [None, '', 'None']:
+        modified_form_data['discount_percentage'] = '0'
+        print(f"  Auto-filled 'discount_percentage' with: 0")
+
+    if 'quote_pdf_password' in modified_form_data and modified_form_data['quote_pdf_password'] in [None, 'None']:
+        modified_form_data['quote_pdf_password'] = ''
+        print(f"  Auto-filled 'quote_pdf_password' with empty string")
+
+    # Modify first item quantity (if present)
     item_index = 0
     item_modified = False
     while True:
@@ -112,8 +119,7 @@ def test_quote_edit_process(session: requests.Session):
             break
         item_index += 1
 
-    # Debug warnings for suspicious values
-    print("\n[Debug] Checking form for empty or invalid fields...")
+    print("\n[Debug] Checking form for empty or suspicious fields...")
     for k, v in modified_form_data.items():
         if v in [None, '', 'None']:
             print(f"  [Warning] Field '{k}' is empty or None")
@@ -151,7 +157,7 @@ def test_quote_edit_process(session: requests.Session):
         else:
             print("  ❌ Notes update FAILED.")
 
-        # Verify quantity
+        # Verify item quantity
         if item_modified:
             item_input = soup.find('input', {'name': 'items[0][quantity]'})
             current_qty = item_input.get('value') if item_input else None
