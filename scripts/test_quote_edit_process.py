@@ -5,7 +5,7 @@ import time
 BASE_URL = "http://localhost:8080"
 LOGIN_ENDPOINT = "/auth/login"
 USERNAME = "admin"
-PASSWORD = "admin123"
+PASSWORD = "admin"
 
 QUOTE_ID = 74
 EDIT_ENDPOINT = f"/quotes/{QUOTE_ID}/edit"
@@ -104,4 +104,42 @@ def run_test():
             modified_form_data[k] = v
             print(f"  Defaulted required field '{k}' to: {v}")
 
-    new_notes = f"[TEST]_
+    new_notes = f"[TEST] Updated via v2 script at {time.strftime('%Y-%m-%d %H:%M:%S')}"
+    modified_form_data['notes'] = new_notes
+
+    item_keys = [key for key in modified_form_data if key.startswith("items[") and key.endswith("[name]")]
+    if item_keys:
+        first_item = item_keys[0]
+        modified_form_data[first_item] = "Updated test item name"
+        item_index = first_item.split('[')[1].split(']')[0]
+        modified_form_data[f"items[{item_index}][quantity]"] = "2"
+    else:
+        print("⚠️  No quote items found. Adding a dummy item for testing.")
+        modified_form_data['items[0][name]'] = "Test Item"
+        modified_form_data['items[0][description]'] = "Added via script"
+        modified_form_data['items[0][quantity]'] = "1"
+        modified_form_data['items[0][price]'] = "50.00"
+        modified_form_data['items[0][tax_rate_id]'] = "0"
+
+    print("\n2. Sending POST request with modified form data...")
+    try:
+        post_resp = session.post(EDIT_URL, data=modified_form_data, allow_redirects=True)
+        post_resp.raise_for_status()
+        print(f"✅ POST successful. Status Code: {post_resp.status_code}")
+        if post_resp.history:
+            print(f"  Redirected: {post_resp.history[0].url} → {post_resp.url}")
+    except Exception as e:
+        print(f"❌ Error during POST: {e}")
+        return
+
+    print(f"\n3. Verifying changes at {BASE_URL}/quotes/{QUOTE_ID}...")
+    verify_resp = session.get(f"{BASE_URL}/quotes/{QUOTE_ID}")
+    if verify_resp.status_code == 200:
+        if new_notes in verify_resp.text:
+            print("✅ Notes update verified successfully.")
+        else:
+            print("❌ Notes update FAILED.")
+    print("\n--- Test Complete ---")
+
+if __name__ == "__main__":
+    run_test()
