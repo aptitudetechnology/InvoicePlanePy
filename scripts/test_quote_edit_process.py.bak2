@@ -83,7 +83,7 @@ def run_test():
     modified_form_data = initial_form_data.copy()
     today = time.strftime('%Y-%m-%d')
     future_date = time.strftime('%Y-%m-%d', time.localtime(time.time() + 7 * 86400))
-    for date_field in ['issue_date', 'valid_until', 'quote_date', 'expires_at', 'invoice_date']:
+    for date_field in ['quote_date', 'expires_at', 'invoice_date', 'valid_until']:
         if date_field in modified_form_data and modified_form_data[date_field] in [None, '', 'None']:
             modified_form_data[date_field] = future_date
             print(f"  Auto-filled missing date field '{date_field}' with: {future_date}")
@@ -107,26 +107,12 @@ def run_test():
     new_notes = f"[TEST] Updated via v2 script at {time.strftime('%Y-%m-%d %H:%M:%S')}"
     modified_form_data['notes'] = new_notes
 
-    # Fix items in modified_form_data to match backend expected field names and types
     item_keys = [key for key in modified_form_data if key.startswith("items[") and key.endswith("[name]")]
     if item_keys:
         first_item = item_keys[0]
+        modified_form_data[first_item] = "Updated test item name"
         item_index = first_item.split('[')[1].split(']')[0]
-
-        # Update required fields
-        modified_form_data[f"items[{item_index}][name]"] = "Updated test item name"
         modified_form_data[f"items[{item_index}][quantity]"] = "2"
-        modified_form_data[f"items[{item_index}][price]"] = "100.00"  # example price
-
-        # Rename tax_rate_id to tax_rate if present
-        tax_rate_id_key = f"items[{item_index}][tax_rate_id]"
-        tax_rate_key = f"items[{item_index}][tax_rate]"
-        if tax_rate_id_key in modified_form_data:
-            modified_form_data[tax_rate_key] = modified_form_data.pop(tax_rate_id_key)
-        else:
-            # If tax_rate not present, set default
-            modified_form_data[tax_rate_key] = "0"
-
     else:
         print("⚠️  No quote items found. Adding a dummy item for testing.")
         modified_form_data['items[0][name]'] = "Test Item"
