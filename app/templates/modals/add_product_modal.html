@@ -264,12 +264,9 @@ function addSelectedProducts() {
         const row = checkbox.closest('.product-row');
         const productName = row.cells[3].textContent.trim();
         const price = row.cells[5].textContent.replace('$', '');
-        
-        // TODO: Add to quote items table using existing addNewRow logic
-        console.log('Adding product:', productName, 'Price:', price);
-        
-        // For now, just add a new row with the product info
-        addProductToQuote(productName, price);
+        const productId = checkbox.getAttribute('data-product-id');
+        // Pass productId to addProductToQuote
+        addProductToQuote(productName, price, productId);
     });
     
     // Clear selections
@@ -283,11 +280,10 @@ function addSelectedProducts() {
     modal.hide();
 }
 
-function addProductToQuote(productName, price) {
-    // Placeholder - integrate with existing addNewRow functionality
-    // This would add the product to the quote items table
+function addProductToQuote(productName, price, productId = null) {
     const tbody = document.getElementById('quote-items');
     const newRow = document.createElement('tr');
+    const taxRateDropdownContent = createTaxRateDropdownHTML(itemCounter);
     newRow.innerHTML = `
         <td>
             <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem(this)">
@@ -297,6 +293,7 @@ function addProductToQuote(productName, price) {
         <td>
             <input type="text" class="form-control form-control-sm" name="items[${itemCounter}][name]" value="${productName}" placeholder="Item">
             <textarea class="form-control form-control-sm mt-1" name="items[${itemCounter}][description]" rows="2" placeholder="Description"></textarea>
+            <input type="hidden" name="items[${itemCounter}][product_id]" value="${productId || ''}">
         </td>
         <td>
             <input type="number" class="form-control form-control-sm" name="items[${itemCounter}][quantity]" value="1" step="0.01" onchange="calculateItemTotal(this)">
@@ -308,7 +305,7 @@ function addProductToQuote(productName, price) {
             <input type="number" class="form-control form-control-sm" name="items[${itemCounter}][discount]" value="0.00" step="0.01" onchange="calculateItemTotal(this)">
         </td>
         <td>
-            ${createTaxRateDropdownHTML(itemCounter)}
+            ${taxRateDropdownContent}
         </td>
         <td class="item-subtotal">$${parseFloat(price).toFixed(2)}</td>
         <td class="item-discount-amount">$0.00</td>
