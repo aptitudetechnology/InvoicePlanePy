@@ -105,7 +105,6 @@ async def quote_create_post(
     status: str = Form(None),
     issue_date: str = Form(None),
     valid_until: str = Form(None),
-    terms: str = Form(None),
     notes: str = Form(None),
 ):
     """Handle quote creation with improved enum handling"""
@@ -138,7 +137,7 @@ async def quote_create_post(
             issue_date=issue_date_parsed,
             valid_until=valid_until_parsed,
             status=quote_status,
-            terms=terms,
+            terms=None,  # terms is not settable here; use default or config elsewhere
             notes=notes,
         )
 
