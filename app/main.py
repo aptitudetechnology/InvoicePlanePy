@@ -10,6 +10,7 @@ from app.database import get_db, engine, Base
 from app.routers import auth, dashboard, clients, invoices, quotes, payments, products, tasks, reports, settings, help, notifications, profile, tax_rates
 from app.dependencies import get_current_user_optional
 from app.models.user import User
+from app.routers import product_modal
 
 # Import all models to ensure they're registered with Base
 from app.models import user, client, invoice, product, payment, api_key
@@ -49,6 +50,8 @@ app.include_router(help.router, prefix="/help", tags=["help"])
 app.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
 app.include_router(profile.router, prefix="/profile", tags=["profile"])
 app.include_router(tax_rates.router, prefix="/tax_rates", tags=["tax_rates"])
+app.include_router(product_modal.router, prefix="/modals", tags=["modals"])
+
 
 # Debug route to show all registered routes
 @app.get("/debug/routes")
