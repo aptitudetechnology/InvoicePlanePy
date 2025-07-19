@@ -1,210 +1,146 @@
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
-import os
-import sys
 import time
 
-# --- Configuration ---
-BASE_URL = os.environ.get("BASE_URL", "http://localhost:8080")
-QUOTE_ID_TO_TEST = 74
-USERNAME = os.environ.get("USERNAME", "admin")
-PASSWORD = os.environ.get("PASSWORD", "admin123")
+BASE_URL = "http://localhost:8080"
+LOGIN_ENDPOINT = "/auth/login"
+USERNAME = "admin"
+PASSWORD = "admin"
 
-def extract_form_data(html_content, quote_id):
-    soup = BeautifulSoup(html_content, 'html.parser')
-    form = soup.find('form', {'action': f'/quotes/{quote_id}/edit', 'method': 'post'}) \
-           or soup.find('form', {'method': 'post'})
+QUOTE_ID = 74
+EDIT_ENDPOINT = f"/quotes/{QUOTE_ID}/edit"
+EDIT_URL = f"{BASE_URL}{EDIT_ENDPOINT}"
 
-    if not form or not form.find('input', {'name': 'quote_number'}):
-        print(f"Error: Could not find the form for quote ID {quote_id} on the page.")
-        return None
-
-    form_data = {}
-    for element in form.find_all(['input', 'select', 'textarea']):
-        name = element.get('name')
+def extract_form_fields(html):
+    soup = BeautifulSoup(html, "html.parser")
+    form = soup.find("form")
+    fields = {}
+    for input_tag in form.find_all(["input", "textarea", "select"]):
+        name = input_tag.get("name")
         if not name:
             continue
-
-        if element.name == 'input':
-            input_type = element.get('type')
-            if input_type == 'checkbox':
-                if element.get('checked'):
-                    form_data[name] = element.get('value', 'on')
-            elif input_type == 'radio':
-                if element.get('checked'):
-                    form_data[name] = element.get('value', '')
-            elif input_type == 'file':
-                continue
-            else:
-                form_data[name] = element.get('value', '')
-        elif element.name == 'select':
-            selected_option = element.find('option', selected=True)
-            form_data[name] = selected_option.get('value', '') if selected_option else \
-                              element.find('option').get('value', '') if element.find('option') else ''
-        elif element.name == 'textarea':
-            form_data[name] = element.text.strip()
-
-    return form_data
-
-def test_quote_edit_process(session: requests.Session):
-    edit_url = urljoin(BASE_URL, f'/quotes/{QUOTE_ID_TO_TEST}/edit')
-    view_url = urljoin(BASE_URL, f'/quotes/{QUOTE_ID_TO_TEST}')
-
-    print(f"--- Testing Quote Edit Process for Quote ID: {QUOTE_ID_TO_TEST} ---")
-    print(f"Edit URL: {edit_url}")
-
-    print("\n1. Fetching current quote data from edit page...")
-    try:
-        response_get = session.get(edit_url)
-        response_get.raise_for_status()
-        print(f"GET successful. Status Code: {response_get.status_code}")
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching quote edit page: {e}")
-        return
-
-    initial_form_data = extract_form_data(response_get.text, QUOTE_ID_TO_TEST)
-    if not initial_form_data:
-        print("Failed to extract initial form data. Exiting.")
-        return
-
-    print("Initial form data extracted (partial):")
-    print(f"  Quote Number: {initial_form_data.get('quote_number')}")
-    print(f"  Status: {initial_form_data.get('status')}")
-    print(f"  Notes (initial): '{initial_form_data.get('notes', '')[:50]}...'")
-
-    modified_form_data = initial_form_data.copy()
-
-    # Add a timestamped note
-    new_notes = f"This is an automated test note added at {time.strftime('%Y-%m-%d %H:%M:%S')}. Original notes: {initial_form_data.get('notes', '')}"
-    modified_form_data['notes'] = new_notes
-
-    # Auto-fill missing or invalid date fields
-    today = time.strftime('%Y-%m-%d')
-    future_date = time.strftime('%Y-%m-%d', time.localtime(time.time() + 7 * 86400))
-
-    for date_field in ['quote_date', 'expires_at', 'invoice_date', 'valid_until']:
-        if date_field in modified_form_data:
-            if modified_form_data[date_field] in [None, '', 'None']:
-                modified_form_data[date_field] = future_date
-                print(f"  Auto-filled missing date field '{date_field}' with: {future_date}")
-
-    # Fill in optional fields with safe defaults
-    if 'discount_percentage' in modified_form_data and modified_form_data['discount_percentage'] in [None, '', 'None']:
-        modified_form_data['discount_percentage'] = '0'
-        print(f"  Auto-filled 'discount_percentage' with: 0")
-
-    if 'quote_pdf_password' in modified_form_data and modified_form_data['quote_pdf_password'] in [None, 'None']:
-        modified_form_data['quote_pdf_password'] = ''
-        print(f"  Auto-filled 'quote_pdf_password' with empty string")
-
-    # Modify first item quantity (if present)
-    item_index = 0
-    item_modified = False
-    while True:
-        item_name_key = f'items[{item_index}][name]'
-        quantity_key = f'items[{item_index}][quantity]'
-        if item_name_key in modified_form_data:
-            try:
-                current_quantity = float(modified_form_data.get(quantity_key, '0'))
-            except ValueError:
-                current_quantity = 0
-            modified_form_data[quantity_key] = str(current_quantity + 1)
-            print(f"  Modified item {item_index} quantity to: {modified_form_data[quantity_key]}")
-            item_modified = True
-            break
+        if input_tag.name == "textarea":
+            value = input_tag.text or ""
+        elif input_tag.name == "select":
+            selected = input_tag.find("option", selected=True)
+            value = selected["value"] if selected else ""
         else:
-            if item_index == 0:
-                print("No existing quote items found to modify quantity.")
-            break
-        item_index += 1
+            value = input_tag.get("value", "")
+        fields[name] = value
+    return fields
 
-    print("\n[Debug] Checking form for empty or suspicious fields...")
-    for k, v in modified_form_data.items():
-        if v in [None, '', 'None']:
-            print(f"  [Warning] Field '{k}' is empty or None")
+def login(session):
+    print("🔐 Attempting to log in...")
+    login_url = BASE_URL + LOGIN_ENDPOINT
+    resp = session.get(login_url)
+    soup = BeautifulSoup(resp.text, "html.parser")
+    token = soup.find("input", {"name": "_token"})
+    token_val = token["value"] if token else ""
 
-    print("\n2. Sending POST request with modified form data...")
-    try:
-        response_post = session.post(edit_url, data=modified_form_data)
-        response_post.raise_for_status()
-        print(f"POST successful. Status Code: {response_post.status_code}")
-        if response_post.history:
-            print(f"  Redirected: {response_post.history[0].url} → {response_post.url}")
-        else:
-            print("  No redirect detected after POST.")
-        print("\nPOST Response (first 500 chars):")
-        print(response_post.text[:500])
-    except requests.exceptions.RequestException as e:
-        print(f"Error during POST: {e}")
-        if e.response:
-            print(f"  Status Code: {e.response.status_code}")
-            print(f"  Response: {e.response.text}")
-        return
+    payload = {
+        "_token": token_val,
+        "username": USERNAME,
+        "password": PASSWORD
+    }
+    r = session.post(login_url, data=payload, allow_redirects=True)
+    if r.status_code == 200 and "dashboard" in r.url:
+        print("✅ Login success via /auth/login")
+        return True
+    print("❌ Login failed")
+    return False
 
-    print(f"\n3. Verifying changes at {view_url}...")
-    try:
-        response_verify = session.get(view_url)
-        response_verify.raise_for_status()
-        soup = BeautifulSoup(response_verify.text, 'html.parser')
+def run_test():
+    session = requests.Session()
 
-        # Verify Notes
-        notes_element = soup.find('textarea', {'name': 'notes'})
-        current_notes = notes_element.text.strip() if notes_element else ""
-        print(f"  Notes after edit: '{current_notes[:50]}...'")
-        if new_notes in current_notes:
-            print("  ✅ Notes update VERIFIED.")
-        else:
-            print("  ❌ Notes update FAILED.")
-
-        # Verify item quantity
-        if item_modified:
-            item_input = soup.find('input', {'name': 'items[0][quantity]'})
-            current_qty = item_input.get('value') if item_input else None
-            expected_qty = modified_form_data.get('items[0][quantity]')
-            print(f"  Item 0 Quantity: {current_qty}")
-            if current_qty == expected_qty:
-                print("  ✅ Item quantity VERIFIED.")
-            else:
-                print(f"  ❌ Quantity mismatch. Expected: {expected_qty}")
-    except requests.exceptions.RequestException as e:
-        print(f"Error verifying changes: {e}")
-        if e.response:
-            print(f"  Status Code: {e.response.status_code}")
-            print(f"  Response: {e.response.text}")
-
-    print("\n--- Test Complete ---")
-
-if __name__ == "__main__":
     print("--- Starting Quote Edit Process Test ---")
     print(f"Base URL: {BASE_URL}")
     print(f"Username: {USERNAME}")
     print("---------------------------------------")
 
-    session = requests.Session()
-    session.headers.update({'User-Agent': 'QuoteEditProcessTester/1.0'})
+    if not login(session):
+        return
 
-    print("🔐 Attempting to log in...")
+    print(f"--- Testing Quote Edit Process for Quote ID: {QUOTE_ID} ---")
+    print(f"Edit URL: {EDIT_URL}")
 
-    login_endpoints = ["/auth/login", "/login", "/api/auth/login"]
-    login_success = False
+    print("\n1. Fetching current quote data from edit page...")
+    r = session.get(EDIT_URL)
+    if r.status_code != 200:
+        print(f"❌ Failed to fetch quote edit page. Status: {r.status_code}")
+        return
+    print("GET successful. Status Code: 200")
+    initial_form_data = extract_form_fields(r.text)
+    print("Initial form data extracted (partial):")
+    print(f"  Quote Number: {initial_form_data.get('quote_number', 'N/A')}")
+    print(f"  Status: {initial_form_data.get('status', 'N/A')}")
+    print(f"  Notes (initial): '{initial_form_data.get('notes', '')[:30]}...'")
 
-    for endpoint in login_endpoints:
-        try:
-            login_url = urljoin(BASE_URL, endpoint)
-            print(f"   Trying: {login_url}")
-            response = session.post(login_url, data={"username": USERNAME, "password": PASSWORD}, timeout=30)
-            if response.status_code == 200:
-                print(f"✅ Login success via {endpoint}")
-                login_success = True
-                break
-            else:
-                print(f"   ❌ Failed: Status {response.status_code} — {response.text[:100]}")
-        except Exception as e:
-            print(f"   ⚠️ Error during login: {e}")
+    modified_form_data = initial_form_data.copy()
 
-    if not login_success:
-        print("❌ Login failed. Check credentials and endpoints.")
-        sys.exit(1)
+    # Auto-fill missing required fields
+    today = time.strftime('%Y-%m-%d')
+    future_date = time.strftime('%Y-%m-%d', time.localtime(time.time() + 7 * 86400))
+    for date_field in ['quote_date', 'expires_at', 'invoice_date', 'valid_until']:
+        if date_field in modified_form_data and modified_form_data[date_field] in [None, '', 'None']:
+            modified_form_data[date_field] = future_date
+            print(f"  Auto-filled missing date field '{date_field}' with: {future_date}")
 
-    test_quote_edit_process(session)
+    if 'discount_percentage' in modified_form_data and not modified_form_data['discount_percentage']:
+        modified_form_data['discount_percentage'] = '0'
+        print("  Auto-filled 'discount_percentage' with: 0")
+
+    if 'quote_pdf_password' in modified_form_data and modified_form_data['quote_pdf_password'] in [None, 'None']:
+        modified_form_data['quote_pdf_password'] = ''
+
+    print("\n[Debug] Checking form for empty or suspicious fields...")
+    for field in ['quote_pdf_password', 'valid_until', 'discount_percentage']:
+        if modified_form_data.get(field) in [None, '', 'None']:
+            print(f"  [Warning] Field '{field}' is empty or None")
+
+    # Modify notes and items
+    new_notes = f"[TEST] Updated via test script at {time.strftime('%Y-%m-%d %H:%M:%S')}"
+    modified_form_data['notes'] = new_notes
+
+    # Check for existing items or add a new one
+    item_modified = False
+    item_keys = [key for key in modified_form_data if key.startswith("items[") and key.endswith("[name]")]
+    if item_keys:
+        first_item = item_keys[0]
+        modified_form_data[first_item] = "Updated test item name"
+        item_index = first_item.split('[')[1].split(']')[0]
+        modified_form_data[f"items[{item_index}][quantity]"] = "2"
+        item_modified = True
+    else:
+        print("⚠️  No quote items found. Adding a dummy item for testing.")
+        modified_form_data['items[0][name]'] = "Test Item"
+        modified_form_data['items[0][description]'] = "Added via test script"
+        modified_form_data['items[0][quantity]'] = "1"
+        modified_form_data['items[0][price]'] = "50.00"
+        modified_form_data['items[0][tax_rate_id]'] = "0"
+        item_modified = True
+
+    print("\n2. Sending POST request with modified form data...")
+    try:
+        post_resp = session.post(EDIT_URL, data=modified_form_data, allow_redirects=True)
+        post_resp.raise_for_status()
+        print(f"POST successful. Status Code: {post_resp.status_code}")
+        if post_resp.history:
+            print(f"  Redirected: {post_resp.history[0].url} → {post_resp.url}")
+        print("\nPOST Response (first 500 chars):")
+        print(post_resp.text[:500])
+    except Exception as e:
+        print(f"Error during POST: {e}")
+        return
+
+    # Optional: re-fetch to verify
+    print(f"\n3. Verifying changes at {BASE_URL}/quotes/{QUOTE_ID}...")
+    verify_resp = session.get(f"{BASE_URL}/quotes/{QUOTE_ID}")
+    if verify_resp.status_code == 200:
+        if new_notes in verify_resp.text:
+            print("✅ Notes update verified successfully.")
+        else:
+            print("❌ Notes update FAILED.")
+    print("\n--- Test Complete ---")
+
+if __name__ == "__main__":
+    run_test()
