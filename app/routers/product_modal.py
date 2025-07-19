@@ -2,7 +2,7 @@
 
 ## 1. Create a Blueprint/Router for Product Modal
 
-**File:** `app/routers/product_modal.py`
+#**File:** `app/routers/product_modal.py`
 
 ```python
 from fastapi import APIRouter, Depends, Request
