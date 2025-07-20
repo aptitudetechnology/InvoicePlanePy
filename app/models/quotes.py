@@ -21,7 +21,7 @@ class Quote(BaseModel):  # Changed from Quotes to Quote
     client_id = Column(ForeignKey("clients.id"), nullable=False)
     
     # Quote details
-    product_name = Column(String(255), nullable=False)  # Renamed from name
+    #product_name = Column(String(255), nullable=False)  # Renamed from name
     description = Column(Text)
     quantity = Column(Numeric(10, 3), nullable=False)   # Increased precision for quantity
     unit_price = Column(Numeric(10, 2), nullable=False) # Renamed from price
