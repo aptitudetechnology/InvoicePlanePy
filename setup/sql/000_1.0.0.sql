@@ -75,7 +75,6 @@ CREATE TABLE IF NOT EXISTS quotes (
     notes TEXT,
     tax_rate NUMERIC(5,2) DEFAULT 0.00,
     tax_amount NUMERIC(10,2),
-    discount_percentage NUMERIC(5,2) DEFAULT 0.00,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
