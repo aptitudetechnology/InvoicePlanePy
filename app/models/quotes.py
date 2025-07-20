@@ -17,26 +17,26 @@ class Quote(BaseModel):
     __tablename__ = "quotes"
     
     # Foreign keys
-    user_id = Column(ForeignKey("users.id"), nullable=False)
-    client_id = Column(ForeignKey("clients.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
     
-    # Quote details - match database schema
+    # Quote details - exactly matching your database schema
     quote_number = Column(String(50), nullable=False, unique=True)
     title = Column(String(255))
     issue_date = Column(Date, nullable=False)
-    valid_until = Column(Date, nullable=True)
+    valid_until = Column(Date)
     
-    # Financial fields - match database schema
+    # Financial fields - exactly matching your database schema
     total = Column(Numeric(10, 2), nullable=False)
     balance = Column(Numeric(10, 2), nullable=False)
     currency = Column(String(3), default='AUD')
     tax_rate = Column(Numeric(5, 2), default=0.00)
-    tax_amount = Column(Numeric(10, 2))  # Changed from tax_total
+    tax_amount = Column(Numeric(10, 2))
     
     # Content
     notes = Column(Text)
     
-    # Status - using Integer FK as per database schema
+    # Status - Integer FK to quote_statuses table
     status = Column(Integer, ForeignKey("quote_statuses.id"), nullable=False)
     
     # Relationships
@@ -49,7 +49,9 @@ class Quote(BaseModel):
         """Check if quote is expired"""
         if not self.valid_until:
             return False
-        return (self.status not in [1, 4, 7]  # Assuming DRAFT=1, ACCEPTED=4, CONVERTED=7
+        # You'll need to map status IDs to their meanings
+        # This assumes non-active statuses, adjust based on your quote_statuses table
+        return (self.status not in [1, 4, 7]  # Update with actual status IDs
                 and self.valid_until < date.today())
     
     @property
@@ -62,25 +64,26 @@ class Quote(BaseModel):
     @property
     def can_be_converted(self) -> bool:
         """Check if quote can be converted to invoice"""
-        return self.status == 4  # Assuming ACCEPTED status id is 4
+        # Update with the actual status ID for ACCEPTED in your quote_statuses table
+        return self.status == 4  # Adjust this based on your quote_statuses table
 
 class QuoteItem(BaseModel):
     __tablename__ = "quote_items"
     
     # Foreign keys
-    quote_id = Column(ForeignKey("quotes.id"), nullable=False)
-    product_id = Column(ForeignKey("products.id"), nullable=True)
+    quote_id = Column(Integer, ForeignKey("quotes.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"))
     
-    # Item details - match database schema
-    product_name = Column(String(255))  # Changed from 'name'
+    # Item details - exactly matching your database schema
+    product_name = Column(String(255))
     description = Column(Text)
-    unit_price = Column(Numeric(10, 2), nullable=False)  # Changed from 'price'
+    unit_price = Column(Numeric(10, 2), nullable=False)
     quantity = Column(Numeric(10, 2), nullable=False)
     discount_percentage = Column(Numeric(5, 2), default=0.00)
     tax_rate = Column(Numeric(5, 2), default=0.00)
     sort_order = Column(Integer)
     
-    # Calculated amounts
+    # Calculated amounts - exactly matching your database schema
     tax_amount = Column(Numeric(10, 2))
     subtotal = Column(Numeric(10, 2))
     discount_amount = Column(Numeric(10, 2))
