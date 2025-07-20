@@ -29,7 +29,7 @@ class Quote(BaseModel):
     # Financial fields - exactly matching your database schema
     total = Column(Numeric(10, 2), nullable=False)
     #balance = Column(Numeric(10, 2), nullable=False)
-    currency = Column(String(3), default='AUD')
+    #currency = Column(String(3), default='AUD')
     tax_rate = Column(Numeric(5, 2), default=0.00)
     tax_amount = Column(Numeric(10, 2))
     
