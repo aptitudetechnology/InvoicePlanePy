@@ -83,8 +83,10 @@ CREATE TABLE IF NOT EXISTS quote_items (
     product_name VARCHAR(255) NOT NULL,
     description TEXT,
     quantity NUMERIC(10, 3) DEFAULT 1.000,
-    unit_price NUMERIC(10, 2) NOT NULL,
-    line_total NUMERIC(10, 2) NOT NULL,
+    item.price NUMERIC(10, 2) NOT NULL,
+    item.total NUMERIC(10, 2) NOT NULL,
+    COLUMN discount_percentage NUMERIC(5,2) DEFAULT 0.00,
+    COLUMN tax_rate NUMERIC(5,2) DEFAULT 0.00
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
