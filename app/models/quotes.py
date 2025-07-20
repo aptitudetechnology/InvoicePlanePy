@@ -13,25 +13,20 @@ class QuoteStatus(PyEnum):
     EXPIRED = 'EXPIRED'
     CONVERTED = 'CONVERTED'  # When quote becomes an invoice
 
-class Quote(BaseModel):  # Changed from Quotes to Quote
-    __tablename__ = "quotes"  # Fixed: was **tablename**
+class Quote(BaseModel):
+    __tablename__ = "quotes"
     
     # Foreign keys
     user_id = Column(ForeignKey("users.id"), nullable=False)
     client_id = Column(ForeignKey("clients.id"), nullable=False)
     
     # Quote details
-    #product_name = Column(String(255), nullable=False)  # Renamed from name
-    #description = Column(Text)
-    #quantity = Column(Numeric(10, 3), nullable=False)   # Increased precision for quantity
-    unit_price = Column(Numeric(10, 2), nullable=False) # Renamed from price
     issue_date = Column(Date, nullable=False)
     valid_until = Column(Date, nullable=True)
+    
     # Discount and tax fields for template support
     discount_percentage = Column(Numeric(5, 2), default=0.00)
     tax_rate = Column(Numeric(5, 2), default=0.00)
-    tax_amount = Column(Numeric(10, 2), default=0.00)
-    discount_amount = Column(Numeric(10, 2), default=0.00)
     
     # Content
     terms = Column(Text)
@@ -40,10 +35,13 @@ class Quote(BaseModel):  # Changed from Quotes to Quote
     # Security
     url_key = Column(String(32), unique=True)
     
-    # Calculated fields
-    subtotal = Column(Numeric(10, 2), default=0)
-    tax_total = Column(Numeric(10, 2), default=0)
-    total = Column(Numeric(10, 2), default=0)
+    # Calculated totals (computed from items)
+    subtotal = Column(Numeric(10, 2), default=0.00)
+    tax_total = Column(Numeric(10, 2), default=0.00)
+    total = Column(Numeric(10, 2), default=0.00)
+    
+    # Status
+    status = Column(Enum(QuoteStatus), default=QuoteStatus.DRAFT)
     
     # Relationships
     client = relationship("Client", back_populates="quotes")
@@ -71,11 +69,11 @@ class Quote(BaseModel):  # Changed from Quotes to Quote
         return self.status == QuoteStatus.ACCEPTED
 
 class QuoteItem(BaseModel):
-    __tablename__ = "quote_items"  # Fixed: was **tablename**
+    __tablename__ = "quote_items"
     
     # Foreign keys
     quote_id = Column(ForeignKey("quotes.id"), nullable=False)
-    product_id = Column(ForeignKey("products.id"))
+    product_id = Column(ForeignKey("products.id"), nullable=True)
     
     # Item details
     name = Column(String(100), nullable=False)
@@ -84,11 +82,11 @@ class QuoteItem(BaseModel):
     price = Column(Numeric(10, 2), nullable=False)
     sort_order = Column(Integer, default=0)
     
-    # Calculated amounts
+    # Calculated amounts (computed from quantity * price + tax)
     subtotal = Column(Numeric(10, 2))
     tax_amount = Column(Numeric(10, 2))
     total = Column(Numeric(10, 2))
     
     # Relationships
-    quote = relationship("Quote", back_populates="items")  # Changed from Quotes to Quote
+    quote = relationship("Quote", back_populates="items")
     product = relationship("Product")
