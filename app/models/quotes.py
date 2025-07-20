@@ -22,7 +22,7 @@ class Quote(BaseModel):
     
     # Quote details - exactly matching your database schema
     quote_number = Column(String(50), nullable=False, unique=True)
-    title = Column(String(255))
+    #title = Column(String(255))
     issue_date = Column(Date, nullable=False)
     valid_until = Column(Date)
     
