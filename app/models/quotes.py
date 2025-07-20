@@ -23,7 +23,7 @@ class Quote(BaseModel):  # Changed from Quotes to Quote
     # Quote details
     #product_name = Column(String(255), nullable=False)  # Renamed from name
     #description = Column(Text)
-    quantity = Column(Numeric(10, 3), nullable=False)   # Increased precision for quantity
+    #quantity = Column(Numeric(10, 3), nullable=False)   # Increased precision for quantity
     unit_price = Column(Numeric(10, 2), nullable=False) # Renamed from price
     issue_date = Column(Date, nullable=False)
     valid_until = Column(Date, nullable=True)
