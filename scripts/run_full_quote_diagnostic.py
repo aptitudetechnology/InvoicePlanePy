@@ -851,4 +851,274 @@ def diagnose_quote_migration_issues_enhanced(engine, session_factory, quote_data
 
     if verbose:
         # Display results with priorities
-        critical_categories = ['missing_required_fields', 'foreign_key_
+        critical_categories = ['missing_required_fields', 'foreign_key_violations', 'data_type_issues']
+        warning_categories = ['schema_mismatches', 'constraint_violations', 'business_logic_issues']
+        info_categories = ['custom_field_issues', 'tax_rate_issues', 'circular_dependencies'] # Explicitly list info
+
+        print(f"TOTAL ISSUES FOUND: {total_issues}\n")
+
+        # Show critical issues first
+        for category in critical_categories:
+            problems = issues.get(category, [])
+            if problems:
+                print(f"🚨 CRITICAL - {category.upper().replace('_', ' ')}:")
+                for problem in problems:
+                    print(f"   ❌ {problem}")
+                print()
+
+        # Show warnings
+        for category in warning_categories:
+            problems = issues.get(category, [])
+            if problems:
+                print(f"⚠️  WARNING - {category.upper().replace('_', ' ')}:")
+                for problem in problems:
+                    print(f"   ⚠️  {problem}")
+                print()
+
+        # Show other issues (info level)
+        for category in info_categories:
+            problems = issues.get(category, [])
+            if problems:
+                print(f"ℹ️  INFO - {category.upper().replace('_', ' ')}:")
+                for problem in problems:
+                    print(f"   ℹ️  {problem}")
+                print()
+
+    # Test actual save operation with enhanced error reporting
+    if verbose:
+        print("=" * 60)
+        print("TESTING ACTUAL SAVE OPERATION (against live database):")
+        print("=" * 60)
+
+    save_result = diagnostic.test_quote_save_enhanced(quote_data)
+
+    if save_result['success']:
+        if verbose:
+            print("✅ Quote save test PASSED")
+    else:
+        if verbose:
+            print("❌ Quote save test FAILED")
+            print(f"   Error Type: {save_result['error_type']}")
+            print(f"   Rollback Cause: {save_result['rollback_cause']}")
+            print(f"   Error Message: {save_result['error_message']}")
+
+            if save_result.get('detailed_error'):
+                print(f"   Detailed Error: {save_result['detailed_error']}")
+
+            if save_result.get('sql_statement'):
+                print(f"   SQL Statement: {save_result['sql_statement']}")
+                print(f"   Parameters: {save_result['parameters']}")
+
+    # Generate and show fix recommendations
+    if verbose and total_issues > 0:
+        print("\n" + "=" * 60)
+        print("FIX RECOMMENDATIONS:")
+        print("=" * 60)
+        recommendations = diagnostic.generate_fix_recommendations(issues)
+        for rec in recommendations:
+            print(rec)
+
+    return issues, save_result
+
+
+# Base for declarative models (for creating the test database)
+Base = declarative_base()
+
+# Define SQLAlchemy ORM models matching the structure in data_dictionaries/quotes_schema.py
+# This is used to programmatically create the test SQLite database schema.
+class User(Base):
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(255), nullable=False)
+    email = Column(String(255), unique=True, nullable=False)
+
+class Client(Base):
+    __tablename__ = 'clients'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(255), nullable=False)
+    email = Column(String(255))
+
+class Product(Base):
+    __tablename__ = 'products'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(255), nullable=False)
+    price = Column(Numeric(10, 2))
+
+class QuoteStatus(Base):
+    __tablename__ = 'quote_statuses'
+    id = Column(Integer, primary_key=True)
+    status_name = Column(String(50), nullable=False, unique=True)
+    description = Column(Text)
+
+class Quote(Base):
+    __tablename__ = 'quotes'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
+    quote_number = Column(String(50), unique=True, nullable=False)
+    title = Column(String(255))
+    quote_date = Column(Date, nullable=False)
+    due_date = Column(Date)
+    amount = Column(Numeric(10, 2), nullable=False)
+    balance = Column(Numeric(10, 2), nullable=False)
+    currency = Column(String(3), default='AUD')
+    status_id = Column(Integer, ForeignKey('quote_statuses.id'), nullable=False)
+    notes = Column(Text)
+    tax_rate = Column(Numeric(5, 2), default=0.00)
+    tax_amount = Column(Numeric(10, 2))
+    discount_type = Column(String(20))
+    discount_value = Column(Numeric(10, 2))
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+class QuoteItem(Base):
+    __tablename__ = 'quote_items'
+    id = Column(Integer, primary_key=True)
+    quote_id = Column(Integer, ForeignKey('quotes.id'), nullable=False)
+    product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
+    item_name = Column(String(255))
+    description = Column(Text)
+    cost = Column(Numeric(10, 2), nullable=False)
+    qty = Column(Numeric(10, 2), nullable=False)
+    tax_rate = Column(Numeric(5, 2), default=0.00)
+    tax_amount = Column(Numeric(10, 2))
+    total_amount = Column(Numeric(10, 2))
+    notes = Column(Text)
+    sort_order = Column(Integer)
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+class QuoteCustomField(Base):
+    __tablename__ = 'quote_custom_fields'
+    id = Column(Integer, primary_key=True)
+    quote_id = Column(Integer, ForeignKey('quotes.id'), nullable=False)
+    field_name = Column(String(100), nullable=False) # Matches VARCHAR(100) from schema
+    field_value = Column(Text) # TEXT type (no length limit)
+    field_type = Column(String(50))
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+
+def create_test_database_and_session():
+    """Creates an in-memory SQLite database and populates it with minimal data."""
+    engine = create_engine('sqlite:///:memory:', echo=False) # In-memory SQLite
+    Base.metadata.create_all(engine) # Create tables based on ORM models
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    # Populate with minimal required foreign key data
+    try:
+        session.add(User(id=1, name='Test User', email='test@example.com'))
+        session.add(Client(id=123, name='Test Client Corp', email='client@example.com'))
+        session.add(Product(id=456, name='Website Design Service', price=750.00))
+        session.add(Product(id=789, name='Consulting Hour', price=100.00)) # Added for invalid data test
+        session.add(QuoteStatus(id=1, status_name='Draft'))
+        session.add(QuoteStatus(id=2, status_name='Sent'))
+        session.add(QuoteStatus(id=3, status_name='Accepted'))
+        session.commit()
+    except IntegrityError:
+        session.rollback() # Handle if running multiple times in same process and IDs conflict
+    except Exception as e:
+        print(f"Error populating test data: {e}")
+        session.rollback()
+    finally:
+        session.close() # Close this temporary session
+
+    return engine, Session
+
+# Main execution logic
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+
+    # First, make sure we have the IDEAL_QUOTE_SCHEMA loaded
+    if not IDEAL_QUOTE_SCHEMA:
+        print("\nExiting because IDEAL_QUOTE_SCHEMA could not be loaded. Please check data_dictionaries/quotes_schema.py and its path.")
+        sys.exit(1)
+
+
+    print("\n" + "=" * 60)
+    print("SETTING UP TEST DATABASE (in-memory SQLite):")
+    print("=" * 60)
+    test_engine, TestSession = create_test_database_and_session()
+    if not test_engine:
+        print("Failed to set up test database. Exiting.")
+        sys.exit(1)
+
+    print("\n" + "=" * 60)
+    print("RUNNING DIAGNOSTIC WITH VALID DATA:")
+    print("=" * 60)
+
+    # Example of valid quote data
+    valid_quote_data = {
+        'user_id': 1,
+        'client_id': 123,
+        'quote_number': 'Q-2024-001',
+        'title': 'Project Alpha Quote',
+        'quote_date': '2024-01-15',
+        'due_date': '2024-02-15',
+        'amount': 1500.00, # This will be (750*2) = 1500
+        'balance': 1500.00,
+        'status_id': 1,
+        'notes': 'This is a test quote for Project Alpha.',
+        'items': [
+            {
+                'product_id': 456,
+                'item_name': 'Web Development',
+                'description': 'Custom website development.',
+                'cost': 750.00,
+                'qty': 2,
+                'tax_rate': 10.0, # Example tax rate
+                'notes': 'Specific notes for item 1.'
+            }
+        ],
+        'custom_fields': {
+            'project_code': 'PA-789',
+            'priority_level': 'High importance for client.' # Max length of field_value is TEXT (no limit)
+        }
+    }
+
+    diagnose_quote_migration_issues_enhanced(test_engine, TestSession, valid_quote_data, verbose=True, ideal_schema=IDEAL_QUOTE_SCHEMA)
+
+    print("\n" + "=" * 60)
+    print("RUNNING DIAGNOSTIC WITH INTENTIONAL ISSUES:")
+    print("=" * 60)
+
+    # Example of quote data with intentional issues
+    invalid_quote_data = {
+        # 'user_id': MISSING - Will cause missing required field check (from ideal schema)
+        'client_id': 999, # FK violation: client_id 999 does not exist (live DB check)
+        'quote_number': 'Q-2024-001', # Duplicate quote number if first test committed (unique constraint on live DB)
+        'title': 'A' * 300, # Too long for VARCHAR(255) (ideal schema check)
+        'quote_date': '2024-01-15',
+        'due_date': '2024-01-10', # Business logic: due date before quote date
+        'amount': -100.00, # Constraint: negative amount (ideal schema check)
+        'balance': 5000.00, # Business logic: balance > amount
+        'status_id': 5, # FK violation: status_id 5 does not exist (live DB check)
+        'notes': 'Some notes.',
+        'items': [
+            {
+                # 'product_id': MISSING - Will cause missing required field in item
+                'item_name': 'Consulting',
+                'description': 'Long description' * 50, # Potential length issue if description was VARCHAR(255)
+                'cost': 'abc', # Data type mismatch: string for numeric (ideal schema check)
+                'qty': -5, # Constraint: negative quantity (ideal schema check)
+                'tax_rate': 120.0 # Tax rate out of range
+            },
+            {
+                'product_id': 456, # Valid product_id
+                'cost': 0.00,
+                'qty': 0, # Constraint: qty must be positive
+            }
+        ],
+        'custom_fields': {
+            'invalid_field_name': '', # Test invalid name (empty string)
+            'project_code_long': 'PC' * 60, # Too long for VARCHAR(100) for field_name
+            'another_field_with_long_value': 'Y' * 2000 # Test field_value length (TEXT type, so only constrained by DB limit)
+        }
+    }
+
+    diagnose_quote_migration_issues_enhanced(test_engine, TestSession, invalid_quote_data, verbose=True, ideal_schema=IDEAL_QUOTE_SCHEMA)
+
+    print("\n" + "=" * 60)
+    print("DIAGNOSTIC RUN COMPLETE.")
+    print("=" * 60)
