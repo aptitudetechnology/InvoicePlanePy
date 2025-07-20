@@ -40,7 +40,8 @@ class Product(BaseModel):
     description = Column(Text, nullable=True)
     price = Column(Numeric(10, 2), nullable=True)  # Changed to nullable=True
     sku = Column(String(100), unique=True, nullable=False)  # Updated length and made required
-    
+    tax_rate = Column(Numeric(5, 2), default=0.00)
+
     # Foreign keys
     user_id = Column(ForeignKey("users.id"), nullable=True)
     family_id = Column(ForeignKey("product_families.id"), nullable=True)
