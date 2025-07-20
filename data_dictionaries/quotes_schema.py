@@ -221,4 +221,69 @@ QUOTE_SCHEMA = {
             'description': 'Data type of the custom field.',
             'nullable': True
         },
-        'created_at':_
+        'created_at': {
+            'type': 'DATETIME',
+            'description': 'Timestamp when the custom field record was created.',
+            'nullable': False,
+            'default': 'CURRENT_TIMESTAMP'
+        },
+        'updated_at': {
+            'type': 'DATETIME',
+            'description': 'Timestamp when the custom field record was last updated.',
+            'nullable': False,
+            'default': 'CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'
+        }
+    },
+    'quote_statuses': {
+        'id': {
+            'type': 'INTEGER',
+            'description': 'Primary key, auto-increment.',
+            'nullable': False,
+            'primary_key': True,
+            'auto_increment': True
+        },
+        'status_name': {
+            'type': 'VARCHAR(50)',
+            'description': 'Name of the quote status (e.g., "Draft", "Sent").',
+            'nullable': False,
+            'unique': True
+        },
+        'description': {
+            'type': 'TEXT',
+            'description': 'Description of the status.',
+            'nullable': True
+        }
+    },
+    'users': {
+        'id': {
+            'type': 'INTEGER',
+            'description': 'Primary key, auto-increment for users table.',
+            'nullable': False, 'primary_key': True, 'auto_increment': True
+        },
+        'name': {'type': 'VARCHAR(255)', 'description': 'User full name.', 'nullable': False},
+        'email': {'type': 'VARCHAR(255)', 'description': 'User email.', 'nullable': False, 'unique': True}
+    },
+    'clients': {
+        'id': {
+            'type': 'INTEGER',
+            'description': 'Primary key, auto-increment for clients table.',
+            'nullable': False, 'primary_key': True, 'auto_increment': True
+        },
+        'name': {'type': 'VARCHAR(255)', 'description': 'Client name.', 'nullable': False},
+        'email': {'type': 'VARCHAR(255)', 'description': 'Client email.', 'nullable': True},
+        'address': {'type': 'TEXT', 'description': 'Client address.', 'nullable': True},
+        'city': {'type': 'VARCHAR(100)', 'description': 'Client city.', 'nullable': True},
+        'state': {'type': 'VARCHAR(100)', 'description': 'Client state.', 'nullable': True},
+        'postal_code': {'type': 'VARCHAR(20)', 'description': 'Client postal code.', 'nullable': True},
+        'country': {'type': 'VARCHAR(100)', 'description': 'Client country.', 'nullable': True}
+    },
+    'products': {
+        'id': {
+            'type': 'INTEGER',
+            'description': 'Primary key, auto-increment for products table.',
+            'nullable': False, 'primary_key': True, 'auto_increment': True
+        },
+        'name': {'type': 'VARCHAR(255)', 'description': 'Product or service name.', 'nullable': False},
+        'price': {'type': 'DECIMAL(10,2)', 'description': 'Product price.', 'nullable': True}
+    }
+}
