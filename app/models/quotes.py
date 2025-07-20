@@ -1,104 +1,119 @@
-from sqlalchemy import Column, String, Text, Date, ForeignKey, Enum, Boolean, Integer, Numeric
+from sqlalchemy import Column, String, Text, Date, ForeignKey, Integer, Numeric, TIMESTAMP
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 from enum import Enum as PyEnum
 from app.models.base import BaseModel
 from datetime import date
 
-class QuoteStatus(PyEnum):
-    DRAFT = 'DRAFT'
-    SENT = 'SENT'
-    VIEWED = 'VIEWED'
-    ACCEPTED = 'ACCEPTED'
-    REJECTED = 'REJECTED'
-    EXPIRED = 'EXPIRED'
-    CONVERTED = 'CONVERTED'  # When quote becomes an invoice
+class InvoiceStatus(PyEnum):
+    DRAFT = 1
+    SENT = 2
+    VIEWED = 3
+    PAID = 4
+    OVERDUE = 5
+    CANCELLED = 6
 
-class Quote(BaseModel):
-    __tablename__ = "quotes"
+class Invoice(BaseModel):
+    __tablename__ = "invoices"
     
     # Foreign keys
-    user_id = Column(ForeignKey("users.id"), nullable=False)
-    client_id = Column(ForeignKey("clients.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
     
-    # Quote details - REMOVED product_name (it belongs to quote_items)
-    #description = Column(Text)
-    #quantity = Column(Numeric(10, 3), nullable=False)
-    # Instead of quotes.quantity, use:
-    #total_quantity = sum(item.quantity for item in quote.items)
-    unit_price = Column(Numeric(10, 2), nullable=False)
+    # Invoice identification
+    invoice_number = Column(String(20), unique=True, nullable=False)
+    
+    # Status (integer referencing the enum values above)
+    status = Column(Integer, default=1)  # 1=DRAFT, 2=SENT, 3=VIEWED, 4=PAID, 5=OVERDUE, 6=CANCELLED
+    
+    # Dates
     issue_date = Column(Date, nullable=False)
-    valid_until = Column(Date, nullable=True)
-    
-    # Discount and tax fields for template support
-    discount_percentage = Column(Numeric(5, 2), default=0.00)
-    tax_rate = Column(Numeric(5, 2), default=0.00)
-    tax_amount = Column(Numeric(10, 2), default=0.00)
-    discount_amount = Column(Numeric(10, 2), default=0.00)
+    due_date = Column(Date, nullable=False)
     
     # Content
     terms = Column(Text)
     notes = Column(Text)
     
-    # Security
+    # Security/sharing
     url_key = Column(String(32), unique=True)
     
-    # Calculated fields
-    subtotal = Column(Numeric(10, 2), default=0)
-    tax_total = Column(Numeric(10, 2), default=0)
-    total = Column(Numeric(10, 2), default=0)
+    # Financial totals
+    subtotal = Column(Numeric(10, 2), default=0.00)
+    tax_total = Column(Numeric(10, 2), default=0.00)
+    total = Column(Numeric(10, 2), default=0.00)
+    paid_amount = Column(Numeric(10, 2), default=0.00)
+    balance = Column(Numeric(10, 2), default=0.00)
+    
+    # Timestamps (likely inherited from BaseModel, but including for reference)
+    # created_at = Column(TIMESTAMP, server_default=func.current_timestamp())
+    # updated_at = Column(TIMESTAMP, server_default=func.current_timestamp())
     
     # Relationships
-    client = relationship("Client", back_populates="quotes")
-    user = relationship("User", back_populates="quotes")
-    items = relationship("QuoteItem", back_populates="quote", cascade="all, delete-orphan")
+    user = relationship("User", back_populates="invoices")
+    client = relationship("Client", back_populates="invoices")
+    items = relationship("InvoiceItem", back_populates="invoice", cascade="all, delete-orphan")
+    
+    @property
+    def status_name(self) -> str:
+        """Get status name from enum"""
+        try:
+            return InvoiceStatus(self.status).name
+        except ValueError:
+            return "UNKNOWN"
+    
+    @property
+    def is_overdue(self) -> bool:
+        """Check if invoice is overdue"""
+        return (self.status not in [InvoiceStatus.PAID.value, InvoiceStatus.CANCELLED.value] 
+                and self.due_date < date.today())
+    
+    @property
+    def days_overdue(self) -> int:
+        """Calculate days overdue (negative if not yet due)"""
+        return (date.today() - self.due_date).days
+    
+    @property
+    def is_paid(self) -> bool:
+        """Check if invoice is fully paid"""
+        return self.status == InvoiceStatus.PAID.value or self.balance <= 0
+    
+    @property
+    def can_be_cancelled(self) -> bool:
+        """Check if invoice can be cancelled"""
+        return self.status in [InvoiceStatus.DRAFT.value, InvoiceStatus.SENT.value]
 
-    @property
-    def total_quantity(self):
-        """Sum of all item quantities in this quote"""
-        return sum(item.quantity for item in self.items if item.quantity)
-    
-    @property
-    def is_expired(self) -> bool:
-        """Check if quote is expired"""
-        if not self.valid_until:
-            return False
-        return (self.status not in [QuoteStatus.DRAFT, QuoteStatus.ACCEPTED, QuoteStatus.CONVERTED]
-                and self.valid_until < date.today())
-    
-    @property
-    def days_until_expiry(self) -> int:
-        """Calculate days until expiry (negative if expired)"""
-        if not self.valid_until:
-            return 999  # No expiry date set
-        return (self.valid_until - date.today()).days
-    
-    @property
-    def can_be_converted(self) -> bool:
-        """Check if quote can be converted to invoice"""
-        return self.status == QuoteStatus.ACCEPTED
-
-class QuoteItem(BaseModel):
-    __tablename__ = "quote_items"
+class InvoiceItem(BaseModel):
+    __tablename__ = "invoice_items"
     
     # Foreign keys
-    quote_id = Column(ForeignKey("quotes.id"), nullable=False)
-    product_id = Column(ForeignKey("products.id"))
+    invoice_id = Column(Integer, ForeignKey("invoices.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"))
     
-    # Item details - FIXED to match database schema
-    product_name = Column(String(255))  # Changed from 'name' to 'product_name'
-    #description = Column(Text)
-    unit_price = Column(Numeric(10, 2), nullable=False)  # Changed from 'price' to 'unit_price'
+    # Item details
+    name = Column(String(100), nullable=False)
+    description = Column(Text)
     quantity = Column(Numeric(10, 2), nullable=False)
-    discount_percentage = Column(Numeric(5, 2), default=0.00)  # Added from schema
-    tax_rate = Column(Numeric(5, 2), default=0.00)  # Added from schema
-    sort_order = Column(Integer)  # Removed default=0 to match schema
+    price = Column(Numeric(10, 2), nullable=False)
+    
+    # Ordering (note: "order" is a reserved word, so it's quoted in the schema)
+    order = Column("order", Integer, default=0)
     
     # Calculated amounts
-    tax_amount = Column(Numeric(10, 2))
     subtotal = Column(Numeric(10, 2))
-    discount_amount = Column(Numeric(10, 2))  # Added from schema
+    tax_amount = Column(Numeric(10, 2))
     total = Column(Numeric(10, 2))
     
+    # Timestamps (likely inherited from BaseModel)
+    # created_at = Column(TIMESTAMP, server_default=func.current_timestamp())
+    # updated_at = Column(TIMESTAMP, server_default=func.current_timestamp())
+    
     # Relationships
-    quote = relationship("Quote", back_populates="items")
+    invoice = relationship("Invoice", back_populates="items")
     product = relationship("Product")
+    
+    @property
+    def line_total(self) -> float:
+        """Calculate line total (quantity * price)"""
+        if self.quantity and self.price:
+            return float(self.quantity * self.price)
+        return 0.0
