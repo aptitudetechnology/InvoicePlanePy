@@ -1,13 +1,3 @@
-"""
-This module defines a conceptual schema for the 'quotes' and related tables.
-It's intended for documentation, static validation, or to guide the creation
-of actual database tables.
-
-NOTE: The ImprovedQuoteRollbackDiagnostic script primarily uses introspection
-to get the *actual* database schema at runtime. This file serves as a
-reference or a target schema definition.
-"""
-
 QUOTE_SCHEMA = {
     'quotes': {
         'id': {
@@ -40,14 +30,19 @@ QUOTE_SCHEMA = {
             'description': 'Title or brief description of the quote.',
             'nullable': True
         },
-        'quote_date': {
+        'issue_date': {  # renamed from quote_date
             'type': 'DATE',
             'description': 'The date the quote was issued.',
             'nullable': False
         },
-        'due_date': {
+        'valid_until': {  # renamed from due_date
             'type': 'DATE',
-            'description': 'The date by which the quote is expected to be accepted or payment is due.',
+            'description': 'The date by which the quote is expected to be accepted or expire.',
+            'nullable': True
+        },
+        'quote_pdf_password': {  # newly added
+            'type': 'VARCHAR(255)',
+            'description': 'Optional password to protect the generated PDF.',
             'nullable': True
         },
         'amount': {
@@ -68,7 +63,7 @@ QUOTE_SCHEMA = {
         },
         'status_id': {
             'type': 'INTEGER',
-            'description': 'Foreign key referencing the quote_statuses table (e.g., Draft, Sent, Accepted, Rejected).',
+            'description': 'Foreign key referencing the quote_statuses table.',
             'nullable': False,
             'foreign_key': {'table': 'quote_statuses', 'column': 'id'}
         },
@@ -77,7 +72,7 @@ QUOTE_SCHEMA = {
             'description': 'General notes or comments for the entire quote.',
             'nullable': True
         },
-        'tax_rate': { # Main quote tax rate, if applicable (can be overridden by item tax rates)
+        'tax_rate': {
             'type': 'DECIMAL(5,2)',
             'description': 'Default tax rate for the entire quote (0-100%).',
             'nullable': True,
@@ -88,15 +83,11 @@ QUOTE_SCHEMA = {
             'description': 'Calculated total tax amount for the quote.',
             'nullable': True
         },
-        'discount_type': {
-            'type': 'VARCHAR(20)', # e.g., 'percentage', 'fixed'
-            'description': 'Type of discount applied (e.g., percentage, fixed amount).',
-            'nullable': True
-        },
-        'discount_value': {
-            'type': 'DECIMAL(10,2)',
-            'description': 'Value of the discount applied (percentage or fixed amount).',
-            'nullable': True
+        'discount_percentage': {  # replaces discount_type and discount_value
+            'type': 'DECIMAL(5,2)',
+            'description': 'Discount applied to the subtotal as a percentage (0–100%).',
+            'nullable': True,
+            'default': 0.00
         },
         'created_at': {
             'type': 'DATETIME',
@@ -127,65 +118,76 @@ QUOTE_SCHEMA = {
         },
         'product_id': {
             'type': 'INTEGER',
-            'description': 'Foreign key referencing the products table (the product or service being quoted).',
-            'nullable': False,
+            'description': 'Foreign key referencing the products table.',
+            'nullable': True,
             'foreign_key': {'table': 'products', 'column': 'id'}
         },
         'item_name': {
             'type': 'VARCHAR(255)',
             'description': 'Name or description of the item.',
-            'nullable': True # Can be derived from product_id or custom
+            'nullable': True
         },
         'description': {
             'type': 'TEXT',
-            'description': 'Detailed description of the quote item.',
+            'description': 'Detailed description of the item.',
             'nullable': True
         },
-        'cost': {
+        'price': {  # renamed from cost
             'type': 'DECIMAL(10,2)',
-            'description': 'Unit cost of the product or service.',
+            'description': 'Unit price of the item.',
             'nullable': False
         },
-        'qty': {
+        'quantity': {  # renamed from qty
             'type': 'DECIMAL(10,2)',
-            'description': 'Quantity of the product or service.',
+            'description': 'Quantity of the item.',
             'nullable': False
+        },
+        'discount': {  # newly added
+            'type': 'DECIMAL(5,2)',
+            'description': 'Discount on this item as a percentage (0–100%).',
+            'nullable': True,
+            'default': 0.00
         },
         'tax_rate': {
             'type': 'DECIMAL(5,2)',
-            'description': 'Tax rate specific to this item (0-100%). Overrides quote default if present.',
+            'description': 'Tax rate specific to this item.',
             'nullable': True,
             'default': 0.00
         },
         'tax_amount': {
             'type': 'DECIMAL(10,2)',
-            'description': 'Calculated tax amount for this specific item.',
+            'description': 'Tax amount for the item.',
             'nullable': True
         },
-        'total_amount': {
+        'subtotal': {  # newly added
             'type': 'DECIMAL(10,2)',
-            'description': 'Total amount for this item (cost * qty + tax_amount).',
+            'description': 'Subtotal before discount and tax (price * quantity).',
             'nullable': True
         },
-        'notes': {
-            'type': 'TEXT',
-            'description': 'Specific notes for this individual quote item.',
+        'discount_amount': {  # newly added
+            'type': 'DECIMAL(10,2)',
+            'description': 'Discount amount applied to the item.',
+            'nullable': True
+        },
+        'total': {  # renamed from total_amount
+            'type': 'DECIMAL(10,2)',
+            'description': 'Final total after tax and discount.',
             'nullable': True
         },
         'sort_order': {
             'type': 'INTEGER',
-            'description': 'Order of the item within the quote for display purposes.',
+            'description': 'Display order of the item in the quote.',
             'nullable': True
         },
         'created_at': {
             'type': 'DATETIME',
-            'description': 'Timestamp when the quote item record was created.',
+            'description': 'Timestamp when the quote item was created.',
             'nullable': False,
             'default': 'CURRENT_TIMESTAMP'
         },
         'updated_at': {
             'type': 'DATETIME',
-            'description': 'Timestamp when the quote item record was last updated.',
+            'description': 'Timestamp when the quote item was last updated.',
             'nullable': False,
             'default': 'CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'
         }
@@ -215,73 +217,8 @@ QUOTE_SCHEMA = {
             'nullable': True
         },
         'field_type': {
-            'type': 'VARCHAR(50)', # e.g., 'text', 'number', 'date'
-            'description': 'Data type of the custom field value.',
-            'nullable': True
-        },
-        'created_at': {
-            'type': 'DATETIME',
-            'description': 'Timestamp when the custom field record was created.',
-            'nullable': False,
-            'default': 'CURRENT_TIMESTAMP'
-        },
-        'updated_at': {
-            'type': 'DATETIME',
-            'description': 'Timestamp when the custom field record was last updated.',
-            'nullable': False,
-            'default': 'CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'
-        }
-    },
-    'quote_statuses': {
-        'id': {
-            'type': 'INTEGER',
-            'description': 'Primary key, auto-increment.',
-            'nullable': False,
-            'primary_key': True,
-            'auto_increment': True
-        },
-        'status_name': {
             'type': 'VARCHAR(50)',
-            'description': 'Name of the quote status (e.g., "Draft", "Sent", "Accepted", "Rejected", "Expired").',
-            'nullable': False,
-            'unique': True
-        },
-        'description': {
-            'type': 'TEXT',
-            'description': 'Description of the status.',
+            'description': 'Data type of the custom field.',
             'nullable': True
-        }
-    },
-    # Add other related tables here if you want a truly comprehensive schema
-    # For example, 'users', 'clients', 'products'
-    'users': {
-        'id': {
-            'type': 'INTEGER',
-            'description': 'Primary key, auto-increment for users table.',
-            'nullable': False, 'primary_key': True, 'auto_increment': True
         },
-        'name': {'type': 'VARCHAR(255)', 'description': 'User full name.', 'nullable': False},
-        'email': {'type': 'VARCHAR(255)', 'description': 'User email.', 'nullable': False, 'unique': True},
-        # ... other user fields
-    },
-    'clients': {
-        'id': {
-            'type': 'INTEGER',
-            'description': 'Primary key, auto-increment for clients table.',
-            'nullable': False, 'primary_key': True, 'auto_increment': True
-        },
-        'name': {'type': 'VARCHAR(255)', 'description': 'Client full name or company name.', 'nullable': False},
-        'email': {'type': 'VARCHAR(255)', 'description': 'Client contact email.', 'nullable': True},
-        # ... other client fields
-    },
-    'products': {
-        'id': {
-            'type': 'INTEGER',
-            'description': 'Primary key, auto-increment for products table.',
-            'nullable': False, 'primary_key': True, 'auto_increment': True
-        },
-        'name': {'type': 'VARCHAR(255)', 'description': 'Product or service name.', 'nullable': False},
-        'price': {'type': 'DECIMAL(10,2)', 'description': 'Default price of the product.', 'nullable': True},
-        # ... other product fields
-    }
-}
+        'created_at':_
