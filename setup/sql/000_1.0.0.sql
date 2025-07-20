@@ -77,7 +77,7 @@ status VARCHAR(20) DEFAULT 'DRAFT',
  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE quote_items (
+CREATE TABLE IF NOT EXISTS quote_items (
     id SERIAL PRIMARY KEY,
     quote_id INTEGER REFERENCES quotes(id) NOT NULL,
     product_name VARCHAR(255) NOT NULL,
