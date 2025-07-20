@@ -22,7 +22,9 @@ class Quote(BaseModel):
     
     # Quote details - REMOVED product_name (it belongs to quote_items)
     #description = Column(Text)
-    quantity = Column(Numeric(10, 3), nullable=False)
+    #quantity = Column(Numeric(10, 3), nullable=False)
+    # Instead of quotes.quantity, use:
+    #total_quantity = sum(item.quantity for item in quote.items)
     unit_price = Column(Numeric(10, 2), nullable=False)
     issue_date = Column(Date, nullable=False)
     valid_until = Column(Date, nullable=True)
@@ -49,6 +51,11 @@ class Quote(BaseModel):
     client = relationship("Client", back_populates="quotes")
     user = relationship("User", back_populates="quotes")
     items = relationship("QuoteItem", back_populates="quote", cascade="all, delete-orphan")
+
+    @property
+    def total_quantity(self):
+        """Sum of all item quantities in this quote"""
+        return sum(item.quantity for item in self.items if item.quantity)
     
     @property
     def is_expired(self) -> bool:
@@ -79,7 +86,7 @@ class QuoteItem(BaseModel):
     
     # Item details - FIXED to match database schema
     product_name = Column(String(255))  # Changed from 'name' to 'product_name'
-    description = Column(Text)
+    #description = Column(Text)
     unit_price = Column(Numeric(10, 2), nullable=False)  # Changed from 'price' to 'unit_price'
     quantity = Column(Numeric(10, 2), nullable=False)
     discount_percentage = Column(Numeric(5, 2), default=0.00)  # Added from schema
