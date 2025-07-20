@@ -21,12 +21,17 @@ class Quote(BaseModel):  # Changed from Quotes to Quote
     client_id = Column(ForeignKey("clients.id"), nullable=False)
     
     # Quote details
-    quote_number = Column(String(20), unique=True, nullable=False)
-    status = Column(Enum(QuoteStatus), default=QuoteStatus.DRAFT)
-    
-    # Dates
+    product_name = Column(String(255), nullable=False)  # Renamed from name
+    description = Column(Text)
+    quantity = Column(Numeric(10, 3), nullable=False)   # Increased precision for quantity
+    unit_price = Column(Numeric(10, 2), nullable=False) # Renamed from price
     issue_date = Column(Date, nullable=False)
     valid_until = Column(Date, nullable=True)
+    # Discount and tax fields for template support
+    discount_percentage = Column(Numeric(5, 2), default=0.00)
+    tax_rate = Column(Numeric(5, 2), default=0.00)
+    tax_amount = Column(Numeric(10, 2), default=0.00)
+    discount_amount = Column(Numeric(10, 2), default=0.00)
     
     # Content
     terms = Column(Text)
