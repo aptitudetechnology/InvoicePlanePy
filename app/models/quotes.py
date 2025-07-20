@@ -13,20 +13,20 @@ class QuoteStatus(PyEnum):
     EXPIRED = 'EXPIRED'
     CONVERTED = 'CONVERTED'  # When quote becomes an invoice
 
-class Quote(BaseModel):  # Changed from Quotes to Quote
-    __tablename__ = "quotes"  # Fixed: was **tablename**
+class Quote(BaseModel):
+    __tablename__ = "quotes"
     
     # Foreign keys
     user_id = Column(ForeignKey("users.id"), nullable=False)
     client_id = Column(ForeignKey("clients.id"), nullable=False)
     
-    # Quote details
-    product_name = Column(String(255), nullable=False)  # Renamed from name
+    # Quote details - REMOVED product_name (it belongs to quote_items)
     description = Column(Text)
-    quantity = Column(Numeric(10, 3), nullable=False)   # Increased precision for quantity
-    unit_price = Column(Numeric(10, 2), nullable=False) # Renamed from price
+    quantity = Column(Numeric(10, 3), nullable=False)
+    unit_price = Column(Numeric(10, 2), nullable=False)
     issue_date = Column(Date, nullable=False)
     valid_until = Column(Date, nullable=True)
+    
     # Discount and tax fields for template support
     discount_percentage = Column(Numeric(5, 2), default=0.00)
     tax_rate = Column(Numeric(5, 2), default=0.00)
@@ -71,24 +71,27 @@ class Quote(BaseModel):  # Changed from Quotes to Quote
         return self.status == QuoteStatus.ACCEPTED
 
 class QuoteItem(BaseModel):
-    __tablename__ = "quote_items"  # Fixed: was **tablename**
+    __tablename__ = "quote_items"
     
     # Foreign keys
     quote_id = Column(ForeignKey("quotes.id"), nullable=False)
     product_id = Column(ForeignKey("products.id"))
     
-    # Item details
-    name = Column(String(100), nullable=False)
+    # Item details - FIXED to match database schema
+    product_name = Column(String(255))  # Changed from 'name' to 'product_name'
     description = Column(Text)
+    unit_price = Column(Numeric(10, 2), nullable=False)  # Changed from 'price' to 'unit_price'
     quantity = Column(Numeric(10, 2), nullable=False)
-    price = Column(Numeric(10, 2), nullable=False)
-    sort_order = Column(Integer, default=0)
+    discount_percentage = Column(Numeric(5, 2), default=0.00)  # Added from schema
+    tax_rate = Column(Numeric(5, 2), default=0.00)  # Added from schema
+    sort_order = Column(Integer)  # Removed default=0 to match schema
     
     # Calculated amounts
-    subtotal = Column(Numeric(10, 2))
     tax_amount = Column(Numeric(10, 2))
+    subtotal = Column(Numeric(10, 2))
+    discount_amount = Column(Numeric(10, 2))  # Added from schema
     total = Column(Numeric(10, 2))
     
     # Relationships
-    quote = relationship("Quote", back_populates="items")  # Changed from Quotes to Quote
+    quote = relationship("Quote", back_populates="items")
     product = relationship("Product")
