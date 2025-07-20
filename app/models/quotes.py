@@ -25,7 +25,7 @@ class Quote(BaseModel):
     valid_until = Column(Date, nullable=True)
     
     # Discount and tax fields for template support
-    discount_percentage = Column(Numeric(5, 2), default=0.00)
+    #discount_percentage = Column(Numeric(5, 2), default=0.00)
     tax_rate = Column(Numeric(5, 2), default=0.00)
     
     # Content
@@ -82,7 +82,7 @@ class QuoteItem(BaseModel):
     price = Column(Numeric(10, 2), nullable=False)
     sort_order = Column(Integer, default=0)
     
-    # Calculated amounts (computed from quantity * price + tax).
+    # Calculated amounts (computed from quantity * price + tax)
     subtotal = Column(Numeric(10, 2))
     tax_amount = Column(Numeric(10, 2))
     total = Column(Numeric(10, 2))
