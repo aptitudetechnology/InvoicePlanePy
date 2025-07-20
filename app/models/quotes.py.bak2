@@ -11,7 +11,7 @@ class QuoteStatus(PyEnum):
     ACCEPTED = 'ACCEPTED'
     REJECTED = 'REJECTED'
     EXPIRED = 'EXPIRED'
-    CONVERTED = 'CONVERTED' # When quote becomes an invoice
+    CONVERTED = 'CONVERTED'  # When quote becomes an invoice
 
 class Quote(BaseModel):
     __tablename__ = "quotes"
@@ -20,24 +20,28 @@ class Quote(BaseModel):
     user_id = Column(ForeignKey("users.id"), nullable=False)
     client_id = Column(ForeignKey("clients.id"), nullable=False)
     
-    # Quote details - match database schema
-    quote_number = Column(String(50), nullable=False, unique=True)
-    title = Column(String(255))
+    # Quote details
     issue_date = Column(Date, nullable=False)
     valid_until = Column(Date, nullable=True)
     
-    # Financial fields - match database schema
-    total = Column(Numeric(10, 2), nullable=False)
-    balance = Column(Numeric(10, 2), nullable=False)
-    currency = Column(String(3), default='AUD')
+    # Discount and tax fields for template support
+    #discount_percentage = Column(Numeric(5, 2), default=0.00)
     tax_rate = Column(Numeric(5, 2), default=0.00)
-    tax_amount = Column(Numeric(10, 2))  # Changed from tax_total
     
     # Content
+    terms = Column(Text)
     notes = Column(Text)
     
-    # Status - using Integer FK as per database schema
-    status = Column(Integer, ForeignKey("quote_statuses.id"), nullable=False)
+    # Security
+    url_key = Column(String(32), unique=True)
+    
+    # Calculated totals (computed from items)
+    subtotal = Column(Numeric(10, 2), default=0.00)
+    tax_total = Column(Numeric(10, 2), default=0.00)
+    total = Column(Numeric(10, 2), default=0.00)
+    
+    # Status
+    status = Column(Enum(QuoteStatus), default=QuoteStatus.DRAFT)
     
     # Relationships
     client = relationship("Client", back_populates="quotes")
@@ -49,20 +53,20 @@ class Quote(BaseModel):
         """Check if quote is expired"""
         if not self.valid_until:
             return False
-        return (self.status not in [1, 4, 7]  # Assuming DRAFT=1, ACCEPTED=4, CONVERTED=7
+        return (self.status not in [QuoteStatus.DRAFT, QuoteStatus.ACCEPTED, QuoteStatus.CONVERTED]
                 and self.valid_until < date.today())
     
     @property
     def days_until_expiry(self) -> int:
         """Calculate days until expiry (negative if expired)"""
         if not self.valid_until:
-            return 999 # No expiry date set
+            return 999  # No expiry date set
         return (self.valid_until - date.today()).days
     
     @property
     def can_be_converted(self) -> bool:
         """Check if quote can be converted to invoice"""
-        return self.status == 4  # Assuming ACCEPTED status id is 4
+        return self.status == QuoteStatus.ACCEPTED
 
 class QuoteItem(BaseModel):
     __tablename__ = "quote_items"
@@ -71,19 +75,16 @@ class QuoteItem(BaseModel):
     quote_id = Column(ForeignKey("quotes.id"), nullable=False)
     product_id = Column(ForeignKey("products.id"), nullable=True)
     
-    # Item details - match database schema
-    product_name = Column(String(255))  # Changed from 'name'
+    # Item details
+    name = Column(String(100), nullable=False)
     description = Column(Text)
-    unit_price = Column(Numeric(10, 2), nullable=False)  # Changed from 'price'
     quantity = Column(Numeric(10, 2), nullable=False)
-    discount_percentage = Column(Numeric(5, 2), default=0.00)
-    tax_rate = Column(Numeric(5, 2), default=0.00)
-    sort_order = Column(Integer)
+    price = Column(Numeric(10, 2), nullable=False)
+    sort_order = Column(Integer, default=0)
     
-    # Calculated amounts
-    tax_amount = Column(Numeric(10, 2))
+    # Calculated amounts (computed from quantity * price + tax)
     subtotal = Column(Numeric(10, 2))
-    discount_amount = Column(Numeric(10, 2))
+    tax_amount = Column(Numeric(10, 2))
     total = Column(Numeric(10, 2))
     
     # Relationships
