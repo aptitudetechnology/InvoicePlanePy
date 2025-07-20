@@ -60,35 +60,46 @@ CREATE TABLE IF NOT EXISTS products (
 
 
 CREATE TABLE IF NOT EXISTS quotes (
- id SERIAL PRIMARY KEY,
- user_id INTEGER REFERENCES users(id) NOT NULL,
- client_id INTEGER REFERENCES clients(id) NOT NULL,
- quote_number VARCHAR(20) UNIQUE NOT NULL,
-status VARCHAR(20) DEFAULT 'DRAFT',
- issue_date DATE NOT NULL,
- valid_until DATE,
- terms TEXT,
- notes TEXT,
- url_key VARCHAR(32) UNIQUE,
- subtotal NUMERIC(10, 2) DEFAULT 0.00,
- tax_total NUMERIC(10, 2) DEFAULT 0.00,
- total NUMERIC(10, 2) DEFAULT 0.00,
- created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
- updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    client_id INTEGER NOT NULL REFERENCES clients(id),
+    quote_number VARCHAR(50) NOT NULL UNIQUE,
+    title VARCHAR(255),
+    issue_date DATE NOT NULL,
+    valid_until DATE,
+    quote_pdf_password VARCHAR(255),
+    amount NUMERIC(10,2) NOT NULL,
+    balance NUMERIC(10,2) NOT NULL,
+    currency VARCHAR(3) DEFAULT 'AUD',
+    status_id INTEGER NOT NULL REFERENCES quote_statuses(id),
+    notes TEXT,
+    tax_rate NUMERIC(5,2) DEFAULT 0.00,
+    tax_amount NUMERIC(10,2),
+    discount_percentage NUMERIC(5,2) DEFAULT 0.00,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
+
 
 CREATE TABLE IF NOT EXISTS quote_items (
     id SERIAL PRIMARY KEY,
-    quote_id INTEGER REFERENCES quotes(id) NOT NULL,
-    product_name VARCHAR(255) NOT NULL,
+    quote_id INTEGER NOT NULL REFERENCES quotes(id) ON DELETE CASCADE,
+    product_id INTEGER REFERENCES products(id),
+    item_name VARCHAR(255),
     description TEXT,
-    quantity NUMERIC(10, 3) DEFAULT 1.000,
-    item.price NUMERIC(10, 2) NOT NULL,
-    item.total NUMERIC(10, 2) NOT NULL,
-    discount_percentage NUMERIC(5,2) DEFAULT 0.00,
-    tax_rate NUMERIC(5,2) DEFAULT 0.00
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    price NUMERIC(10, 2) NOT NULL,
+    quantity NUMERIC(10, 2) NOT NULL,
+    discount NUMERIC(5, 2) DEFAULT 0.00,
+    tax_rate NUMERIC(5, 2) DEFAULT 0.00,
+    tax_amount NUMERIC(10, 2),
+    subtotal NUMERIC(10, 2),
+    discount_amount NUMERIC(10, 2),
+    total NUMERIC(10, 2),
+    sort_order INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
+
 
 -- Invoices table
 CREATE TABLE IF NOT EXISTS invoices (
