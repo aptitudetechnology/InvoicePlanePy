@@ -21,7 +21,7 @@ class Quote(BaseModel):
     client_id = Column(ForeignKey("clients.id"), nullable=False)
     
     # Quote details - REMOVED product_name (it belongs to quote_items)
-    description = Column(Text)
+    #description = Column(Text)
     quantity = Column(Numeric(10, 3), nullable=False)
     unit_price = Column(Numeric(10, 2), nullable=False)
     issue_date = Column(Date, nullable=False)
