@@ -82,7 +82,7 @@ class QuoteItem(BaseModel):
     description = Column(Text)
     quantity = Column(Numeric(10, 2), nullable=False)
     price = Column(Numeric(10, 2), nullable=False)
-    order = Column(Integer, default=0)
+    sort_order = Column(Integer, default=0)
     
     # Calculated amounts
     subtotal = Column(Numeric(10, 2))
