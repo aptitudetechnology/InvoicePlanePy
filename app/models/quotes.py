@@ -74,7 +74,7 @@ class QuoteItem(BaseModel):
     quote_id = Column(Integer, ForeignKey("quotes.id"), nullable=False)
     product_id = Column(Integer, ForeignKey("products.id"))
     
-    # Item details - exactly matching your database schema
+    # Item details - exactly matching your database schema.
     product_name = Column(String(255))
     description = Column(Text)
     unit_price = Column(Numeric(10, 2), nullable=False)
