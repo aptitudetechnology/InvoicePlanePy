@@ -166,8 +166,7 @@ async def save_invoice_settings(
         # Step 2: Check database connection health
         logger.info("=== DATABASE CONNECTION CHECK ===")
         try:
-            from sqlalchemy import text
-            db.execute(text("SELECT 1"))
+            db.execute("SELECT 1")
             logger.info("Database connection is healthy")
         except Exception as db_check_error:
             logger.error(f"Database connection issue: {db_check_error}")
@@ -233,42 +232,38 @@ async def save_invoice_settings(
             settings_obj.enable_pdf_watermarks = enable_pdf_watermarks == "on"
             settings_obj.include_zugferd = include_zugferd == "on"
             settings_obj.pdf_invoice_footer = pdf_invoice_footer
+            logger.info("Existing settings object updated")
+
+        # Step 5: Commit with detailed monitoring
+        logger.info("=== COMMITTING CHANGES TO DATABASE ===")
+        try:
+            db.commit()
+            logger.info("✓ Database commit successful")
+        except Exception as commit_error:
+            logger.error(f"✗ Database commit failed: {commit_error}")
+            raise
+        
+        # Step 6: Refresh with monitoring
+        logger.info("=== REFRESHING SETTINGS OBJECT ===")
+        try:
+            db.refresh(settings_obj)
+            logger.info("✓ Settings object refresh successful")
+            logger.info(f"Refreshed object ID: {settings_obj.id}")
+        except Exception as refresh_error:
+            logger.error(f"✗ Settings object refresh failed: {refresh_error}")
+            raise
+        
+        # Step 7: Validate object state before template
+        logger.info("=== VALIDATING OBJECT STATE ===")
+        try:
+            # Test if object attributes are accessible
+            test_attrs = [
+                'id', 'default_invoice_group', 'default_invoice_terms', 
+                'invoice_default_payment_method', 'invoices_due_after',
+                'generate_invoice_number_for_draft', 'einvoicing', 
+                'pdf_template', 'pdf_invoice_footer'
+            ]
             
-        settings_obj = db.query(InvoiceSettings).first()
-        if not settings_obj:
-            # Create new settings record
-            settings_obj = InvoiceSettings(
-                default_invoice_group=default_invoice_group or "invoice-default",
-                default_invoice_terms=default_terms or "Payment due within 30 days",
-                invoice_default_payment_method=default_payment_method or "bank_transfer",
-                invoices_due_after=invoices_due_after or 30,
-                generate_invoice_number_for_draft=generate_invoice_number_draft == "on",
-                einvoicing=mark_invoices_sent_pdf == "on",
-                pdf_template=default_pdf_template or "default",
-                invoice_pdf_password=invoice_pdf_password,
-                enable_pdf_watermarks=enable_pdf_watermarks == "on",
-                include_zugferd=include_zugferd == "on",
-                pdf_invoice_footer=pdf_invoice_footer
-            )
-            db.add(settings_obj)
-            db.commit()
-            db.refresh(settings_obj)
-        else:
-            # Update existing settings record.
-            settings_obj.default_invoice_group = default_invoice_group or "invoice-default"
-            settings_obj.default_invoice_terms = default_terms or "Payment due within 30 days"
-            settings_obj.invoice_default_payment_method = default_payment_method or "bank_transfer"
-            settings_obj.invoices_due_after = invoices_due_after or 30
-            settings_obj.generate_invoice_number_for_draft = generate_invoice_number_draft == "on"
-            settings_obj.einvoicing = mark_invoices_sent_pdf == "on"
-            settings_obj.pdf_template = default_pdf_template or "default"
-            settings_obj.invoice_pdf_password = invoice_pdf_password
-            settings_obj.enable_pdf_watermarks = enable_pdf_watermarks == "on"
-            settings_obj.include_zugferd = include_zugferd == "on"
-            settings_obj.pdf_invoice_footer = pdf_invoice_footer
-            db.commit()
-            db.refresh(settings_obj)
-                    try:
             for attr in test_attrs:
                 try:
                     value = getattr(settings_obj, attr, 'MISSING')
@@ -284,10 +279,9 @@ async def save_invoice_settings(
             }
             json.dumps(serialization_test)
             logger.info("✓ Object attributes are JSON serializable")
-
-        except Exception as validation_error:  # ✅ Now it's inside a try block
+            
+        except Exception as validation_error:
             logger.error(f"✗ Object validation failed: {validation_error}")
-
             # Continue anyway to see what happens
         
         # Step 8: Check template file existence
