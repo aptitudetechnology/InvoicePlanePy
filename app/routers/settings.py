@@ -326,24 +326,22 @@ async def save_invoice_settings(
             logger.error(f"✗ Template context preparation failed: {context_error}")
             raise
         
-        # Step 10: Test template rendering with required context
-        logger.info("=== TESTING TEMPLATE WITH REQUIRED CONTEXT ===")
+        # Step 10: Test minimal template rendering first
+        logger.info("=== TESTING MINIMAL TEMPLATE CONTEXT ===")
         try:
-            # The template requires invoice_settings, so include it in the test
-            test_context = {
+            minimal_context = {
                 "request": request,
                 "user": current_user,
-                "invoice_settings": settings_obj,  # This is required!
                 "title": "Invoice Settings"
             }
             
             # This is just a test - we won't return this
-            test_response = templates.TemplateResponse("settings/invoice.html", test_context)
-            logger.info("✓ Template context with invoice_settings works")
+            test_response = templates.TemplateResponse("settings/invoice.html", minimal_context)
+            logger.info("✓ Minimal template context works")
             
-        except Exception as template_test_error:
-            logger.error(f"✗ Template test failed: {template_test_error}")
-            logger.error(f"Template test error traceback: {traceback.format_exc()}")
+        except Exception as minimal_error:
+            logger.error(f"✗ Even minimal template context fails: {minimal_error}")
+            logger.error(f"Minimal error traceback: {traceback.format_exc()}")
             raise
         
         # Step 11: Create the actual response
