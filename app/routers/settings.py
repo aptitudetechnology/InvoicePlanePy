@@ -132,52 +132,98 @@ async def save_invoice_settings(
     default_pdf_template: str = Form(None),
     pdf_invoice_footer: str = Form(None)
 ):
-       # Save or update invoice settings in the database
-    settings_obj = db.query(InvoiceSettings).first()
+    try:
+        # Save or update invoice settings in the database
+        settings_obj = db.query(InvoiceSettings).first()
 
-    if not settings_obj:
-        # Create new settings record
-        settings_obj = InvoiceSettings(
-            default_invoice_group=default_invoice_group or "invoice-default",
-            default_invoice_terms=default_terms or "Payment due within 30 days",
-            invoice_default_payment_method=default_payment_method or "bank_transfer",
-            invoices_due_after=invoices_due_after or 30,
-            generate_invoice_number_for_draft=generate_invoice_number_draft == "on",
-            einvoicing=mark_invoices_sent_pdf == "on",
-            pdf_template=default_pdf_template or "default",
-            invoice_pdf_password=invoice_pdf_password,
-            enable_pdf_watermarks=enable_pdf_watermarks == "on",
-            include_zugferd=include_zugferd == "on",
-            pdf_invoice_footer=pdf_invoice_footer
-        )
-        db.add(settings_obj)
-    else:
-        # Update existing settings record.
-        settings_obj.default_invoice_group = default_invoice_group or "invoice-default"
-        settings_obj.default_invoice_terms = default_terms or "Payment due within 30 days"
-        settings_obj.invoice_default_payment_method = default_payment_method or "bank_transfer"
-        settings_obj.invoices_due_after = invoices_due_after or 30
-        settings_obj.generate_invoice_number_for_draft = generate_invoice_number_draft == "on"
-        settings_obj.einvoicing = mark_invoices_sent_pdf == "on"
-        settings_obj.pdf_template = default_pdf_template or "default"
-        settings_obj.invoice_pdf_password = invoice_pdf_password
-        settings_obj.enable_pdf_watermarks = enable_pdf_watermarks == "on"
-        settings_obj.include_zugferd = include_zugferd == "on"
-        settings_obj.pdf_invoice_footer = pdf_invoice_footer
+        if not settings_obj:
+            # Create new settings record
+            settings_obj = InvoiceSettings(
+                default_invoice_group=default_invoice_group or "invoice-default",
+                default_invoice_terms=default_terms or "Payment due within 30 days",
+                invoice_default_payment_method=default_payment_method or "bank_transfer",
+                invoices_due_after=invoices_due_after or 30,
+                generate_invoice_number_for_draft=generate_invoice_number_draft == "on",
+                einvoicing=mark_invoices_sent_pdf == "on",
+                pdf_template=default_pdf_template or "default",
+                invoice_pdf_password=invoice_pdf_password,
+                enable_pdf_watermarks=enable_pdf_watermarks == "on",
+                include_zugferd=include_zugferd == "on",
+                pdf_invoice_footer=pdf_invoice_footer
+            )
+            db.add(settings_obj)
+        else:
+            # Update existing settings record
+            settings_obj.default_invoice_group = default_invoice_group or "invoice-default"
+            settings_obj.default_invoice_terms = default_terms or "Payment due within 30 days"
+            settings_obj.invoice_default_payment_method = default_payment_method or "bank_transfer"
+            settings_obj.invoices_due_after = invoices_due_after or 30
+            settings_obj.generate_invoice_number_for_draft = generate_invoice_number_draft == "on"
+            settings_obj.einvoicing = mark_invoices_sent_pdf == "on"
+            settings_obj.pdf_template = default_pdf_template or "default"
+            settings_obj.invoice_pdf_password = invoice_pdf_password
+            settings_obj.enable_pdf_watermarks = enable_pdf_watermarks == "on"
+            settings_obj.include_zugferd = include_zugferd == "on"
+            settings_obj.pdf_invoice_footer = pdf_invoice_footer
 
-    db.commit()
-    db.refresh(settings_obj)
+        # Commit the changes
+        db.commit()
+        
+        # Refresh to get updated data from DB
+        db.refresh(settings_obj)
+        
+        # Prepare template context carefully
+        template_context = {
+            "request": request,
+            "user": current_user,
+            "invoice_settings": settings_obj,
+            "success_message": "Invoice settings saved successfully.",
+            "title": "Invoice Settings"
+        }
+        
+        return templates.TemplateResponse("settings/invoice.html", template_context)
+        
+    except Exception as e:
+        # Log the error for debugging
+        print(f"Error saving invoice settings: {str(e)}")
+        print(f"Exception type: {type(e).__name__}")
+        
+        # Rollback the transaction
+        db.rollback()
+        
+        # Get the current settings for display (or create default)
+        try:
+            current_settings = db.query(InvoiceSettings).first()
+            if not current_settings:
+                current_settings = InvoiceSettings(
+                    default_invoice_group="invoice-default",
+                    default_invoice_terms="Payment due within 30 days",
+                    invoice_default_payment_method="bank_transfer",
+                    invoices_due_after=30,
+                    generate_invoice_number_for_draft=False,
+                    einvoicing=False,
+                    pdf_invoice_footer="Thank you for your business",
+                    pdf_template="default",
+                    invoice_logo=None,
+                    invoice_pdf_password=None,
+                    enable_pdf_watermarks=False,
+                    include_zugferd=False
+                )
+        except Exception:
+            # Fallback to empty settings if even this fails
+            current_settings = InvoiceSettings()
+        
+        # Return error response
+        return templates.TemplateResponse("settings/invoice.html", {
+            "request": request,
+            "user": current_user,
+            "invoice_settings": current_settings,
+            "error_message": f"Failed to save settings: {str(e)}",
+            "title": "Invoice Settings"
+        })
 
-    return templates.TemplateResponse("settings/invoice.html", {
-        "request": request,
-        "user": current_user,
-        "invoice_settings": settings_obj,
-        "success_message": "Invoice settings saved successfully.",
-        "title": "Invoice Settings"
-    })
 
 
-    
 
 @router.get("/custom-fields", response_class=HTMLResponse)
 async def custom_fields(
