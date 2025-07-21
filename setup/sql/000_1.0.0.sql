@@ -121,7 +121,6 @@ CREATE TABLE IF NOT EXISTS invoices (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Invoice items table
 CREATE TABLE IF NOT EXISTS invoice_items (
     id SERIAL PRIMARY KEY,
     invoice_id INTEGER REFERENCES invoices(id) NOT NULL,
@@ -137,6 +136,31 @@ CREATE TABLE IF NOT EXISTS invoice_items (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Invoice settings table
+CREATE TABLE IF NOT EXISTS invoice_settings (
+    id SERIAL PRIMARY KEY,
+    default_invoice_group VARCHAR(50),
+    default_invoice_terms TEXT,
+    invoice_default_payment_method VARCHAR(50),
+    invoices_due_after INTEGER,
+    generate_invoice_number_for_draft BOOLEAN DEFAULT FALSE,
+    einvoicing BOOLEAN DEFAULT FALSE,
+    pdf_invoice_footer TEXT,
+    pdf_template VARCHAR(100),
+    invoice_logo VARCHAR(255),
+    invoice_pdf_password VARCHAR(255),
+    enable_pdf_watermarks BOOLEAN DEFAULT FALSE,
+    include_zugferd BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+
+
+
+
 
 -- Payments table
 CREATE TABLE IF NOT EXISTS payments (
