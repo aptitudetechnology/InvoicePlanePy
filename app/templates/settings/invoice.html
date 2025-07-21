@@ -57,7 +57,7 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="default-invoice-terms" class="form-label">Default Terms</label>
-                                <textarea id="default-invoice-terms" name="default_terms" class="form-control" rows="4" placeholder="Enter default payment terms...">{{ invoice_settings.default_terms or 'Please pay within 14 days.\nMake payment to:\nTYPE1GV Pty Ltd' }}</textarea>
+                                <textarea id="default-invoice-terms" name="default_terms" class="form-control" rows="4" placeholder="Enter default payment terms...">{{ invoice_settings.default_invoice_terms or 'Please pay within 14 days.\nMake payment to:\nTYPE1GV Pty Ltd' }}</textarea>
                             </div>
                         </div>
                         <div class="col-md-6">
