@@ -131,47 +131,21 @@ async def save_invoice_settings(
     include_zugferd: str = Form(None),
     default_pdf_template: str = Form(None)
 ):
-       # Save or update invoice settings in the database
-    settings_obj = db.query(InvoiceSettings).first()
-
-    if not settings_obj:
-        # Create new settings record
-        settings_obj = InvoiceSettings(
-            default_invoice_group=default_invoice_group or "invoice-default",
-            default_invoice_terms=default_terms or "Payment due within 30 days",
-            invoice_default_payment_method=default_payment_method or "bank_transfer",
-            invoices_due_after=invoices_due_after or 30,
-            generate_invoice_number_for_draft=generate_invoice_number_draft == "on",
-            einvoicing=mark_invoices_sent_pdf == "on",
-            pdf_template=default_pdf_template or "default",
-            invoice_pdf_password=invoice_pdf_password,
-            enable_pdf_watermarks=enable_pdf_watermarks == "on",
-            include_zugferd=include_zugferd == "on"
-        )
-        db.add(settings_obj)
-    else:
-        # Update existing settings record
-        settings_obj.default_invoice_group = default_invoice_group or "invoice-default"
-        settings_obj.default_invoice_terms = default_terms or "Payment due within 30 days"
-        settings_obj.invoice_default_payment_method = default_payment_method or "bank_transfer"
-        settings_obj.invoices_due_after = invoices_due_after or 30
-        settings_obj.generate_invoice_number_for_draft = generate_invoice_number_draft == "on"
-        settings_obj.einvoicing = mark_invoices_sent_pdf == "on"
-        settings_obj.pdf_template = default_pdf_template or "default"
-        settings_obj.invoice_pdf_password = invoice_pdf_password
-        settings_obj.enable_pdf_watermarks = enable_pdf_watermarks == "on"
-        settings_obj.include_zugferd = include_zugferd == "on"
-
-    db.commit()
-    db.refresh(settings_obj)
-
-    return templates.TemplateResponse("settings/invoice.html", {
-        "request": request,
-        "user": current_user,
-        "settings": settings_obj,
-        "success_message": "Invoice settings saved successfully."
-    })
-
+    """Save invoice settings"""
+    # TODO: Save settings to the database
+    # For now, create a settings object to pass back to template
+    invoice_settings = InvoiceSettings(
+        default_invoice_group=default_invoice_group or "invoice-default",
+        default_invoice_terms=default_terms or "Payment due within 30 days",
+        invoice_default_payment_method=default_payment_method or "bank_transfer",
+        invoices_due_after=invoices_due_after or 30,
+        generate_invoice_number_for_draft=generate_invoice_number_draft == "on",
+        einvoicing=mark_invoices_sent_pdf == "on",
+        pdf_template=default_pdf_template or "default",
+        invoice_pdf_password=invoice_pdf_password,
+        enable_pdf_watermarks=enable_pdf_watermarks == "on",
+        include_zugferd=include_zugferd == "on"
+    )
     
     return templates.TemplateResponse("settings/invoice.html", {
         "request": request,
