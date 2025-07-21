@@ -130,8 +130,7 @@ async def save_invoice_settings(
     invoice_pdf_password: str = Form(None),
     include_zugferd: str = Form(None),
     default_pdf_template: str = Form(None),
-    pdf_invoice_footer: str = Form(None),
-    pdf_invoice_footer=pdf_invoice_footer
+    pdf_invoice_footer: str = Form(None)
 ):
        # Save or update invoice settings in the database
     settings_obj = db.query(InvoiceSettings).first()
