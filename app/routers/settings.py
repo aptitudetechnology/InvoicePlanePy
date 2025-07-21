@@ -337,7 +337,7 @@ async def save_invoice_settings(
             
             # Provide the required context for safe test rendering
             minimal_context["invoice_settings"] = settings_obj
-            test_response = templates.TemplateResponse("settings/invoice.html", minimal_context)
+            #test_response = templates.TemplateResponse("settings/invoice.html", minimal_context)
 
             
         except Exception as minimal_error:
