@@ -130,6 +130,7 @@ async def save_invoice_settings(
     invoice_pdf_password: str = Form(None),
     include_zugferd: str = Form(None),
     default_pdf_template: str = Form(None),
+    pdf_invoice_footer: str = Form(None),
     pdf_invoice_footer=pdf_invoice_footer
 ):
        # Save or update invoice settings in the database
@@ -147,7 +148,8 @@ async def save_invoice_settings(
             pdf_template=default_pdf_template or "default",
             invoice_pdf_password=invoice_pdf_password,
             enable_pdf_watermarks=enable_pdf_watermarks == "on",
-            include_zugferd=include_zugferd == "on"
+            include_zugferd=include_zugferd == "on",
+            pdf_invoice_footer=pdf_invoice_footer
         )
         db.add(settings_obj)
     else:
@@ -162,6 +164,7 @@ async def save_invoice_settings(
         settings_obj.invoice_pdf_password = invoice_pdf_password
         settings_obj.enable_pdf_watermarks = enable_pdf_watermarks == "on"
         settings_obj.include_zugferd = include_zugferd == "on"
+        settings_obj.pdf_invoice_footer = pdf_invoice_footer
 
     db.commit()
     db.refresh(settings_obj)
