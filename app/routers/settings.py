@@ -8,6 +8,10 @@ from app.dependencies import get_current_user
 from app.models.user import User
 from app.models.api_key import ApiKey
 from app.models.invoicesettings import InvoiceSettings
+import logging
+
+# Add this at the top of your file
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter()
@@ -132,12 +136,14 @@ async def save_invoice_settings(
     default_pdf_template: str = Form(None),
     pdf_invoice_footer: str = Form(None)
 ):
+    logger.info("Starting invoice settings save process")
+    
     try:
-        # Save or update invoice settings in the database
+        logger.info("Querying existing settings")
         settings_obj = db.query(InvoiceSettings).first()
-
+        
         if not settings_obj:
-            # Create new settings record
+            logger.info("Creating new settings record")
             settings_obj = InvoiceSettings(
                 default_invoice_group=default_invoice_group or "invoice-default",
                 default_invoice_terms=default_terms or "Payment due within 30 days",
@@ -153,7 +159,7 @@ async def save_invoice_settings(
             )
             db.add(settings_obj)
         else:
-            # Update existing settings record
+            logger.info("Updating existing settings record")
             settings_obj.default_invoice_group = default_invoice_group or "invoice-default"
             settings_obj.default_invoice_terms = default_terms or "Payment due within 30 days"
             settings_obj.invoice_default_payment_method = default_payment_method or "bank_transfer"
@@ -166,13 +172,13 @@ async def save_invoice_settings(
             settings_obj.include_zugferd = include_zugferd == "on"
             settings_obj.pdf_invoice_footer = pdf_invoice_footer
 
-        # Commit the changes
+        logger.info("Committing changes to database")
         db.commit()
         
-        # Refresh to get updated data from DB
+        logger.info("Refreshing settings object")
         db.refresh(settings_obj)
         
-        # Prepare template context carefully
+        logger.info("Preparing template context")
         template_context = {
             "request": request,
             "user": current_user,
@@ -181,20 +187,27 @@ async def save_invoice_settings(
             "title": "Invoice Settings"
         }
         
-        return templates.TemplateResponse("settings/invoice.html", template_context)
+        logger.info("Rendering template response")
+        response = templates.TemplateResponse("settings/invoice.html", template_context)
+        logger.info("Template response created successfully")
+        return response
         
     except Exception as e:
-        # Log the error for debugging
-        print(f"Error saving invoice settings: {str(e)}")
-        print(f"Exception type: {type(e).__name__}")
+        logger.error(f"Error in save_invoice_settings: {str(e)}", exc_info=True)
+        logger.error(f"Exception type: {type(e).__name__}")
         
         # Rollback the transaction
-        db.rollback()
+        try:
+            db.rollback()
+            logger.info("Database rollback completed")
+        except Exception as rollback_error:
+            logger.error(f"Error during rollback: {rollback_error}")
         
-        # Get the current settings for display (or create default)
+        # Try to get current settings for error display
         try:
             current_settings = db.query(InvoiceSettings).first()
             if not current_settings:
+                logger.info("Creating default settings for error display")
                 current_settings = InvoiceSettings(
                     default_invoice_group="invoice-default",
                     default_invoice_terms="Payment due within 30 days",
@@ -209,8 +222,8 @@ async def save_invoice_settings(
                     enable_pdf_watermarks=False,
                     include_zugferd=False
                 )
-        except Exception:
-            # Fallback to empty settings if even this fails
+        except Exception as settings_error:
+            logger.error(f"Error getting settings for error display: {settings_error}")
             current_settings = InvoiceSettings()
         
         # Return error response
@@ -221,8 +234,6 @@ async def save_invoice_settings(
             "error_message": f"Failed to save settings: {str(e)}",
             "title": "Invoice Settings"
         })
-
-
 
 
 @router.get("/custom-fields", response_class=HTMLResponse)
