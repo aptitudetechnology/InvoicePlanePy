@@ -166,7 +166,8 @@ async def save_invoice_settings(
         # Step 2: Check database connection health
         logger.info("=== DATABASE CONNECTION CHECK ===")
         try:
-            db.execute("SELECT 1")
+            from sqlalchemy import text
+            db.execute(text("SELECT 1"))
             logger.info("Database connection is healthy")
         except Exception as db_check_error:
             logger.error(f"Database connection issue: {db_check_error}")
