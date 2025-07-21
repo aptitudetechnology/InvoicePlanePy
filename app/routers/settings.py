@@ -168,7 +168,7 @@ async def save_invoice_settings(
     return templates.TemplateResponse("settings/invoice.html", {
         "request": request,
         "user": current_user,
-        "settings": settings_obj,
+        "settings": invoice_settings_obj,
         "success_message": "Invoice settings saved successfully."
     })
 

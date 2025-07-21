@@ -81,6 +81,17 @@ In `app/templates/settings/invoice.html`, update the success message to confirm 
 - Submit the form and verify that settings are saved in the `invoice_settings` table.
 - Reload the page and confirm settings are loaded from the database.
 
+## Implementation Checklist
+
+- [ ] Update `app/routers/settings.py` to persist invoice settings in the database
+- [ ] Ensure all required fields are present in `app/models/invoicesettings.py`
+- [ ] Confirm form field names in `app/templates/settings/invoice.html` match backend keys
+- [ ] Update success message in `app/templates/settings/invoice.html` to confirm persistence
+- [ ] Test form submission and verify data is saved in `invoice_settings` table
+- [ ] Test loading and displaying settings from the database
+- [ ] Remove any remaining TODO comments related to invoice settings persistence
+- [ ] Document any additional changes or edge cases
+
 ---
 
 **Summary:**
