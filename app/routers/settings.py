@@ -268,6 +268,7 @@ async def save_invoice_settings(
             settings_obj.pdf_invoice_footer = pdf_invoice_footer
             db.commit()
             db.refresh(settings_obj)
+                    try:
             for attr in test_attrs:
                 try:
                     value = getattr(settings_obj, attr, 'MISSING')
@@ -283,9 +284,10 @@ async def save_invoice_settings(
             }
             json.dumps(serialization_test)
             logger.info("✓ Object attributes are JSON serializable")
-            
-        except Exception as validation_error:
+
+        except Exception as validation_error:  # ✅ Now it's inside a try block
             logger.error(f"✗ Object validation failed: {validation_error}")
+
             # Continue anyway to see what happens
         
         # Step 8: Check template file existence
