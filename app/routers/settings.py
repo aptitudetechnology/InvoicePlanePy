@@ -335,9 +335,10 @@ async def save_invoice_settings(
                 "title": "Invoice Settings"
             }
             
-            # This is just a test - we won't return this
+            # Provide the required context for safe test rendering
+            minimal_context["invoice_settings"] = settings_obj
             test_response = templates.TemplateResponse("settings/invoice.html", minimal_context)
-            logger.info("✓ Minimal template context works")
+
             
         except Exception as minimal_error:
             logger.error(f"✗ Even minimal template context fails: {minimal_error}")
