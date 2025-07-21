@@ -111,7 +111,7 @@ async def invoice_settings(
     return templates.TemplateResponse("settings/invoice.html", {
         "request": request,
         "user": current_user,
-        "invoice_settings": settings_obj,
+        "invoice_settings": invoice_settings_data,
         "title": "Invoice Settings"
     })
 
