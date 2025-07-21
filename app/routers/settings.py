@@ -111,7 +111,7 @@ async def invoice_settings(
     return templates.TemplateResponse("settings/invoice.html", {
         "request": request,
         "user": current_user,
-        "invoice_settings": invoice_settings_data,
+        "invoice_settings": settings_obj,
         "title": "Invoice Settings"
     })
 
@@ -168,18 +168,13 @@ async def save_invoice_settings(
     return templates.TemplateResponse("settings/invoice.html", {
         "request": request,
         "user": current_user,
-        "settings": invoice_settings_obj,
-        "success_message": "Invoice settings saved successfully."
-    })
-
-    
-    return templates.TemplateResponse("settings/invoice.html", {
-        "request": request,
-        "user": current_user,
-        "invoice_settings": invoice_settings,
-        "success_message": "Settings saved successfully. (Not yet persisted)",
+        "invoice_settings": settings_obj,
+        "success_message": "Invoice settings saved successfully.",
         "title": "Invoice Settings"
     })
+
+
+    
 
 @router.get("/custom-fields", response_class=HTMLResponse)
 async def custom_fields(
