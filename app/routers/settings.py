@@ -7,50 +7,11 @@ from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.user import User
 from app.models.api_key import ApiKey
+from app.models.invoicesettings import InvoiceSettings
 
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
-
-# Move the POST /invoices route here, after router is defined
-@router.post("/invoices", response_class=HTMLResponse)
-async def save_invoice_settings(
-    request: Request,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    default_invoice_group: str = Form(None),
-    default_payment_method: str = Form(None),
-    default_terms: str = Form(None),
-    invoices_due_after: int = Form(None),
-    generate_invoice_number_draft: str = Form(None),
-    mark_invoices_sent_pdf: str = Form(None),
-    enable_pdf_watermarks: str = Form(None),
-    invoice_pdf_password: str = Form(None),
-    include_zugferd: str = Form(None),
-    default_pdf_template: str = Form(None)
-    # Add other fields as needed
-):
-    """Save invoice settings"""
-    # TODO: Save settings to the database or config file
-    # For now, just reload the page with a success message
-    settings = {
-        "default_invoice_group": default_invoice_group,
-        "default_payment_method": default_payment_method,
-        "default_terms": default_terms,
-        "invoices_due_after": invoices_due_after,
-        "generate_invoice_number_draft": generate_invoice_number_draft,
-        "mark_invoices_sent_pdf": mark_invoices_sent_pdf,
-        "enable_pdf_watermarks": enable_pdf_watermarks,
-        "invoice_pdf_password": invoice_pdf_password,
-        "include_zugferd": include_zugferd,
-        "default_pdf_template": default_pdf_template
-    }
-    return templates.TemplateResponse("settings/invoice.html", {
-        "request": request,
-        "user": current_user,
-        "settings": settings,
-        "success_message": "Settings saved successfully. (Not yet persisted)"
-    })
 
 @router.get("/", response_class=HTMLResponse)
 async def settings_page(
@@ -83,7 +44,7 @@ async def company_settings(
     return templates.TemplateResponse("settings/company.html", {
         "request": request,
         "user": current_user,
-        "settings": settings,  # This is what was missing!
+        "settings": settings,
         "title": "Company Settings"
     })
 
@@ -102,7 +63,6 @@ async def user_settings(
         "title": "User Management"
     })
 
-
 @router.get("/users/create", response_class=HTMLResponse)
 async def create_user(
     request: Request,
@@ -117,37 +77,45 @@ async def create_user(
         "title": "Create User"
     })
 
-
 @router.get("/invoice", response_class=HTMLResponse)
 async def invoice_settings(
-    request: Request,
-    db: Session = Depends(get_db),
+    request: Request, 
+    db: Session = Depends(get_db), 
     current_user: User = Depends(get_current_user)
 ):
     """Show invoice settings"""
-    # Define default settings for the invoice template, or fetch from DB if applicable
-    invoice_settings_data = {
-        "language": "english", # Example: Default language setting
-        "invoice_prefix": "INV-",
-        "invoice_start_number": 1,
-        "due_days": 30,
-        # Add any other settings your invoice.html template expects
-    }
-
-    # If you have actual invoice settings stored in your database (e.g., in a SystemSettings table or UserSettings related to invoices), you would fetch them here
-    # For example:
-    # invoice_db_settings = db.query(InvoiceSettingsModel).filter(...).first()
-    # if invoice_db_settings:
-    #     invoice_settings_data.update(invoice_db_settings.__dict__) # Or map relevant fields
-
+    # Fetch invoice settings from database
+    invoice_db_settings = db.query(InvoiceSettings).first()  # System-wide settings
+    # OR if user-specific: db.query(InvoiceSettings).filter(InvoiceSettings.user_id == current_user.id).first()
+    
+    if invoice_db_settings:
+        # Use the actual database object
+        invoice_settings_data = invoice_db_settings
+    else:
+        # Create default settings object if none exists
+        invoice_settings_data = InvoiceSettings(
+            default_invoice_group="invoice-default",
+            default_invoice_terms="Payment due within 30 days",
+            invoice_default_payment_method="bank_transfer",
+            invoices_due_after=30,
+            generate_invoice_number_for_draft=False,
+            einvoicing=False,
+            pdf_invoice_footer="Thank you for your business",
+            pdf_template="default",
+            invoice_logo=None,
+            invoice_pdf_password=None,
+            enable_pdf_watermarks=False,
+            include_zugferd=False
+        )
+    
     return templates.TemplateResponse("settings/invoice.html", {
         "request": request,
         "user": current_user,
-        "invoice_settings": invoice_settings_data, # <--- THIS IS THE FIX
+        "invoice_settings": invoice_settings_data,
         "title": "Invoice Settings"
     })
 
-@router.post("/invoices", response_class=HTMLResponse)
+@router.post("/invoice", response_class=HTMLResponse)
 async def save_invoice_settings(
     request: Request,
     db: Session = Depends(get_db),
@@ -162,28 +130,29 @@ async def save_invoice_settings(
     invoice_pdf_password: str = Form(None),
     include_zugferd: str = Form(None),
     default_pdf_template: str = Form(None)
-    # Add other fields as needed
 ):
     """Save invoice settings"""
-    # TODO: Save settings to the database or config file
-    # For now, just reload the page with a success message
-    settings = {
-        "default_invoice_group": default_invoice_group,
-        "default_payment_method": default_payment_method,
-        "default_terms": default_terms,
-        "invoices_due_after": invoices_due_after,
-        "generate_invoice_number_draft": generate_invoice_number_draft,
-        "mark_invoices_sent_pdf": mark_invoices_sent_pdf,
-        "enable_pdf_watermarks": enable_pdf_watermarks,
-        "invoice_pdf_password": invoice_pdf_password,
-        "include_zugferd": include_zugferd,
-        "default_pdf_template": default_pdf_template
-    }
+    # TODO: Save settings to the database
+    # For now, create a settings object to pass back to template
+    invoice_settings = InvoiceSettings(
+        default_invoice_group=default_invoice_group or "invoice-default",
+        default_invoice_terms=default_terms or "Payment due within 30 days",
+        invoice_default_payment_method=default_payment_method or "bank_transfer",
+        invoices_due_after=invoices_due_after or 30,
+        generate_invoice_number_for_draft=generate_invoice_number_draft == "on",
+        einvoicing=mark_invoices_sent_pdf == "on",
+        pdf_template=default_pdf_template or "default",
+        invoice_pdf_password=invoice_pdf_password,
+        enable_pdf_watermarks=enable_pdf_watermarks == "on",
+        include_zugferd=include_zugferd == "on"
+    )
+    
     return templates.TemplateResponse("settings/invoice.html", {
         "request": request,
         "user": current_user,
-        "settings": settings,
-        "success_message": "Settings saved successfully. (Not yet persisted)"
+        "invoice_settings": invoice_settings,
+        "success_message": "Settings saved successfully. (Not yet persisted)",
+        "title": "Invoice Settings"
     })
 
 @router.get("/custom-fields", response_class=HTMLResponse)
