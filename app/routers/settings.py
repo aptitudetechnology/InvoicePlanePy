@@ -150,7 +150,7 @@ async def save_invoice_settings(
         )
         db.add(settings_obj)
     else:
-        # Update existing settings record
+        # Update existing settings record.
         settings_obj.default_invoice_group = default_invoice_group or "invoice-default"
         settings_obj.default_invoice_terms = default_terms or "Payment due within 30 days"
         settings_obj.invoice_default_payment_method = default_payment_method or "bank_transfer"
