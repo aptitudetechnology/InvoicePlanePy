@@ -251,9 +251,9 @@
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <div class="mb-3">
-                        <label for="invoice_terms" class="form-label"><strong>Invoice Terms</strong></label>
-                        <textarea class="form-control" id="invoice_terms" name="invoice_terms" rows="5" placeholder="Payment terms, conditions, etc.">{{ quote.terms if quote.terms else invoice_settings.default_invoice_terms }}</textarea>
-                        </div>
+                            <label class="form-label"><strong>Invoice Terms</strong></label>
+                            <div class="form-control-plaintext">{{ invoice_settings.default_invoice_terms }}</div>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
