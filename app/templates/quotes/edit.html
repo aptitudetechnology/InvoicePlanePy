@@ -228,7 +228,7 @@
                                 </div>
                                 <div class="row mb-2">
                                     <div class="col-6"><strong>Quote Tax:</strong></div>
-                                    <div class="col-6 text-end" id="quote-tax">${{ (quote.quote_tax | default(0)) | round(2) }}</div>
+                                    <div class="col-6 text-end" id="quote-tax">${{ (quote.tax_amounts| default(0)) | round(2) }}</div>
                                 </div>
                                 <div class="row mb-2">
                                     <div class="col-6">
