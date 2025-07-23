@@ -1,5 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
   // If you pass itemCounter from template, assign it to window.itemCounter in HTML
+  
+  const addProductBtn = document.getElementById('display-product-modal-btn');
+if (addProductBtn) {
+  addProductBtn.addEventListener('click', () => {
+    const modal = new bootstrap.Modal(document.getElementById('ProductModal'));
+    modal.show();
+  });
+}
+
+  
   let itemCounter = window.itemCounter || 0;
 
   // Utility to parse floats safely
