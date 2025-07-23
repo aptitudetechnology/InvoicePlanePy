@@ -19,16 +19,16 @@ class QuoteManager {
   }
 
   setupQuote() {
-    // Get quote context data from template
     this.extractContextData();
-    
-    // Load data and setup event listeners
+
     this.loadTaxRates().then(() => {
       this.calculateTotals();
     });
+
     this.loadProducts();
+
     this.attachEventListeners();
-    
+
     // Expose addNewRowWithProduct globally for ProductModal integration
     window.addNewRowWithProduct = (productName, price, productId) => {
       this.addNewRowWithProduct(productName, price, productId);
@@ -36,14 +36,12 @@ class QuoteManager {
   }
 
   extractContextData() {
-    // Extract quote ID from the form action or URL
     const form = document.querySelector('form[action*="/quotes/"]');
     if (form) {
       const matches = form.action.match(/\/quotes\/(\d+)\/edit/);
       this.quoteId = matches ? matches[1] : null;
     }
-    
-    // Count existing items to set initial counter
+
     const existingItems = document.querySelectorAll('#quote-items tr');
     this.itemCounter = existingItems.length;
   }
@@ -57,14 +55,20 @@ class QuoteManager {
     document.querySelector('[onclick="copyQuote()"]')?.addEventListener('click', () => this.copyQuote());
     document.querySelector('[onclick="deleteQuote()"]')?.addEventListener('click', () => this.deleteQuote());
 
-    // Item management buttons
-    document.querySelector('[onclick="addNewRow()"]')?.addEventListener('click', () => this.addNewRow());
-    document.querySelector('[onclick="displayProductModal()"]')?.addEventListener('click', () => this.displayProductModal());
+    // Item management buttons (updated selectors to IDs for clarity)
+    const addRowBtn = document.getElementById('add-item-btn');
+    if (addRowBtn) {
+      addRowBtn.addEventListener('click', () => this.addNewRow());
+    }
 
-    // Remove inline onclick attributes (will be done via cleanup)
+    const displayProductModalBtn = document.getElementById('display-product-modal-btn');
+    if (displayProductModalBtn) {
+      displayProductModalBtn.addEventListener('click', () => this.displayProductModal());
+    }
+
     this.cleanupInlineHandlers();
 
-    // Quote discount percentage change
+    // Discount percentage change
     const discountInput = document.querySelector('input[name="discount_percentage"]');
     if (discountInput) {
       discountInput.addEventListener('change', () => this.calculateTotals());
@@ -74,8 +78,8 @@ class QuoteManager {
     const itemsTable = document.getElementById('quote-items');
     if (itemsTable) {
       itemsTable.addEventListener('click', (e) => {
-        if (e.target.closest('.btn-outline-danger')) {
-          this.removeItem(e.target.closest('.btn-outline-danger'));
+        if (e.target.closest('.btn-outline-danger') || e.target.closest('.remove-item-btn')) {
+          this.removeItem(e.target.closest('tr'));
         }
       });
 
@@ -88,7 +92,6 @@ class QuoteManager {
   }
 
   cleanupInlineHandlers() {
-    // Remove onclick attributes that we've replaced with event listeners
     const elementsToClean = [
       '[onclick="addQuoteTax()"]',
       '[onclick="downloadPDF()"]', 
@@ -171,12 +174,14 @@ class QuoteManager {
 
   addNewRow() {
     const tbody = document.getElementById('quote-items');
-    const newRow = document.createElement('tr');
+    if (!tbody) return;
+
     const taxRateDropdownContent = this.createTaxRateDropdownHTML(this.itemCounter);
 
+    const newRow = document.createElement('tr');
     newRow.innerHTML = `
       <td>
-        <button type="button" class="btn btn-sm btn-outline-danger">
+        <button type="button" class="btn btn-sm btn-outline-danger remove-item-btn" aria-label="Remove item">
           <i class="bi bi-trash"></i>
         </button>
       </td>
@@ -186,13 +191,13 @@ class QuoteManager {
         <input type="hidden" name="items[${this.itemCounter}][product_id]" value="">
       </td>
       <td>
-        <input type="number" class="form-control form-control-sm" name="items[${this.itemCounter}][quantity]" value="1" step="0.01">
+        <input type="number" class="form-control form-control-sm" name="items[${this.itemCounter}][quantity]" value="1" step="0.01" min="0">
       </td>
       <td>
-        <input type="number" class="form-control form-control-sm" name="items[${this.itemCounter}][price]" value="0.00" step="0.01">
+        <input type="number" class="form-control form-control-sm" name="items[${this.itemCounter}][price]" value="0.00" step="0.01" min="0">
       </td>
       <td>
-        <input type="number" class="form-control form-control-sm" name="items[${this.itemCounter}][discount]" value="0.00" step="0.01">
+        <input type="number" class="form-control form-control-sm" name="items[${this.itemCounter}][discount]" value="0.00" step="0.01" min="0">
       </td>
       <td>
         ${taxRateDropdownContent}
@@ -202,37 +207,40 @@ class QuoteManager {
       <td class="item-tax-amount">$0.00</td>
       <td class="item-total">$0.00</td>
     `;
-    
+
     tbody.appendChild(newRow);
     this.itemCounter++;
+
+    // Attach event listeners to new inputs for recalculation
+    this.attachEventListeners();
   }
 
   addNewRowWithProduct(productName, price, productId) {
     this.addNewRow();
-    
+
     const tbody = document.getElementById('quote-items');
     const lastRow = tbody.lastElementChild;
-    
+
     if (lastRow) {
-      const nameInput = lastRow.querySelector('input[name*="[name]"]');
+      const nameInput = lastRow.querySelector(`input[name*="[name]"]`);
       if (nameInput) nameInput.value = productName;
-      
-      const priceInput = lastRow.querySelector('input[name*="[price]"]');
+
+      const priceInput = lastRow.querySelector(`input[name*="[price]"]`);
       if (priceInput) {
         priceInput.value = price.toFixed(2);
         this.calculateItemTotal(priceInput);
       }
-      
-      const quantityInput = lastRow.querySelector('input[name*="[quantity]"]');
+
+      const quantityInput = lastRow.querySelector(`input[name*="[quantity]"]`);
       if (quantityInput) quantityInput.value = '1';
-      
-      const productIdInput = lastRow.querySelector('input[name*="[product_id]"]');
+
+      const productIdInput = lastRow.querySelector(`input[name*="[product_id]"]`);
       if (productIdInput && productId) productIdInput.value = productId;
     }
   }
 
-  removeItem(button) {
-    const row = button.closest('tr');
+  removeItem(row) {
+    if (!row) return;
     row.remove();
     this.calculateTotals();
   }
@@ -275,102 +283,6 @@ class QuoteManager {
 
     const discountPercentage = parseFloat(document.querySelector('input[name="discount_percentage"]')?.value) || 0;
     const additionalDiscount = (subtotal - totalDiscount) * (discountPercentage / 100);
-    const quoteTax = 0; // This would need to be calculated based on your business logic
+    const quoteTax = 0; // Implement if needed
 
-    const total = subtotal - totalDiscount - additionalDiscount + itemTax + quoteTax;
-
-    const subtotalEl = document.getElementById('quote-subtotal');
-    const itemTaxEl = document.getElementById('quote-item-tax');
-    const quoteTaxEl = document.getElementById('quote-tax');
-    const totalEl = document.getElementById('quote-total');
-
-    if (subtotalEl) subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
-    if (itemTaxEl) itemTaxEl.textContent = `$${itemTax.toFixed(2)}`;
-    if (quoteTaxEl) quoteTaxEl.textContent = `$${quoteTax.toFixed(2)}`;
-    if (totalEl) totalEl.textContent = `$${total.toFixed(2)}`;
-  }
-
-  // Quote action methods
-  displayProductModal() {
-    if (window.ProductModal) {
-      window.ProductModal.getInstance().showModal();
-    } else {
-      console.error('ProductModal not available');
-    }
-  }
-
-  addQuoteTax() {
-    console.log('Add Quote Tax clicked');
-    // Implement add quote tax functionality
-  }
-
-  downloadPDF() {
-    if (this.quoteId) {
-      window.location.href = `/quotes/${this.quoteId}/pdf`;
-    }
-  }
-
-  sendEmail() {
-    if (this.quoteId) {
-      window.location.href = `/quotes/${this.quoteId}/email`;
-    }
-  }
-
-  quoteToInvoice() {
-    if (confirm('Convert this quote to an invoice?')) {
-      if (this.quoteId) {
-        window.location.href = `/quotes/${this.quoteId}/convert-to-invoice`;
-      }
-    }
-  }
-
-  copyQuote() {
-    if (confirm('Create a copy of this quote?')) {
-      if (this.quoteId) {
-        window.location.href = `/quotes/${this.quoteId}/copy`;
-      }
-    }
-  }
-
-  deleteQuote() {
-    if (confirm('Are you sure you want to delete this quote? This action cannot be undone.')) {
-      if (this.quoteId) {
-        fetch(`/quotes/${this.quoteId}/delete`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        })
-        .then(response => {
-          if (response.ok) {
-            window.location.href = '/quotes';
-          } else {
-            alert('Error deleting quote');
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          alert('Error deleting quote');
-        });
-      }
-    }
-  }
-
-  // Static method to get instance
-  static getInstance() {
-    if (!window.quoteManagerInstance) {
-      window.quoteManagerInstance = new QuoteManager();
-    }
-    return window.quoteManagerInstance;
-  }
-}
-
-// Auto-initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-  QuoteManager.getInstance();
-});
-
-// Export for module systems (if needed)
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = QuoteManager;
-}
+    const total = subtotal - totalDiscount - additionalDiscount + itemTax +
