@@ -26,16 +26,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..",
 from app import models  # noqa: F401
 from app.models import *  # noqa: F403, F401
 
-# Find the Base class
-Base = None
-for obj in models.__dict__.values():
-    if hasattr(obj, "__table__"):
-        Base = obj.__class__.__bases__[0]
-        break
-if Base is None:
-    # Fallback
-    from sqlalchemy.orm import declarative_base
-    Base = declarative_base()
+from app.database import Base  # Use the same Base as all models
 
 # --- SCHEMA CHECK LOGIC ---
 def get_model_tables():
