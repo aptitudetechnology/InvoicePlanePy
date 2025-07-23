@@ -102,6 +102,7 @@ CREATE TABLE IF NOT EXISTS products (
 );
 
 
+-- Create table if it doesn't exist
 CREATE TABLE IF NOT EXISTS quote_statuses (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE,
@@ -110,6 +111,19 @@ CREATE TABLE IF NOT EXISTS quote_statuses (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Seed the table with standard quote statuses
+INSERT INTO quote_statuses (name, description)
+VALUES 
+  ('DRAFT', 'Quote is being drafted. Not yet sent to the client.'),
+  ('SENT', 'Quote has been sent to the client.'),
+  ('VIEWED', 'Client has viewed the quote.'),
+  ('ACCEPTED', 'Client has accepted the quote.'),
+  ('REJECTED', 'Client has rejected the quote.'),
+  ('EXPIRED', 'Quote has expired.'),
+  ('CONVERTED', 'Quote has been converted to an invoice.')
+ON CONFLICT (name) DO NOTHING;
+
 
 CREATE TABLE IF NOT EXISTS quotes (
     id SERIAL PRIMARY KEY,
