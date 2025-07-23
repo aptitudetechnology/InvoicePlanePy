@@ -127,12 +127,21 @@ def main():
         if purge == 'y':
             print("Purging and recreating the database...")
             try:
-                # Drop all tables and recreate
                 from sqlalchemy_utils import database_exists, create_database, drop_database
-                if database_exists(engine.url):
-                    drop_database(engine.url)
-                create_database(engine.url)
-                Base.metadata.create_all(engine)
+                from sqlalchemy.engine.url import make_url
+                url = make_url(DATABASE_URL)
+                admin_url = url.set(database="postgres")
+                target_db = url.database
+                # Drop DB safely from admin connection
+                if database_exists(url):
+                    print(f"Dropping database '{target_db}' via admin connection...")
+                    drop_database(admin_url.set(database=target_db))
+                print(f"Creating database '{target_db}'...")
+                create_database(admin_url.set(database=target_db))
+                # Reconnect engine to new DB
+                engine.dispose()
+                engine_new = create_engine(DATABASE_URL)
+                Base.metadata.create_all(engine_new)
                 print("[OK] Database purged and recreated.")
             except ImportError:
                 print("[ERROR] sqlalchemy_utils is required for purge. Install with 'pip install sqlalchemy-utils'.")
