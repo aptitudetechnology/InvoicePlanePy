@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="{{ cldr }}">
+<head>
+    <meta charset="utf-8">
+    <title>{{ _('invoice') }}</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='invoiceplane/css/templates.css') }}">
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='core/css/custom-pdf.css') }}">
+</head>
+<body>
+<header class="clearfix">
+    <h1>Tax Invoice</h1>
+    <div id="logo">
+        {{ invoice_logo|safe }}
+    </div>
+
+    <div id="client">
+        <b>{{ format_client(invoice) }}</b><br>
+        <b>{{ custom_fields.client['Company Name'] }}</b><br>
+
+        {% if invoice.client_address_1 %}
+            <div>{{ invoice.client_address_1 }}</div>
+        {% endif %}
+        {% if invoice.client_address_2 %}
+            <div>{{ invoice.client_address_2 }}</div>
+        {% endif %}
+        {% if invoice.client_city or invoice.client_state or invoice.client_zip %}
+            <div>
+                {{ invoice.client_city }} {{ invoice.client_state }} {{ invoice.client_zip }}
+            </div>
+        {% endif %}
+        {% if invoice.client_country %}
+            <div>{{ get_country_name(cldr, invoice.client_country) }}</div>
+        {% endif %}
+
+        <br>
+
+        {% if invoice.client_phone %}
+            <div>{{ _('phone_abbr') }}: {{ invoice.client_phone }}</div>
+        {% endif %}
+    </div>
+
+    <div id="company">
+        <div><b>{{ invoice.user_name }}</b></div>
+        {% if invoice.user_tax_code %}
+            <div>{{ _('tax_code_short') }}: {{ invoice.user_tax_code }}</div>
+        {% endif %}
+        {% if invoice.user_address_1 %}
+            <div>{{ invoice.user_address_1 }}</div>
+        {% endif %}
+        {% if invoice.user_address_2 %}
+            <div>{{ invoice.user_address_2 }}</div>
+        {% endif %}
+        {% if invoice.user_city or invoice.user_state or invoice.user_zip %}
+            <div>
+                {{ invoice.user_city }} {{ invoice.user_state }} {{ invoice.user_zip }}
+            </div>
+        {% endif %}
+        {% if invoice.user_country %}
+            <div>{{ get_country_name(cldr, invoice.user_country) }}</div>
+        {% endif %}
+
+        <br>
+
+        {% if invoice.user_phone %}
+            <div>{{ _('phone_abbr') }}: {{ invoice.user_phone }}</div>
+        {% endif %}
+        {% if invoice.user_fax %}
+            <div>{{ _('fax_abbr') }}: {{ invoice.user_fax }}</div>
+        {% endif %}
+    </div>
+</header>
+
+<main>
+    <div class="invoice-details clearfix">
+        <table>
+            <tr>
+                <td>{{ _('invoice_date') }}:</td>
+                <td>{{ invoice.invoice_date_created | format_date }}</td>
+            </tr>
+            <tr>
+                <td>{{ _('due_date') }}:</td>
+                <td>{{ invoice.invoice_date_due | format_date }}</td>
+            </tr>
+            <tr>
+                <td>{{ _('amount_due') }}:</td>
+                <td>{{ invoice.invoice_balance | currency }}</td>
+            </tr>
+            {% if payment_method %}
+                <tr>
+                    <td>{{ _('payment_method') }}:</td>
+                    <td>{{ payment_method.payment_method_name }}</td>
+                </tr>
+            {% endif %}
+        </table>
+    </div>
+
+    <h1 class="invoice-title">{{ _('Tax invoice') }} {{ invoice.invoice_number }}</h1>
+
+    <table class="item-table">
+        <thead>
+        <tr>
+            <th class="item-name">{{ _('item') }}</th>
+            <th class="item-desc">{{ _('description') }}</th>
+            <th class="item-amount text-right">{{ _('qty') }}</th>
+            <th class="item-price text-right">{{ _('price') }}</th>
+            <th class="item-gst text-right">{{ _('GST') }}</th>
+            {% if show_item_discounts %}
+                <th class="item-discount text-right">{{ _('discount') }}</th>
+            {% endif %}
+            <th class="item-total text-right">{{ _('total') }}</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for item in items %}
+            <tr>
