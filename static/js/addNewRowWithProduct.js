@@ -4,7 +4,7 @@
 (() => {
   let itemCounter = window.itemCounter || 0;
 
-  function addNewRowWithProduct(productName, price, productId, tableBodyId = 'quote-items-body') {
+  function addNewRowWithProduct(productName, price, productId, tableBodyId = 'quote-items') {
     itemCounter++;
     window.itemCounter = itemCounter; // persist globally if needed
 
