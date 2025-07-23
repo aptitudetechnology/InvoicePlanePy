@@ -1,17 +1,6 @@
-document.addEventListener('DOMContentLoaded', () => {
-  // If you pass itemCounter from template, assign it to window.itemCounter in HTML
-  
-  const addProductBtn = document.getElementById('display-product-modal-btn');
-if (addProductBtn) {
-  addProductBtn.addEventListener('click', () => {
-    //const modal = new bootstrap.Modal(document.getElementById('ProductModal'));
-    //modal.show();
-    const modal = new bootstrap.Modal(document.getElementById('productModal'));
-    modal.show();
-
-  });
-}
-
+ addProductBtn.addEventListener('click', () => {
+      const productModalInstance = window.productModalInstance || ProductModal.getInstance();
+      productModalInstance.showModal();  // Use the class method
   
   let itemCounter = window.itemCounter || 0;
 
