@@ -285,4 +285,49 @@ class QuoteManager {
     const additionalDiscount = (subtotal - totalDiscount) * (discountPercentage / 100);
     const quoteTax = 0; // Implement if needed
 
-    const total = subtotal - totalDiscount - additionalDiscount + itemTax +
+    const total = subtotal - totalDiscount - additionalDiscount + itemTax + quoteTax;
+
+    document.getElementById('subtotal-display').textContent = `$${subtotal.toFixed(2)}`;
+    document.getElementById('discount-display').textContent = `$${totalDiscount.toFixed(2)}`;
+    document.getElementById('tax-display').textContent = `$${itemTax.toFixed(2)}`;
+    document.getElementById('total-display').textContent = `$${total.toFixed(2)}`;
+  }
+
+  displayProductModal() {
+    // Assuming you have a modal system, trigger it here
+    const modal = document.getElementById('product-modal');
+    if (modal) modal.classList.add('show');
+  }
+
+  addQuoteTax() {
+    // Your existing implementation or placeholder
+    alert('Add quote tax functionality coming soon.');
+  }
+
+  downloadPDF() {
+    // Your existing implementation or placeholder
+    alert('Download PDF functionality coming soon.');
+  }
+
+  sendEmail() {
+    // Your existing implementation or placeholder
+    alert('Send email functionality coming soon.');
+  }
+
+  quoteToInvoice() {
+    // Your existing implementation or placeholder
+    alert('Convert quote to invoice functionality coming soon.');
+  }
+
+  copyQuote() {
+    // Your existing implementation or placeholder
+    alert('Copy quote functionality coming soon.');
+  }
+
+  deleteQuote() {
+    // Your existing implementation or placeholder
+    alert('Delete quote functionality coming soon.');
+  }
+}
+
+new QuoteManager();
