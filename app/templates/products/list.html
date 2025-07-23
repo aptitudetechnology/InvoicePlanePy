@@ -89,9 +89,9 @@ function renderProductsTable() {
     let html = '';
     
     products.forEach(product => {
-        // Product status logic with improved styling
+        // Product status logic with improved styling - FIXED: use is_active instead of active
         let statusHtml = '';
-        if (product.active) {
+        if (product.is_active) {
             statusHtml = `
                 <span class="text-success font-weight-bold">
                     <i class="fas fa-check-circle"></i> Active
@@ -122,7 +122,7 @@ function renderProductsTable() {
                     ${product.unit ? escapeHtml(product.unit.abbreviation) : '<span class="text-muted">-</span>'}
                 </td>
                 <td>
-                    <strong>$${parseFloat(product.price).toFixed(2)}</strong>
+                    <strong>$${parseFloat(product.price || 0).toFixed(2)}</strong>
                 </td>
                 <td>
                     ${statusHtml}
