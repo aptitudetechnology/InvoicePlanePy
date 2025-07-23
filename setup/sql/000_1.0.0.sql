@@ -42,17 +42,16 @@ CREATE TABLE IF NOT EXISTS clients (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Products table
-CREATE TABLE IF NOT EXISTS products (
+CREATE TABLE products (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id),
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    price NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
-    purchase_price NUMERIC(10, 2) DEFAULT 0.00,
-    category VARCHAR(100),
-    unit VARCHAR(50),
+    price NUMERIC(10, 2) DEFAULT 0.00,
+    sku VARCHAR(100) UNIQUE NOT NULL,
     tax_rate NUMERIC(5, 2) DEFAULT 0.00,
+    family_id INTEGER REFERENCES product_families(id),
+    unit_id INTEGER REFERENCES product_units(id),
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
