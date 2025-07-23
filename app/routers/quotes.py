@@ -139,6 +139,7 @@ async def quote_create_post(
             issue_date=issue_date_parsed,
             valid_until=valid_until_parsed,
             status=status_id,
+            total=0,  # Ensure total is never None
             #terms=None,  # terms is not settable here; use default or config elsewhere
             notes=notes,
         )
