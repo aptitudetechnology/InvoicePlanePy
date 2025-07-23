@@ -42,6 +42,28 @@ CREATE TABLE IF NOT EXISTS clients (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create ProductFamily table FIRST
+CREATE TABLE IF NOT EXISTS product_families (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create ProductUnit table SECOND
+CREATE TABLE IF NOT EXISTS product_units (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    abbreviation VARCHAR(10) NOT NULL,
+    description TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create products table LAST (after its dependencies exist)
 CREATE TABLE IF NOT EXISTS products (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id),
@@ -52,27 +74,6 @@ CREATE TABLE IF NOT EXISTS products (
     tax_rate NUMERIC(5, 2) DEFAULT 0.00,
     family_id INTEGER REFERENCES product_families(id),
     unit_id INTEGER REFERENCES product_units(id),
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Create ProductFamily table
-CREATE TABLE IF NOT EXISTS product_families (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    description TEXT,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Create ProductUnit table
-CREATE TABLE IF NOT EXISTS product_units (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL,
-    abbreviation VARCHAR(10) NOT NULL,
-    description TEXT,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
