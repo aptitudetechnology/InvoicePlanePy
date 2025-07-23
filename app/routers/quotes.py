@@ -128,6 +128,8 @@ async def quote_create_post(
 
         # Parse status with fallback handling
         quote_status = parse_quote_status(status)
+        from app.utils.status_helpers import get_status_id
+        status_id = get_status_id(db, quote_status)
 
         # Create new quote
         quote = Quote(
@@ -136,8 +138,8 @@ async def quote_create_post(
             user_id=current_user.id,
             issue_date=issue_date_parsed,
             valid_until=valid_until_parsed,
-            status=quote_status,
-           #terms=None,  # terms is not settable here; use default or config elsewhere
+            status=status_id,
+            #terms=None,  # terms is not settable here; use default or config elsewhere
             notes=notes,
         )
 
@@ -248,7 +250,9 @@ async def edit_quote_post(
         quote.quote_number = quote_number
         
         # Use improved status parsing
-        quote.status = parse_quote_status(status)
+        quote_status = parse_quote_status(status)
+        from app.utils.status_helpers import get_status_id
+        quote.status = get_status_id(db, quote_status)
         print(f"Parsed status: {quote.status}")
         
         quote.notes = notes
@@ -457,7 +461,7 @@ async def duplicate_quote(
             issue_date=date.today(),
             valid_until=quote.valid_until,
             status=QuoteStatus.DRAFT,
-            terms=quote.terms,
+            #erms=quote.terms,
             notes=quote.notes,
             subtotal=quote.subtotal,
             tax_total=quote.tax_total,
