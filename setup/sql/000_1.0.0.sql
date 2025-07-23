@@ -18,26 +18,48 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Clients table
+-- Corrected Clients table - matches SQLAlchemy Client model
 CREATE TABLE IF NOT EXISTS clients (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    surname VARCHAR(255),
-    email VARCHAR(100),
-    phone VARCHAR(20),
-    mobile VARCHAR(20),
-    web VARCHAR(255),
-    fax VARCHAR(20),
-    vat_id VARCHAR(50),
-    tax_code VARCHAR(50),
+    
+    -- Personal Information
+    is_active BOOLEAN DEFAULT true,
+    name VARCHAR(100) NOT NULL,        -- Changed from 255 to 100 to match model
+    surname VARCHAR(100),              -- Changed from 255 to 100 to match model
+    language VARCHAR(10) DEFAULT 'en',
+    
+    -- Address
     address_1 VARCHAR(255),
     address_2 VARCHAR(255),
     city VARCHAR(100),
     state VARCHAR(100),
     zip_code VARCHAR(20),
-    country VARCHAR(100),
-    language VARCHAR(10) DEFAULT 'en',
+    country VARCHAR(50),               -- Changed from 100 to 50 to match model
+    
+    -- Contact Information
+    phone VARCHAR(20),
+    fax VARCHAR(20),
+    mobile VARCHAR(20),
+    email VARCHAR(100),
+    website VARCHAR(255),              -- Added (was 'web' before)
+    
+    -- Personal Information (Additional)
+    gender VARCHAR(10),                -- Added
+    birthdate DATE,                    -- Added
+    company VARCHAR(255),              -- Added
+    
+    -- Taxes Information
+    vat_id VARCHAR(50),
+    tax_code VARCHAR(50),
+    abn VARCHAR(50),                   -- Added (Australian Business Number)
+    
+    -- Legacy fields for compatibility
+    title VARCHAR(50),                 -- Added
+    
+    -- Notes
     notes TEXT,
+    
+    -- Timestamps
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
