@@ -265,6 +265,10 @@
 </div>
 
 <script>
+  window.itemCounter = {{ itemCounter or 0 }};
+</script>
+
+<script>
     // Initialize item counter for the external quotes.js
     let itemCounter = {{ (quote.items|length) if quote.items else 0 }};
 </script>

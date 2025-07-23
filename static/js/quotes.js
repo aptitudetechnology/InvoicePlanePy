@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
+  let itemCounter = window.itemCounter || 0;
+
+document.addEventListener('DOMContentLoaded', () => {
   let itemCounter = {{ itemCounter || 0 }}; // This is set from your template inline script
 
   // Utility to parse floats safely
