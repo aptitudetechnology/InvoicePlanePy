@@ -1,206 +1,150 @@
-// static/js/quotes.js
-// Quote management functionality
+document.addEventListener('DOMContentLoaded', () => {
+  let itemCounter = {{ itemCounter || 0 }}; // This is set from your template inline script
 
-class QuoteManager {
-  constructor() {
-    this.itemCounter = 0;
-    this.taxRates = [];
-    this.products = [];
-    this.quoteId = null;
-    this.init();
+  // Utility to parse floats safely
+  function parseNumber(value) {
+    let n = parseFloat(value);
+    return isNaN(n) ? 0 : n;
   }
 
-  init() {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => this.setupQuote());
-    } else {
-      this.setupQuote();
-    }
-  }
+  // Calculate totals for all items and update totals section
+  function calculateTotals() {
+    let items = document.querySelectorAll('#quote-items tr[data-item-id]');
+    let subtotal = 0;
+    let totalItemTax = 0;
+    let totalDiscountAmount = 0;
 
-  setupQuote() {
-    this.extractContextData();
+    items.forEach(row => {
+      let qty = parseNumber(row.querySelector('.item-quantity').value);
+      let price = parseNumber(row.querySelector('.item-price').value);
+      let discountPercent = parseNumber(row.querySelector('.item-discount').value);
+      let taxRateSelect = row.querySelector('.tax-rate-select');
+      let taxRate = taxRateSelect ? parseNumber(taxRateSelect.value) : 0;
 
-    this.loadTaxRates().then(() => {
-      this.calculateTotals();
+      // Calculate amounts for this item
+      let itemSubtotal = qty * price;
+      let discountAmount = itemSubtotal * (discountPercent / 100);
+      let taxableAmount = itemSubtotal - discountAmount;
+      let taxAmount = taxableAmount * (taxRate / 100);
+      let total = taxableAmount + taxAmount;
+
+      // Update row totals display (assuming elements exist)
+      let subtotalElem = row.querySelector('.item-subtotal');
+      if (subtotalElem) subtotalElem.textContent = `$${itemSubtotal.toFixed(2)}`;
+
+      let discountElem = row.querySelector('.item-discount-amount');
+      if (discountElem) discountElem.textContent = `$${discountAmount.toFixed(2)}`;
+
+      let taxElem = row.querySelector('.item-tax-amount');
+      if (taxElem) taxElem.textContent = `$${taxAmount.toFixed(2)}`;
+
+      let totalElem = row.querySelector('.item-total');
+      if (totalElem) totalElem.textContent = `$${total.toFixed(2)}`;
+
+      subtotal += itemSubtotal;
+      totalItemTax += taxAmount;
+      totalDiscountAmount += discountAmount;
     });
 
-    this.loadProducts();
+    // Apply overall discount percentage from input
+    const discountInput = document.querySelector('input[name="discount_percentage"]');
+    let discountPercent = discountInput ? parseNumber(discountInput.value) : 0;
+    let discountAmount = subtotal * (discountPercent / 100);
 
-    this.attachEventListeners();
+    // Calculate final totals
+    let subtotalAfterDiscount = subtotal - discountAmount;
+    let quoteTax = 0; // You may want to calculate additional quote-level tax here
+    let total = subtotalAfterDiscount + totalItemTax + quoteTax;
 
-    // Expose addNewRowWithProduct globally for ProductModal integration
-    window.addNewRowWithProduct = (productName, price, productId) => {
-      this.addNewRowWithProduct(productName, price, productId);
-    };
+    // Update the totals in the DOM with safety checks
+    const subtotalElem = document.getElementById('quote-subtotal');
+    if (subtotalElem) subtotalElem.textContent = `$${subtotal.toFixed(2)}`;
+
+    const itemTaxElem = document.getElementById('quote-item-tax');
+    if (itemTaxElem) itemTaxElem.textContent = `$${totalItemTax.toFixed(2)}`;
+
+    const quoteTaxElem = document.getElementById('quote-tax');
+    if (quoteTaxElem) quoteTaxElem.textContent = `$${quoteTax.toFixed(2)}`;
+
+    const totalElem = document.getElementById('quote-total');
+    if (totalElem) totalElem.textContent = `$${total.toFixed(2)}`;
   }
 
-  extractContextData() {
-    const form = document.querySelector('form[action*="/quotes/"]');
-    if (form) {
-      const matches = form.action.match(/\/quotes\/(\d+)\/edit/);
-      this.quoteId = matches ? matches[1] : null;
-    }
+  // Event listeners to recalculate totals on inputs change
+  function setupEventListeners() {
+    const container = document.getElementById('quote-items');
+    if (!container) return;
 
-    const existingItems = document.querySelectorAll('#quote-items tr');
-    this.itemCounter = existingItems.length;
-  }
+    container.addEventListener('input', (e) => {
+      // Only recalc if relevant input changed
+      if (['item-quantity', 'item-price', 'item-discount'].some(cls => e.target.classList.contains(cls)) ||
+          e.target.classList.contains('tax-rate-select')) {
+        calculateTotals();
+      }
+    });
 
-  attachEventListeners() {
-    // Action buttons
-    document.querySelector('[onclick="addQuoteTax()"]')?.addEventListener('click', () => this.addQuoteTax());
-    document.querySelector('[onclick="downloadPDF()"]')?.addEventListener('click', () => this.downloadPDF());
-    document.querySelector('[onclick="sendEmail()"]')?.addEventListener('click', () => this.sendEmail());
-    document.querySelector('[onclick="quoteToInvoice()"]')?.addEventListener('click', () => this.quoteToInvoice());
-    document.querySelector('[onclick="copyQuote()"]')?.addEventListener('click', () => this.copyQuote());
-    document.querySelector('[onclick="deleteQuote()"]')?.addEventListener('click', () => this.deleteQuote());
-
-    // Item management buttons (updated selectors to IDs for clarity)
-    const addRowBtn = document.getElementById('add-item-btn');
-    if (addRowBtn) {
-      addRowBtn.addEventListener('click', () => this.addNewRow());
-    }
-
-    const displayProductModalBtn = document.getElementById('display-product-modal-btn');
-    if (displayProductModalBtn) {
-      displayProductModalBtn.addEventListener('click', () => this.displayProductModal());
-    }
-
-    this.cleanupInlineHandlers();
-
-    // Discount percentage change
+    // Discount percentage input
     const discountInput = document.querySelector('input[name="discount_percentage"]');
     if (discountInput) {
-      discountInput.addEventListener('change', () => this.calculateTotals());
+      discountInput.addEventListener('input', () => {
+        calculateTotals();
+      });
     }
 
-    // Event delegation for dynamic item rows
-    const itemsTable = document.getElementById('quote-items');
-    if (itemsTable) {
-      itemsTable.addEventListener('click', (e) => {
-        if (e.target.closest('.btn-outline-danger') || e.target.closest('.remove-item-btn')) {
-          this.removeItem(e.target.closest('tr'));
+    // Remove item button
+    container.addEventListener('click', (e) => {
+      if (e.target.closest('[data-action="remove-item"]')) {
+        const row = e.target.closest('tr[data-item-id]');
+        if (row) {
+          row.remove();
+          calculateTotals();
         }
-      });
+      }
+    });
 
-      itemsTable.addEventListener('change', (e) => {
-        if (e.target.matches('input[name*="[quantity]"], input[name*="[price]"], input[name*="[discount]"], select[name*="[tax_rate]"]')) {
-          this.calculateItemTotal(e.target);
-        }
+    // Add new empty item row
+    const addItemBtn = document.getElementById('add-item-btn');
+    if (addItemBtn) {
+      addItemBtn.addEventListener('click', () => {
+        addNewItemRow();
       });
     }
   }
 
-  cleanupInlineHandlers() {
-    const elementsToClean = [
-      '[onclick="addQuoteTax()"]',
-      '[onclick="downloadPDF()"]', 
-      '[onclick="sendEmail()"]',
-      '[onclick="quoteToInvoice()"]',
-      '[onclick="copyQuote()"]',
-      '[onclick="deleteQuote()"]',
-      '[onclick="addNewRow()"]',
-      '[onclick="displayProductModal()"]',
-      '[onclick="removeItem(this)"]',
-      '[onchange="calculateItemTotal(this)"]',
-      '[onchange="calculateTotals()"]'
-    ];
-
-    elementsToClean.forEach(selector => {
-      document.querySelectorAll(selector).forEach(element => {
-        element.removeAttribute('onclick');
-        element.removeAttribute('onchange');
-      });
-    });
-  }
-
-  async loadTaxRates() {
-    try {
-      const response = await fetch('/tax_rates/api');
-      if (!response.ok) throw new Error('Failed to load tax rates');
-      const data = await response.json();
-      this.taxRates = data.tax_rates || data;
-      this.populateAllTaxRateDropdowns();
-    } catch (error) {
-      console.error('Error loading tax rates:', error);
-      this.taxRates = [];
-    }
-  }
-
-  async loadProducts() {
-    try {
-      const response = await fetch('/products/api');
-      if (!response.ok) throw new Error('Failed to load products');
-      const data = await response.json();
-      this.products = data.products || data;
-    } catch (error) {
-      console.error('Error loading products:', error);
-      this.products = [];
-    }
-  }
-
-  populateAllTaxRateDropdowns() {
-    const taxRateSelects = document.querySelectorAll('.tax-rate-select');
-    taxRateSelects.forEach(select => {
-      this.populateTaxRateDropdown(select);
-    });
-  }
-
-  populateTaxRateDropdown(selectElement) {
-    const currentValue = selectElement.value;
-    selectElement.innerHTML = '<option value="0">None (0%)</option>';
-
-    this.taxRates.forEach(taxRate => {
-      const option = document.createElement('option');
-      option.value = taxRate.rate;
-      option.textContent = `${taxRate.name} (${taxRate.rate.toFixed(2)}%)`;
-      option.setAttribute('data-tax-id', taxRate.id);
-      selectElement.appendChild(option);
-    });
-
-    selectElement.value = currentValue;
-  }
-
-  createTaxRateDropdownHTML(itemIndex, selectedRate = 0) {
-    let optionsHTML = '<option value="0">None (0%)</option>';
-
-    this.taxRates.forEach(taxRate => {
-      const selected = taxRate.rate == selectedRate ? 'selected' : '';
-      optionsHTML += `<option value="${taxRate.rate}" data-tax-id="${taxRate.id}" ${selected}>${taxRate.name} (${taxRate.rate.toFixed(2)}%)</option>`;
-    });
-
-    return `<select class="form-select form-select-sm tax-rate-select" name="items[${itemIndex}][tax_rate]">${optionsHTML}</select>`;
-  }
-
-  addNewRow() {
+  // Function to add a new blank item row
+  function addNewItemRow() {
     const tbody = document.getElementById('quote-items');
     if (!tbody) return;
 
-    const taxRateDropdownContent = this.createTaxRateDropdownHTML(this.itemCounter);
+    const index = tbody.children.length;
 
     const newRow = document.createElement('tr');
+    newRow.setAttribute('data-item-id', `new-${itemCounter++}`);
+
     newRow.innerHTML = `
       <td>
-        <button type="button" class="btn btn-sm btn-outline-danger remove-item-btn" aria-label="Remove item">
+        <button type="button" class="btn btn-sm btn-outline-danger" data-action="remove-item">
           <i class="bi bi-trash"></i>
         </button>
       </td>
       <td>
-        <input type="text" class="form-control form-control-sm" name="items[${this.itemCounter}][name]" placeholder="Item">
-        <textarea class="form-control form-control-sm mt-1" name="items[${this.itemCounter}][description]" rows="2" placeholder="Description"></textarea>
-        <input type="hidden" name="items[${this.itemCounter}][product_id]" value="">
+        <input type="text" class="form-control form-control-sm" name="items[${index}][name]" placeholder="Item">
+        <textarea class="form-control form-control-sm mt-1" name="items[${index}][description]" rows="2" placeholder="Description"></textarea>
       </td>
       <td>
-        <input type="number" class="form-control form-control-sm" name="items[${this.itemCounter}][quantity]" value="1" step="0.01" min="0">
+        <input type="number" class="form-control form-control-sm item-quantity" name="items[${index}][quantity]" step="0.01" data-calculate="item-total" value="1">
       </td>
       <td>
-        <input type="number" class="form-control form-control-sm" name="items[${this.itemCounter}][price]" value="0.00" step="0.01" min="0">
+        <input type="number" class="form-control form-control-sm item-price" name="items[${index}][price]" step="0.01" data-calculate="item-total" value="0.00">
       </td>
       <td>
-        <input type="number" class="form-control form-control-sm" name="items[${this.itemCounter}][discount]" value="0.00" step="0.01" min="0">
+        <input type="number" class="form-control form-control-sm item-discount" name="items[${index}][discount]" step="0.01" data-calculate="item-total" value="0">
       </td>
       <td>
-        ${taxRateDropdownContent}
+        <select class="form-select form-select-sm tax-rate-select" name="items[${index}][tax_rate]" data-calculate="item-total">
+          <option value="0" selected>None (0%)</option>
+          <!-- Add more tax rates if needed -->
+        </select>
       </td>
       <td class="item-subtotal">$0.00</td>
       <td class="item-discount-amount">$0.00</td>
@@ -209,125 +153,9 @@ class QuoteManager {
     `;
 
     tbody.appendChild(newRow);
-    this.itemCounter++;
-
-    // Attach event listeners to new inputs for recalculation
-    this.attachEventListeners();
   }
 
-  addNewRowWithProduct(productName, price, productId) {
-    this.addNewRow();
-
-    const tbody = document.getElementById('quote-items');
-    const lastRow = tbody.lastElementChild;
-
-    if (lastRow) {
-      const nameInput = lastRow.querySelector(`input[name*="[name]"]`);
-      if (nameInput) nameInput.value = productName;
-
-      const priceInput = lastRow.querySelector(`input[name*="[price]"]`);
-      if (priceInput) {
-        priceInput.value = price.toFixed(2);
-        this.calculateItemTotal(priceInput);
-      }
-
-      const quantityInput = lastRow.querySelector(`input[name*="[quantity]"]`);
-      if (quantityInput) quantityInput.value = '1';
-
-      const productIdInput = lastRow.querySelector(`input[name*="[product_id]"]`);
-      if (productIdInput && productId) productIdInput.value = productId;
-    }
-  }
-
-  removeItem(row) {
-    if (!row) return;
-    row.remove();
-    this.calculateTotals();
-  }
-
-  calculateItemTotal(input) {
-    const row = input.closest('tr');
-    const quantity = parseFloat(row.querySelector('input[name*="[quantity]"]').value) || 0;
-    const price = parseFloat(row.querySelector('input[name*="[price]"]').value) || 0;
-    const discount = parseFloat(row.querySelector('input[name*="[discount]"]').value) || 0;
-    const taxRate = parseFloat(row.querySelector('select[name*="[tax_rate]"]').value) || 0;
-
-    const subtotal = quantity * price;
-    const discountAmount = subtotal * (discount / 100);
-    const taxableAmount = subtotal - discountAmount;
-    const taxAmount = taxableAmount * (taxRate / 100);
-    const total = taxableAmount + taxAmount;
-
-    row.querySelector('.item-subtotal').textContent = `$${subtotal.toFixed(2)}`;
-    row.querySelector('.item-discount-amount').textContent = `$${discountAmount.toFixed(2)}`;
-    row.querySelector('.item-tax-amount').textContent = `$${taxAmount.toFixed(2)}`;
-    row.querySelector('.item-total').textContent = `$${total.toFixed(2)}`;
-
-    this.calculateTotals();
-  }
-
-  calculateTotals() {
-    let subtotal = 0;
-    let itemTax = 0;
-    let totalDiscount = 0;
-
-    document.querySelectorAll('#quote-items tr').forEach(row => {
-      const itemSubtotal = parseFloat(row.querySelector('.item-subtotal')?.textContent?.replace('$', '')) || 0;
-      const itemDiscountAmount = parseFloat(row.querySelector('.item-discount-amount')?.textContent?.replace('$', '')) || 0;
-      const itemTaxAmount = parseFloat(row.querySelector('.item-tax-amount')?.textContent?.replace('$', '')) || 0;
-
-      subtotal += itemSubtotal;
-      totalDiscount += itemDiscountAmount;
-      itemTax += itemTaxAmount;
-    });
-
-    const discountPercentage = parseFloat(document.querySelector('input[name="discount_percentage"]')?.value) || 0;
-    const additionalDiscount = (subtotal - totalDiscount) * (discountPercentage / 100);
-    const quoteTax = 0; // Implement if needed
-
-    const total = subtotal - totalDiscount - additionalDiscount + itemTax + quoteTax;
-
-    document.getElementById('subtotal-display').textContent = `$${subtotal.toFixed(2)}`;
-    document.getElementById('discount-display').textContent = `$${totalDiscount.toFixed(2)}`;
-    document.getElementById('tax-display').textContent = `$${itemTax.toFixed(2)}`;
-    document.getElementById('total-display').textContent = `$${total.toFixed(2)}`;
-  }
-
-  displayProductModal() {
-    // Assuming you have a modal system, trigger it here
-    const modal = document.getElementById('product-modal');
-    if (modal) modal.classList.add('show');
-  }
-
-  addQuoteTax() {
-    // Your existing implementation or placeholder
-    alert('Add quote tax functionality coming soon.');
-  }
-
-  downloadPDF() {
-    // Your existing implementation or placeholder
-    alert('Download PDF functionality coming soon.');
-  }
-
-  sendEmail() {
-    // Your existing implementation or placeholder
-    alert('Send email functionality coming soon.');
-  }
-
-  quoteToInvoice() {
-    // Your existing implementation or placeholder
-    alert('Convert quote to invoice functionality coming soon.');
-  }
-
-  copyQuote() {
-    // Your existing implementation or placeholder
-    alert('Copy quote functionality coming soon.');
-  }
-
-  deleteQuote() {
-    // Your existing implementation or placeholder
-    alert('Delete quote functionality coming soon.');
-  }
-}
-
-new QuoteManager();
+  // Initial setup
+  setupEventListeners();
+  calculateTotals();
+});
