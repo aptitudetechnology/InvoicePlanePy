@@ -79,6 +79,27 @@ CREATE TABLE IF NOT EXISTS products (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+
+CREATE TABLE IF NOT EXISTS quote_items (
+    id SERIAL PRIMARY KEY,
+    quote_id INTEGER NOT NULL REFERENCES quotes(id) ON DELETE CASCADE,
+    product_id INTEGER REFERENCES products(id),
+    product_name VARCHAR(255),
+    description TEXT,
+    unit_price NUMERIC(10, 2) NOT NULL,
+    quantity NUMERIC(10, 2) NOT NULL,
+    discount_percentage NUMERIC(5, 2) DEFAULT 0.00,
+    tax_rate NUMERIC(5, 2) DEFAULT 0.00,
+    tax_amount NUMERIC(10, 2),
+    subtotal NUMERIC(10, 2),
+    discount_amount NUMERIC(10, 2),
+    total NUMERIC(10, 2),
+    sort_order INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
 CREATE TABLE IF NOT EXISTS quotes (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id),
@@ -102,24 +123,7 @@ CREATE TABLE IF NOT EXISTS quotes (
 );
 
 
-CREATE TABLE IF NOT EXISTS quote_items (
-    id SERIAL PRIMARY KEY,
-    quote_id INTEGER NOT NULL REFERENCES quotes(id) ON DELETE CASCADE,
-    product_id INTEGER REFERENCES products(id),
-    product_name VARCHAR(255),
-    description TEXT,
-    unit_price NUMERIC(10, 2) NOT NULL,
-    quantity NUMERIC(10, 2) NOT NULL,
-    discount_percentage NUMERIC(5, 2) DEFAULT 0.00,
-    tax_rate NUMERIC(5, 2) DEFAULT 0.00,
-    tax_amount NUMERIC(10, 2),
-    subtotal NUMERIC(10, 2),
-    discount_amount NUMERIC(10, 2),
-    total NUMERIC(10, 2),
-    sort_order INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-);
+
 
 
 -- Invoices table
