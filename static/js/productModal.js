@@ -234,10 +234,10 @@ class ProductModal {
         const productId = checkbox.getAttribute('data-product-id');
 
         // Call external function to add product (must be defined in quotes.js or invoices.js)
-        if (typeof window.addProductToQuote === 'function') {
-          window.addProductToQuote(productName, price, productId);
+        if (typeof window.addNewRowWithProduct === 'function') {
+          window.addNewRowWithProduct(productName, price, productId);
         } else {
-          console.error('addProductToQuote function not found. Make sure quotes.js or invoices.js is loaded.');
+          console.error('addNewRowWithProduct function not found. Make sure quotes.js or invoices.js is loaded.');
         }
       } catch (error) {
         console.error('Error processing product:', error);
