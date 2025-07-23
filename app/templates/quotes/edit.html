@@ -272,5 +272,8 @@
     // Initialize item counter for the external quotes.js
     let itemCounter = {{ (quote.items|length) if quote.items else 0 }};
 </script>
-<script src="{{ url_for('static', filename='js/quotes.js') }}"></script>
+
+<!-- Include the external JavaScript module -->
+<script src="/static/js/quotes.js"></script>
+
 {% endblock %}
