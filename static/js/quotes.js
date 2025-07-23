@@ -4,8 +4,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const addProductBtn = document.getElementById('display-product-modal-btn');
 if (addProductBtn) {
   addProductBtn.addEventListener('click', () => {
-    const modal = new bootstrap.Modal(document.getElementById('ProductModal'));
+    //const modal = new bootstrap.Modal(document.getElementById('ProductModal'));
+    //modal.show();
+    const modal = new bootstrap.Modal(document.getElementById('productModal'));
     modal.show();
+
   });
 }
 
