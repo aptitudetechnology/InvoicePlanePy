@@ -1,6 +1,7 @@
-document.addEventListener('DOMContentLoaded', () => {
-  // Get DOM elements after DOM is loaded
-  const addProductBtn = document.getElementById('display-product-modal-btn');
+ addProductBtn.addEventListener('click', () => {
+      const productModalInstance = window.productModalInstance || ProductModal.getInstance();
+      productModalInstance.showModal();  // Use the class method
+  
   let itemCounter = window.itemCounter || 0;
 
   // Utility to parse floats safely
@@ -155,16 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
 
     tbody.appendChild(newRow);
-  }
-
-  // Add product modal button logic
-  if (addProductBtn) {
-    addProductBtn.addEventListener('click', () => {
-      const productModalInstance = window.productModalInstance || (window.ProductModal && window.ProductModal.getInstance && window.ProductModal.getInstance());
-      if (productModalInstance && typeof productModalInstance.showModal === 'function') {
-        productModalInstance.showModal();
-      }
-    });
   }
 
   // Initial setup
