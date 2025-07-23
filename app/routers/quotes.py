@@ -137,7 +137,7 @@ async def quote_create_post(
             issue_date=issue_date_parsed,
             valid_until=valid_until_parsed,
             status=quote_status,
-            terms=None,  # terms is not settable here; use default or config elsewhere
+           #terms=None,  # terms is not settable here; use default or config elsewhere
             notes=notes,
         )
 
@@ -354,8 +354,8 @@ async def convert_quote_to_invoice(
             issue_date=date.today(),
             due_date=date.today() + timedelta(days=30),
             status="draft",
-            terms=quote.terms,
-            notes=quote.notes,
+            #terms=quote.terms,
+            #tems=quote.notes,
             subtotal=quote.subtotal or 0,
             tax_amount=quote.tax_amount or 0,
             discount_amount=quote.discount_amount or 0,

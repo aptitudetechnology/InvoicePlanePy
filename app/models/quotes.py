@@ -42,8 +42,10 @@ class Quote(BaseModel):
     #tax_rate = Column(Numeric(5, 2), default=0.00)
     #tax_amount = Column(Numeric(10, 2))
 
+
     # Content
     notes = Column(Text)
+   #terms = Column(Text, nullable=True)  # Added to support 'terms' field
 
     # Status - Integer FK to quote_statuses table
     status = Column(Integer, ForeignKey("quote_statuses.id"), nullable=False)
