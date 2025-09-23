@@ -25,7 +25,7 @@ help:
 
 # Build containers
 build:
-	docker compose -f docker compose.python.yml build
+	docker compose -f docker-compose.python.yml build
 
 # Start application
 up:
