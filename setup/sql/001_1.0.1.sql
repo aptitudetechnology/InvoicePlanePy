@@ -4,32 +4,10 @@
 -- Description: Adds invoice_id column to quotes table for tracking conversions
 
 -- Add invoice_id column to quotes table if it doesn't exist
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.columns
-        WHERE table_name = 'quotes' AND column_name = 'invoice_id'
-    ) THEN
-        ALTER TABLE quotes ADD COLUMN invoice_id INTEGER REFERENCES invoices(id);
-        RAISE NOTICE 'Added invoice_id column to quotes table';
-    ELSE
-        RAISE NOTICE 'invoice_id column already exists in quotes table';
-    END IF;
-END $$;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS invoice_id INTEGER;
 
 -- Add discount_percentage column to quotes table if it doesn't exist
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.columns
-        WHERE table_name = 'quotes' AND column_name = 'discount_percentage'
-    ) THEN
-        ALTER TABLE quotes ADD COLUMN discount_percentage NUMERIC(5,2) DEFAULT 0.00;
-        RAISE NOTICE 'Added discount_percentage column to quotes table';
-    ELSE
-        RAISE NOTICE 'discount_percentage column already exists in quotes table';
-    END IF;
-END $$;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS discount_percentage NUMERIC(5,2) DEFAULT 0.00;
 
 -- Ensure all required quote statuses exist
 INSERT INTO quote_statuses (name, description, is_active)
