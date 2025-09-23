@@ -45,6 +45,7 @@ class Invoice(BaseModel):
     user = relationship("User", back_populates="invoices")
     items = relationship("InvoiceItem", back_populates="invoice", cascade="all, delete-orphan")
     payments = relationship("Payment", back_populates="invoice")
+    converted_quotes = relationship("Quote", back_populates="invoice")
 
     @property
     def status_enum(self) -> InvoiceStatus:

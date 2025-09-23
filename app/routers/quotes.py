@@ -332,10 +332,11 @@ async def convert_quote_to_invoice(
         )
 
     # Check if quote is in a valid state to convert
-    if quote.status not in [QuoteStatus.ACCEPTED, QuoteStatus.SENT]:
+    can_convert, reason = can_convert_quote_to_invoice(quote)
+    if not can_convert:
         raise HTTPException(
             status_code=400,
-            detail="Quote must be accepted or sent before converting to invoice",
+            detail=reason,
         )
 
     try:
@@ -368,7 +369,6 @@ async def convert_quote_to_invoice(
             discount_percentage=quote.discount_percentage or 0,
             tax_rate=quote.tax_rate or 0,
             currency=quote.currency or "USD",
-            reference_quote_id=quote.id,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )
@@ -380,25 +380,20 @@ async def convert_quote_to_invoice(
         for item in quote.items:
             invoice_item = InvoiceItem(
                 invoice_id=invoice.id,
-                name=item.name,
+                name=item.product_name or "Quote Item",
                 description=item.description,
                 quantity=item.quantity or 1,
-                price=item.price or 0,
-                discount=item.discount or 0,
-                tax_rate=item.tax_rate or 0,
+                price=item.unit_price or 0,
                 subtotal=item.subtotal or 0,
-                discount_amount=item.discount_amount or 0,
                 tax_amount=item.tax_amount or 0,
                 total=item.total or 0,
-                unit=item.unit if hasattr(item, "unit") else None,
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow(),
             )
             db.add(invoice_item)
 
         # Update quote status to converted
-        quote.status = QuoteStatus.CONVERTED
-        quote.converted_to_invoice_id = invoice.id
+        from app.utils.status_helpers import get_status_id
+        quote.status = get_status_id(db, QuoteStatus.CONVERTED)
+        quote.invoice_id = invoice.id
         quote.updated_at = datetime.utcnow()
 
         db.commit()
@@ -494,10 +489,12 @@ def can_convert_quote_to_invoice(quote: Quote) -> tuple[bool, str]:
     if not quote:
         return False, "Quote not found"
 
-    if quote.status == QuoteStatus.CONVERTED:
+    # Check if already converted
+    if quote.invoice_id:
         return False, "Quote has already been converted to an invoice"
 
-    if quote.status not in [QuoteStatus.ACCEPTED, QuoteStatus.SENT]:
+    # Check status
+    if not quote.status_object or quote.status_object.name not in [QuoteStatus.ACCEPTED.value, QuoteStatus.SENT.value]:
         return False, "Quote must be accepted or sent before converting"
 
     if not hasattr(quote, 'items') or not quote.items:

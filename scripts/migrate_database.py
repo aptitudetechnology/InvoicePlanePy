@@ -256,6 +256,63 @@ def migrate_create_product_tables():
         logger.error(f"❌ Error creating product tables: {e}")
         raise
 
+def migrate_add_quote_invoice_id():
+    """Add invoice_id column to quotes table for tracking conversions"""
+    try:
+        with engine.begin() as conn:
+            # Check if invoice_id column exists in quotes table
+            result = conn.execute(text("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'quotes' AND column_name = 'invoice_id'
+            """))
+            
+            if result.fetchone() is None:
+                logger.info("Adding missing 'invoice_id' column to quotes table...")
+                conn.execute(text("ALTER TABLE quotes ADD COLUMN invoice_id INTEGER REFERENCES invoices(id)"))
+                logger.info("✅ Successfully added 'invoice_id' column to quotes table")
+            else:
+                logger.info("✅ 'invoice_id' column already exists in quotes table")
+                
+    except Exception as e:
+        logger.error(f"❌ Error adding invoice_id column: {e}")
+        raise
+
+def migrate_seed_quote_statuses():
+    """Seed the quote_statuses table with default statuses"""
+    try:
+        with engine.begin() as conn:
+            # Check if quote_statuses table has any data
+            result = conn.execute(text("SELECT COUNT(*) FROM quote_statuses"))
+            count = result.fetchone()[0]
+            
+            if count == 0:
+                logger.info("Seeding quote_statuses table with default statuses...")
+                
+                statuses = [
+                    ('DRAFT', 'Quote is in draft state'),
+                    ('SENT', 'Quote has been sent to client'),
+                    ('VIEWED', 'Quote has been viewed by client'),
+                    ('ACCEPTED', 'Quote has been accepted by client'),
+                    ('REJECTED', 'Quote has been rejected by client'),
+                    ('EXPIRED', 'Quote has expired'),
+                    ('CONVERTED', 'Quote has been converted to invoice')
+                ]
+                
+                for name, description in statuses:
+                    conn.execute(text("""
+                        INSERT INTO quote_statuses (name, description, is_active, created_at, updated_at)
+                        VALUES (:name, :description, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    """), {'name': name, 'description': description})
+                
+                logger.info("✅ Successfully seeded quote_statuses table")
+            else:
+                logger.info(f"✅ quote_statuses table already has {count} records")
+                
+    except Exception as e:
+        logger.error(f"❌ Error seeding quote statuses: {e}")
+        raise
+
 def run_migrations():
     """Run all database migrations"""
     logger.info("🔄 Running database migrations...")
@@ -266,6 +323,9 @@ def run_migrations():
         migrate_create_api_keys_table()
         migrate_update_clients_table()
         migrate_create_product_tables()
+        migrate_add_quote_invoice_id()
+        migrate_seed_quote_statuses()
+        migrate_seed_quote_statuses()
         logger.info("✅ All database migrations completed successfully")
     except Exception as e:
         logger.error(f"❌ Database migration failed: {e}")

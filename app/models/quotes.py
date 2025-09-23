@@ -50,6 +50,9 @@ class Quote(BaseModel):
     # Status - Integer FK to quote_statuses table
     status = Column(Integer, ForeignKey("quote_statuses.id"), nullable=False)
 
+    # Reference to invoice when quote is converted
+    invoice_id = Column(Integer, ForeignKey("invoices.id"), nullable=True)
+
     # --- NEW: Add the ORM relationship to QuoteStatusModel ---
     # This creates a 'status_object' attribute on your Quote instance
     # allowing you to access the related QuoteStatusModel object.
@@ -59,6 +62,7 @@ class Quote(BaseModel):
     client = relationship("Client", back_populates="quotes")
     user = relationship("User", back_populates="quotes")
     items = relationship("QuoteItem", back_populates="quote", cascade="all, delete-orphan")
+    invoice = relationship("Invoice", back_populates="converted_quotes")
 
     @property
     def is_expired(self) -> bool:
