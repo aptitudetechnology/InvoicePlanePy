@@ -25,11 +25,11 @@ help:
 
 # Build containers
 build:
-	docker-compose -f docker-compose.python.yml build
+	docker compose -f docker compose.python.yml build
 
 # Start application
 up:
-	docker-compose -f docker-compose.python.yml up -d
+	docker compose -f docker compose.python.yml up -d
 	@echo ""
 	@echo "🚀 InvoicePlane Python is starting..."
 	@echo "📱 Web interface: http://localhost:8080"
@@ -48,39 +48,39 @@ up:
 
 # Start with logs
 up-logs:
-	docker-compose -f docker-compose.python.yml up
+	docker compose -f docker compose.python.yml up
 
 # Stop application
 down:
-	docker-compose -f docker-compose.python.yml down
+	docker compose -f docker compose.python.yml down
 
 # View logs
 logs:
-	docker-compose -f docker-compose.python.yml logs -f web
+	docker compose -f docker compose.python.yml logs -f web
 
 # Open shell in web container
 shell:
-	docker-compose -f docker-compose.python.yml exec web bash
+	docker compose -f docker compose.python.yml exec web bash
 
 # Initialize database with seed data
 db-init:
-	docker-compose -f docker-compose.python.yml exec web python init_db.py
+	docker compose -f docker compose.python.yml exec web python init_db.py
 
 # Run complete database setup (like PHP InvoicePlane installer)
 setup:
-	docker-compose -f docker-compose.python.yml exec web env PYTHONPATH=/app python setup/setup_manager.py
+	docker compose -f docker compose.python.yml exec web env PYTHONPATH=/app python setup/setup_manager.py
 
 # Create admin user
 create-admin:
-	docker-compose -f docker-compose.python.yml exec web python scripts/create_admin_user.py
+	docker compose -f docker compose.python.yml exec web python scripts/create_admin_user.py
 
 # Open PostgreSQL shell
 db-shell:
-	docker-compose -f docker-compose.python.yml exec db psql -U invoiceplane -d invoiceplane
+	docker compose -f docker compose.python.yml exec db psql -U invoiceplane -d invoiceplane
 
 # Test database models
 test-models:
-	docker-compose -f docker-compose.python.yml exec web python test_models.py
+	docker compose -f docker compose.python.yml exec web python test_models.py
 
 # Test SQLAlchemy models with detailed analysis
 test-sqlalchemy:
@@ -89,7 +89,7 @@ test-sqlalchemy:
 
 # Test Python imports in Docker container
 test-imports:
-	docker-compose -f docker-compose.python.yml exec web python scripts/test_imports.py
+	docker compose -f docker compose.python.yml exec web python scripts/test_imports.py
 
 # Test API routes and authentication
 test-routes:
@@ -98,7 +98,7 @@ test-routes:
 
 # Run tests
 test:
-	docker-compose -f docker-compose.python.yml exec web python -m pytest tests/ -v
+	docker compose -f docker compose.python.yml exec web python -m pytest tests/ -v
 
 # Development setup (build, start, and initialize)
 dev-setup: build up
@@ -114,14 +114,14 @@ dev-setup: build up
 
 # Clean up everything
 clean:
-	docker-compose -f docker-compose.python.yml down -v
+	docker compose -f docker compose.python.yml down -v
 	docker system prune -f
 
 # Reset database completely (remove volumes and restart)
 reset-db:
 	@echo "⚠️  This will completely delete all database data!"
 	@read -p "Are you sure? (y/N): " confirm && [ "$$confirm" = "y" ] || exit 1
-	docker-compose -f docker-compose.python.yml down -v
+	docker compose -f docker compose.python.yml down -v
 	docker volume rm invoiceplanepy_postgres_data 2>/dev/null || true
 	@echo "✅ Database reset complete. Run 'make up' to start fresh."
 
@@ -137,15 +137,15 @@ restart: down up
 
 # View database logs
 db-logs:
-	docker-compose -f docker-compose.python.yml logs -f db
+	docker compose -f docker compose.python.yml logs -f db
 
 # Backup database
 db-backup:
-	docker-compose -f docker-compose.python.yml exec db pg_dump -U invoiceplane invoiceplane > backup_$(shell date +%Y%m%d_%H%M%S).sql
+	docker compose -f docker compose.python.yml exec db pg_dump -U invoiceplane invoiceplane > backup_$(shell date +%Y%m%d_%H%M%S).sql
 
 # Show running containers
 status:
-	docker-compose -f docker-compose.python.yml ps
+	docker compose -f docker compose.python.yml ps
 
 # Install Python dependencies locally (for IDE support)
 install-local:
@@ -153,15 +153,15 @@ install-local:
 
 # Format code
 format:
-	docker-compose -f docker-compose.python.yml exec web black app/ --line-length 88
-	docker-compose -f docker-compose.python.yml exec web isort app/
+	docker compose -f docker compose.python.yml exec web black app/ --line-length 88
+	docker compose -f docker compose.python.yml exec web isort app/
 
 # Lint code
 lint:
-	docker-compose -f docker-compose.python.yml exec web flake8 app/
-	docker-compose -f docker-compose.python.yml exec web mypy app/
+	docker compose -f docker compose.python.yml exec web flake8 app/
+	docker compose -f docker compose.python.yml exec web mypy app/
 
 # Fix database schema issues
 fix-db:
 	@echo "🔧 Fixing database schema issues..."
-	docker-compose -f docker-compose.python.yml exec web python fix_database.py
+	docker compose -f docker compose.python.yml exec web python fix_database.py
