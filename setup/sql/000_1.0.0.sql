@@ -271,6 +271,3 @@ CREATE INDEX IF NOT EXISTS idx_quotes_client ON quotes(client_id);
 CREATE INDEX IF NOT EXISTS idx_quote_items_quote ON quote_items(quote_id);
 CREATE INDEX IF NOT EXISTS idx_quote_items_product ON quote_items(product_id);
 
--- Add foreign key constraints that reference tables created later
-ALTER TABLE quotes ADD CONSTRAINT fk_quotes_invoice_id FOREIGN KEY (invoice_id) REFERENCES invoices(id);
-
