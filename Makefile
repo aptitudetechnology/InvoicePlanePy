@@ -52,7 +52,7 @@ up-logs:
 
 # Stop application
 down:
-	docker compose -f docker compose.python.yml down
+	docker compose -f docker-compose.python.yml down
 
 # View logs
 logs:
