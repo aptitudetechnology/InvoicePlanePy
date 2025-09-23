@@ -44,6 +44,8 @@ class Quote(BaseModel):
     subtotal = Column(Numeric(10, 2))
     item_tax_total = Column(Numeric(10, 2))
     discount_percentage = Column(Numeric(5, 2), default=0.00)
+    notes = Column(Text)
+    url_key = Column(String(32), unique=True)
    #terms = Column(Text, nullable=True)  # Added to support 'terms' field
 
     # Status - Integer FK to quote_statuses table

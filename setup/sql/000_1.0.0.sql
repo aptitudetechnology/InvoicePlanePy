@@ -140,6 +140,7 @@ CREATE TABLE IF NOT EXISTS quotes (
     status INTEGER NOT NULL REFERENCES quote_statuses(id),
     invoice_id INTEGER,
     notes TEXT,
+    url_key VARCHAR(32) UNIQUE,
     tax_rate NUMERIC(5,2) DEFAULT 0.00,
     tax_amount NUMERIC(10,2),
     subtotal NUMERIC(10,2),

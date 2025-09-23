@@ -450,17 +450,20 @@ async def duplicate_quote(
         new_quote_number = f"QUO-{next_number:04d}"
 
         # Create duplicate quote
+        from app.utils.status_helpers import get_status_id
+        draft_status_id = get_status_id(db, QuoteStatus.DRAFT)
+        
         new_quote = Quote(
             quote_number=new_quote_number,
             client_id=quote.client_id,
             user_id=current_user.id,
             issue_date=date.today(),
             valid_until=quote.valid_until,
-            status=QuoteStatus.DRAFT,
+            status=draft_status_id,
             #erms=quote.terms,
             notes=quote.notes,
             subtotal=quote.subtotal,
-            tax_total=quote.tax_total,
+            tax_amount=quote.tax_amount,
             total=quote.total,
         )
 

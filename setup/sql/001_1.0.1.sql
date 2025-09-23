@@ -9,6 +9,9 @@ ALTER TABLE quotes ADD COLUMN IF NOT EXISTS invoice_id INTEGER;
 -- Add discount_percentage column to quotes table if it doesn't exist
 ALTER TABLE quotes ADD COLUMN IF NOT EXISTS discount_percentage NUMERIC(5,2) DEFAULT 0.00;
 
+-- Add url_key column to quotes table if it doesn't exist
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS url_key VARCHAR(32) UNIQUE;
+
 -- Ensure all required quote statuses exist
 INSERT INTO quote_statuses (name, description, is_active)
 VALUES
