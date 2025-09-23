@@ -29,7 +29,7 @@ build:
 
 # Start application
 up:
-	docker compose -f docker compose.python.yml up -d
+	docker compose -f docker compose-python.yml up -d
 	@echo ""
 	@echo "🚀 InvoicePlane Python is starting..."
 	@echo "📱 Web interface: http://localhost:8080"
