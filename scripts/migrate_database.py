@@ -275,7 +275,22 @@ def migrate_add_quote_invoice_id():
                 logger.info("✅ 'invoice_id' column already exists in quotes table")
                 
     except Exception as e:
-        logger.error(f"❌ Error adding invoice_id column: {e}")
+        logger.error(f"❌ Error creating product tables: {e}")
+        raise
+
+def run_migrations():
+    """Run all database migrations"""
+    logger.info("🔄 Running database migrations...")
+    
+    try:
+        migrate_add_role_column()
+        migrate_add_profile_columns()
+        migrate_create_api_keys_table()
+        migrate_update_clients_table()
+        migrate_create_product_tables()
+        logger.info("✅ All database migrations completed successfully")
+    except Exception as e:
+        logger.error(f"❌ Database migration failed: {e}")
         raise
 
 def migrate_seed_quote_statuses():
