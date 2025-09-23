@@ -114,7 +114,7 @@ dev-setup: build up
 
 # Clean up everything
 clean:
-	docker compose -f docker compose.python.yml down -v
+	docker compose -f docker-compose.python.yml down -v
 	docker system prune -f
 
 # Reset database completely (remove volumes and restart)
