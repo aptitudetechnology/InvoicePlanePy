@@ -138,11 +138,13 @@ CREATE TABLE IF NOT EXISTS quotes (
     balance NUMERIC(10,2) NOT NULL,
     currency VARCHAR(3) DEFAULT 'AUD',
     status INTEGER NOT NULL REFERENCES quote_statuses(id),
+    invoice_id INTEGER REFERENCES invoices(id),
     notes TEXT,
     tax_rate NUMERIC(5,2) DEFAULT 0.00,
     tax_amount NUMERIC(10,2),
     subtotal NUMERIC(10,2),
     item_tax_total NUMERIC(10,2),
+    discount_percentage NUMERIC(5,2) DEFAULT 0.00,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );

@@ -37,14 +37,13 @@ class Quote(BaseModel):
 
     # Financial fields - exactly matching your database schema
     total = Column(Numeric(10, 2), nullable=False)
-    #balance = Column(Numeric(10, 2), nullable=False)
-    #currency = Column(String(3), default='AUD')
-    #tax_rate = Column(Numeric(5, 2), default=0.00)
-    #tax_amount = Column(Numeric(10, 2))
-
-
-    # Content
-    notes = Column(Text)
+    balance = Column(Numeric(10, 2), nullable=False)
+    currency = Column(String(3), default='AUD')
+    tax_rate = Column(Numeric(5, 2), default=0.00)
+    tax_amount = Column(Numeric(10, 2))
+    subtotal = Column(Numeric(10, 2))
+    item_tax_total = Column(Numeric(10, 2))
+    discount_percentage = Column(Numeric(5, 2), default=0.00)
    #terms = Column(Text, nullable=True)  # Added to support 'terms' field
 
     # Status - Integer FK to quote_statuses table
