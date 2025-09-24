@@ -42,10 +42,23 @@ async def company_settings(
         "language": "english",
         "company_name": "",
         "company_address": "",
-        # Add other fields that company.html expects
+        "company_address_2": "",
+        "company_city": "",
+        "company_state": "",
+        "company_zip": "",
+        "company_country": "",
+        "company_phone": "",
+        "company_email": "",
+        "tax_decimal_places": "2",
+        "default_invoice_tax": "none",
     }
     
-@router.post("/company", response_class=HTMLResponse)
+    return templates.TemplateResponse("settings/company.html", {
+        "request": request,
+        "user": current_user,
+        "settings": settings,
+        "title": "Company Settings"
+    })
 async def company_settings_post(
     request: Request,
     db: Session = Depends(get_db),
