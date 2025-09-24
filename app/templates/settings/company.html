@@ -15,7 +15,15 @@
         </div>
         {% endif %}
 
-        <form method="POST" action="/settings/system">
+        <!-- Error Message -->
+        {% if error_message %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ error_message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/settings/company">
             <!-- General Settings -->
             <div class="card mb-4">
                 <div class="card-header">
