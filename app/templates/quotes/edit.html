@@ -215,15 +215,15 @@
                             <div class="card-body">
                                 <div class="row mb-2">
                                     <div class="col-6"><strong>Subtotal:</strong></div>
-                                    <div class="col-6 text-end" id="quote-subtotal">${{ (quote.subtotal | default(0)) | round(2) }}</div>
+                                    <div class="col-6 text-end" id="quote-subtotal">${{ '%.2f'|format(quote.subtotal) if quote.subtotal is not none else '0.00' }}</div>
                                 </div>
                                 <div class="row mb-2">
                                     <div class="col-6"><strong>Item Tax:</strong></div>
-                                    <div class="col-6 text-end" id="quote-item-tax">${{ (quote.item_tax | default(0)) | round(2) }}</div>
+                                    <div class="col-6 text-end" id="quote-item-tax">${{ '%.2f'|format(quote.item_tax_total) if quote.item_tax_total is not none else '0.00' }}</div>
                                 </div>
                                 <div class="row mb-2">
                                     <div class="col-6"><strong>Quote Tax:</strong></div>
-                                    <div class="col-6 text-end" id="quote-tax">${{ (quote.tax_amounts| default(0)) | round(2) }}</div>
+                                    <div class="col-6 text-end" id="quote-tax">${{ '%.2f'|format(quote.tax_amount) if quote.tax_amount is not none else '0.00' }}</div>
                                 </div>
                                 <div class="row mb-2">
                                     <div class="col-6">
@@ -240,7 +240,7 @@
                                 <hr>
                                 <div class="row">
                                     <div class="col-6"><strong>Total:</strong></div>
-                                    <div class="col-6 text-end" id="quote-total"><strong>${{ (quote.total | default(0)) | round(2) }}</strong></div>
+                                    <div class="col-6 text-end" id="quote-total"><strong>${{ '%.2f'|format(quote.total) if quote.total is not none else '0.00' }}</strong></div>
                                 </div>
                             </div>
                         </div>

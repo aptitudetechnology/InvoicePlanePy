@@ -141,6 +141,9 @@ async def quote_create_post(
             status=status_id,
             total=0,  # Ensure total is never None
             balance=0,  # Ensure balance is never None - initially equals total
+            subtotal=0,  # Initialize subtotal to 0
+            tax_amount=0,  # Initialize tax_amount to 0
+            item_tax_total=0,  # Initialize item_tax_total to 0
             #terms=None,  # terms is not settable here; use default or config elsewhere
             notes=notes,
         )
@@ -463,8 +466,9 @@ async def duplicate_quote(
             status=draft_status_id,
             #erms=quote.terms,
             notes=quote.notes,
-            subtotal=quote.subtotal,
-            tax_amount=quote.tax_amount,
+            subtotal=quote.subtotal or 0,  # Ensure subtotal is never None
+            tax_amount=quote.tax_amount or 0,  # Ensure tax_amount is never None
+            item_tax_total=quote.item_tax_total or 0,  # Ensure item_tax_total is never None
             total=quote.total,
             balance=quote.balance,  # Copy balance from original quote
         )
