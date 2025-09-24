@@ -12,8 +12,13 @@ class Payment(BaseModel):
     amount = Column(Numeric(10, 2), nullable=False)
     payment_date = Column(Date, nullable=False)
     payment_method = Column(String(50))
-    reference_number = Column(String(100))
+    reference = Column(String(100))
     notes = Column(Text)
+    
+    # Additional fields for API compatibility
+    payer = Column(String(100))  # For API compatibility
+    date = Column(Date)  # Alias for payment_date
+    status = Column(String(20), default="completed")  # Payment status
     
     # Relationships
     invoice = relationship("Invoice", back_populates="payments")

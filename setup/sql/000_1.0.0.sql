@@ -242,6 +242,9 @@ CREATE TABLE IF NOT EXISTS payments (
     payment_method VARCHAR(50),
     reference VARCHAR(100),
     notes TEXT,
+    payer VARCHAR(100),
+    date DATE,
+    status VARCHAR(20) DEFAULT 'completed',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
