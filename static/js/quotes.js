@@ -3,6 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const addProductBtn = document.getElementById('display-product-modal-btn');
   let itemCounter = window.itemCounter || 0;
 
+  // Debug: Check if tax rates are available
+  console.log('Tax rates available:', window.taxRates);
+
   // Utility to parse floats safely
   function parseNumber(value) {
     let n = parseFloat(value);
@@ -119,6 +122,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!tbody) return;
 
     const index = tbody.children.length;
+
+    // Debug: Log tax rates when adding new row
+    console.log('Adding new row, tax rates:', window.taxRates);
 
     const newRow = document.createElement('tr');
     newRow.setAttribute('data-item-id', `new-${itemCounter++}`);
