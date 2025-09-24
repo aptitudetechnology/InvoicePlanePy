@@ -71,6 +71,71 @@ async def quotes_list(
     current_user: User = Depends(get_current_user),
 ):
     """List all quotes"""
+    query = db.query(Quote).options(
+        joinedload(Quote.client),
+        joinedload(Quote.status_object)
+    )
+    if not current_user.is_admin:
+        query = query.filter(Quote.user_id == current_user.id)
+
+    quotes = query.order_by(Quote.created_at.desc()).all()
+
+    return templates.TemplateResponse(
+        "quotes/list.html", {"request": request, "user": current_user, "quotes": quotes}
+    )
+    """
+    Parse status string to QuoteStatus enum with fallback handling
+    """
+    if not status_str:
+        return QuoteStatus.DRAFT
+    
+    # Try direct match first
+    try:
+        return QuoteStatus(status_str)
+    except ValueError:
+        pass
+    
+    # Try uppercase
+    try:
+        return QuoteStatus(status_str.upper())
+    except ValueError:
+        pass
+    
+    # Try mapping common variations
+    status_mapping = {
+        'approved': QuoteStatus.ACCEPTED,
+        'approve': QuoteStatus.ACCEPTED,
+        'accept': QuoteStatus.ACCEPTED,
+        'accepted': QuoteStatus.ACCEPTED,
+        'draft': QuoteStatus.DRAFT,
+        'sent': QuoteStatus.SENT,
+        'send': QuoteStatus.SENT,
+        'viewed': QuoteStatus.VIEWED,
+        'view': QuoteStatus.VIEWED,
+        'rejected': QuoteStatus.REJECTED,
+        'reject': QuoteStatus.REJECTED,
+        'expired': QuoteStatus.EXPIRED,
+        'expire': QuoteStatus.EXPIRED,
+        'converted': QuoteStatus.CONVERTED,
+        'convert': QuoteStatus.CONVERTED,
+    }
+    
+    mapped_status = status_mapping.get(status_str.lower())
+    if mapped_status:
+        return mapped_status
+    
+    # If all else fails, return DRAFT
+    print(f"Warning: Could not parse status '{status_str}', defaulting to DRAFT")
+    return QuoteStatus.DRAFT
+
+
+@router.get("/", response_class=HTMLResponse)
+async def quotes_list(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """List all quotes"""
     query = db.query(Quote)
     if not current_user.is_admin:
         query = query.filter(Quote.user_id == current_user.id)

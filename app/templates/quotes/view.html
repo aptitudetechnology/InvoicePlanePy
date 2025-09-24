@@ -52,7 +52,7 @@
             <h5>Quote Details</h5>
             <div class="mb-3">
               <strong>Quote #:</strong> {{ quote.quote_number }}<br>
-              <strong>Status:</strong> {{ quote.status.value|capitalize }}<br>
+              <strong>Status:</strong> {{ quote.status_object.name|capitalize if quote.status_object else 'Unknown' }}<br>
               <strong>Date:</strong> {{ quote.issue_date }}<br>
               <strong>Expires:</strong> {{ quote.valid_until }}
             </div>
