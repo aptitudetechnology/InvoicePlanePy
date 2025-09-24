@@ -140,6 +140,7 @@ async def quote_create_post(
             valid_until=valid_until_parsed,
             status=status_id,
             total=0,  # Ensure total is never None
+            balance=0,  # Ensure balance is never None - initially equals total
             #terms=None,  # terms is not settable here; use default or config elsewhere
             notes=notes,
         )
@@ -465,6 +466,7 @@ async def duplicate_quote(
             subtotal=quote.subtotal,
             tax_amount=quote.tax_amount,
             total=quote.total,
+            balance=quote.balance,  # Copy balance from original quote
         )
 
         # Generate URL key
