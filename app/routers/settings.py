@@ -40,6 +40,16 @@ async def company_settings(
     # Add default settings for the template
     settings = {
         "language": "english",
+        "theme": "invoiceplane-default",
+        "first_day_week": "monday",
+        "date_format": "m/d/Y",
+        "default_country": "US",
+        "items_per_page": "25",
+        "currency_symbol": "$",
+        "currency_placement": "before",
+        "currency_code": "USD",
+        "tax_decimal_places": "2",
+        "number_format": "comma_dot",
         "company_name": "",
         "company_address": "",
         "company_address_2": "",
@@ -49,8 +59,9 @@ async def company_settings(
         "company_country": "",
         "company_phone": "",
         "company_email": "",
-        "tax_decimal_places": "2",
         "default_invoice_tax": "none",
+        "default_invoice_tax_placement": "after",
+        "default_item_tax": "none",
     }
     
     return templates.TemplateResponse("settings/company.html", {
@@ -59,11 +70,23 @@ async def company_settings(
         "settings": settings,
         "title": "Company Settings"
     })
+
+@router.post("/company", response_class=HTMLResponse)
 async def company_settings_post(
     request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     language: str = Form(None),
+    theme: str = Form(None),
+    first_day_week: str = Form(None),
+    date_format: str = Form(None),
+    default_country: str = Form(None),
+    items_per_page: str = Form(None),
+    currency_symbol: str = Form(None),
+    currency_placement: str = Form(None),
+    currency_code: str = Form(None),
+    tax_decimal_places: str = Form(None),
+    number_format: str = Form(None),
     company_name: str = Form(None),
     company_address: str = Form(None),
     company_address_2: str = Form(None),
@@ -73,8 +96,9 @@ async def company_settings_post(
     company_country: str = Form(None),
     company_phone: str = Form(None),
     company_email: str = Form(None),
-    tax_decimal_places: str = Form(None),
     default_invoice_tax: str = Form(None),
+    default_invoice_tax_placement: str = Form(None),
+    default_item_tax: str = Form(None),
 ):
     """Handle company settings form submission"""
     try:
@@ -82,6 +106,16 @@ async def company_settings_post(
         # In a real implementation, you'd save these to a settings table
         settings_data = {
             "language": language,
+            "theme": theme,
+            "first_day_week": first_day_week,
+            "date_format": date_format,
+            "default_country": default_country,
+            "items_per_page": items_per_page,
+            "currency_symbol": currency_symbol,
+            "currency_placement": currency_placement,
+            "currency_code": currency_code,
+            "tax_decimal_places": tax_decimal_places,
+            "number_format": number_format,
             "company_name": company_name,
             "company_address": company_address,
             "company_address_2": company_address_2,
@@ -91,8 +125,9 @@ async def company_settings_post(
             "company_country": company_country,
             "company_phone": company_phone,
             "company_email": company_email,
-            "tax_decimal_places": tax_decimal_places,
             "default_invoice_tax": default_invoice_tax,
+            "default_invoice_tax_placement": default_invoice_tax_placement,
+            "default_item_tax": default_item_tax,
         }
         
         logger.info(f"Company settings updated by user {current_user.id}: {settings_data}")
@@ -100,6 +135,16 @@ async def company_settings_post(
         # Create settings dict for template with the submitted values
         settings = {
             "language": language or "english",
+            "theme": theme or "invoiceplane-default",
+            "first_day_week": first_day_week or "monday",
+            "date_format": date_format or "m/d/Y",
+            "default_country": default_country or "US",
+            "items_per_page": items_per_page or "25",
+            "currency_symbol": currency_symbol or "$",
+            "currency_placement": currency_placement or "before",
+            "currency_code": currency_code or "USD",
+            "tax_decimal_places": tax_decimal_places or "2",
+            "number_format": number_format or "comma_dot",
             "company_name": company_name or "",
             "company_address": company_address or "",
             "company_address_2": company_address_2 or "",
@@ -109,8 +154,9 @@ async def company_settings_post(
             "company_country": company_country or "",
             "company_phone": company_phone or "",
             "company_email": company_email or "",
-            "tax_decimal_places": tax_decimal_places or "2",
             "default_invoice_tax": default_invoice_tax or "none",
+            "default_invoice_tax_placement": default_invoice_tax_placement or "after",
+            "default_item_tax": default_item_tax or "none",
         }
         
         return templates.TemplateResponse("settings/company.html", {
@@ -127,9 +173,28 @@ async def company_settings_post(
         # Return with error
         settings = {
             "language": language or "english",
+            "theme": theme or "invoiceplane-default",
+            "first_day_week": first_day_week or "monday",
+            "date_format": date_format or "m/d/Y",
+            "default_country": default_country or "US",
+            "items_per_page": items_per_page or "25",
+            "currency_symbol": currency_symbol or "$",
+            "currency_placement": currency_placement or "before",
+            "currency_code": currency_code or "USD",
+            "tax_decimal_places": tax_decimal_places or "2",
+            "number_format": number_format or "comma_dot",
             "company_name": company_name or "",
             "company_address": company_address or "",
-            # ... other defaults
+            "company_address_2": company_address_2 or "",
+            "company_city": company_city or "",
+            "company_state": company_state or "",
+            "company_zip": company_zip or "",
+            "company_country": company_country or "",
+            "company_phone": company_phone or "",
+            "company_email": company_email or "",
+            "default_invoice_tax": default_invoice_tax or "none",
+            "default_invoice_tax_placement": default_invoice_tax_placement or "after",
+            "default_item_tax": default_item_tax or "none",
         }
         
         return templates.TemplateResponse("settings/company.html", {
