@@ -7,6 +7,7 @@ from app.dependencies import get_current_user
 from app.models.user import User
 from app.models.client import Client
 from app.models.quotes import Quote, QuoteItem, QuoteStatus
+from app.models.tax_rate import TaxRate
 from datetime import date, datetime
 from sqlalchemy.orm import joinedload
 from datetime import timedelta
@@ -208,6 +209,7 @@ async def edit_quote(
         raise HTTPException(status_code=403, detail="Permission denied")
 
     clients = db.query(Client).all()
+    tax_rates = db.query(TaxRate).all()
 
     return templates.TemplateResponse(
         "quotes/edit.html",
@@ -216,6 +218,7 @@ async def edit_quote(
             "user": current_user,
             "quote": quote,
             "clients": clients,
+            "tax_rates": tax_rates,
             "quote_statuses": QuoteStatus,
             "title": f"Edit Quote #{quote.quote_number}",
         },

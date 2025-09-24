@@ -180,7 +180,12 @@
                                                     <select class="form-select form-select-sm tax-rate-select"
                                                         name="items[{{ loop.index0 }}][tax_rate]" data-calculate="item-total">
                                                         <option value="0" {% if item.tax_rate == 0 %}selected{% endif %}>None (0%)</option>
-                                                        </select>
+                                                        {% for tax_rate in tax_rates %}
+                                                        <option value="{{ tax_rate.rate }}" {% if item.tax_rate == tax_rate.rate %}selected{% endif %}>
+                                                            {{ tax_rate.name }} ({{ tax_rate.rate }}%)
+                                                        </option>
+                                                        {% endfor %}
+                                                    </select>
                                                 </td>
                                                 <td class="item-subtotal">${{ "{:.2f}".format(item.subtotal) }}</td>
                                                 <td class="item-discount-amount">${{ "{:.2f}".format(item.discount_amount) }}</td>
@@ -272,6 +277,15 @@
 <script>
     // Initialize item counter for the external quotes.js
     let itemCounter = {{ (quote.items|length) if quote.items else 0 }};
+</script>
+
+<script>
+    // Pass tax rates to JavaScript
+    window.taxRates = [
+        {% for tax_rate in tax_rates %}
+        {id: {{ tax_rate.id }}, name: "{{ tax_rate.name }}", rate: {{ tax_rate.rate }}},
+        {% endfor %}
+    ];
 </script>
 
 <!-- Include the external JavaScript module -->

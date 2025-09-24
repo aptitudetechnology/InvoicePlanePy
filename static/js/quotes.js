@@ -145,7 +145,9 @@ document.addEventListener('DOMContentLoaded', () => {
       <td>
         <select class="form-select form-select-sm tax-rate-select" name="items[${index}][tax_rate]" data-calculate="item-total">
           <option value="0" selected>None (0%)</option>
-          <!-- Add more tax rates if needed -->
+          ${window.taxRates ? window.taxRates.map(taxRate => 
+            `<option value="${taxRate.rate}">${taxRate.name} (${taxRate.rate}%)</option>`
+          ).join('') : ''}
         </select>
       </td>
       <td class="item-subtotal">$0.00</td>
