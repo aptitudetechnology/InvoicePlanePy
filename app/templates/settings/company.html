@@ -199,6 +199,7 @@
                                 <label for="default-invoice-tax" class="form-label">Default Invoice Tax Rate</label>
                                 <select id="default-invoice-tax" name="default_invoice_tax" class="form-select">
                                     <option value="none" {% if settings.default_invoice_tax == 'none' %}selected{% endif %}>None</option>
+                                    <!-- Debug: {{ tax_rates|length }} tax rates available -->
                                     {% for tax_rate in tax_rates %}
                                     <option value="{{ tax_rate.rate }}" {% if settings.default_invoice_tax|string == tax_rate.rate|string %}selected{% endif %}>
                                         {{ tax_rate.name }} ({{ tax_rate.rate }}%)

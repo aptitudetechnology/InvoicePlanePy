@@ -50,6 +50,11 @@ async def company_settings(
     # Load tax rates for the dropdown
     tax_rates = db.query(TaxRate).all()
     
+    # Debug: Print what we're passing
+    print(f"DEBUG: Loading company settings, found {len(tax_rates)} tax rates")
+    for tr in tax_rates:
+        print(f"  Tax rate: {tr.name} ({tr.rate}%)")
+    
     # Convert settings to dict for template
     settings = {
         "language": company_settings.language,
