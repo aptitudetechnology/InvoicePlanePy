@@ -281,11 +281,7 @@
 
 <script>
     // Pass tax rates to JavaScript
-    window.taxRates = [
-        {% for tax_rate in tax_rates %}
-        {id: {{ tax_rate.id }}, name: "{{ tax_rate.name }}", rate: {{ tax_rate.rate }}},
-        {% endfor %}
-    ];
+    window.taxRates = {{ tax_rates | tojson }};
 </script>
 
 <!-- Include the external JavaScript module -->

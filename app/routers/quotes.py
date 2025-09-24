@@ -210,6 +210,9 @@ async def edit_quote(
 
     clients = db.query(Client).all()
     tax_rates = db.query(TaxRate).all()
+    
+    # Convert tax rates to dictionaries for JSON serialization
+    tax_rates_dict = [{"id": tr.id, "name": tr.name, "rate": tr.rate} for tr in tax_rates]
 
     return templates.TemplateResponse(
         "quotes/edit.html",
@@ -218,7 +221,7 @@ async def edit_quote(
             "user": current_user,
             "quote": quote,
             "clients": clients,
-            "tax_rates": tax_rates,
+            "tax_rates": tax_rates_dict,
             "quote_statuses": QuoteStatus,
             "title": f"Edit Quote #{quote.quote_number}",
         },
