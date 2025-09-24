@@ -663,8 +663,8 @@ def can_convert_quote_to_invoice(quote: Quote) -> tuple[bool, str]:
         return False, "Quote has already been converted to an invoice"
 
     # Check status
-    if not quote.status_object or quote.status_object.name not in [QuoteStatus.ACCEPTED.value, QuoteStatus.SENT.value]:
-        return False, "Quote must be accepted or sent before converting"
+    if not quote.status_object or quote.status_object.name not in [QuoteStatus.ACCEPTED.value, QuoteStatus.SENT.value, QuoteStatus.VIEWED.value]:
+        return False, "Quote must be viewed, sent, or accepted before converting"
 
     if not hasattr(quote, 'items') or not quote.items:
         return False, "Quote must have at least one item"

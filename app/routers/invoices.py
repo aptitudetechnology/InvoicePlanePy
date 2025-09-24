@@ -43,7 +43,11 @@ async def view_invoice(
     current_user: User = Depends(get_current_user),
 ):
     """View a specific invoice"""
-    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+    from sqlalchemy.orm import joinedload
+    invoice = db.query(Invoice).options(
+        joinedload(Invoice.client),
+        joinedload(Invoice.items)
+    ).filter(Invoice.id == invoice_id).first()
 
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
