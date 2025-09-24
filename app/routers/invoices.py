@@ -65,6 +65,63 @@ async def view_invoice(
             "title": f"Invoice #{invoice.invoice_number}",
         },
     )
+
+
+@router.get("/{invoice_id}/edit", response_class=HTMLResponse)
+async def edit_invoice(
+    invoice_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Show edit invoice form"""
+    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+
+    # Check permissions
+    if not current_user.is_admin and invoice.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    clients = db.query(Client).all()
+
+    return templates.TemplateResponse(
+        "invoices/edit.html",
+        {
+            "request": request,
+            "user": current_user,
+            "invoice": invoice,
+            "clients": clients,
+            "title": f"Edit Invoice #{invoice.invoice_number}",
+        },
+    )
+
+
+@router.post("/{invoice_id}/edit")
+async def edit_invoice_post(
+    invoice_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    # Add form fields as needed
+):
+    """Handle invoice edit form submission"""
+    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+
+    # Check permissions
+    if not current_user.is_admin and invoice.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    # For now, just redirect back to the invoice view
+    # TODO: Implement actual invoice update logic
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url=f"/invoices/{invoice_id}", status_code=303)
+
+
 """
 @router.get("/create", response_class=HTMLResponse)
 async def invoice_create(
