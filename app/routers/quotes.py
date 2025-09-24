@@ -6,7 +6,7 @@ from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.user import User
 from app.models.client import Client
-from app.models.quotes import Quote, QuoteStatus
+from app.models.quotes import Quote, QuoteItem, QuoteStatus
 from datetime import date, datetime
 from sqlalchemy.orm import joinedload
 from datetime import timedelta
@@ -228,12 +228,6 @@ async def edit_quote_post(
     request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    client_id: int = Form(...),
-    quote_number: str = Form(...),
-    status: str = Form(...),
-    issue_date: str = Form(...),
-    valid_until: str = Form(None),
-    notes: str = Form(None),
 ):
     """Handle quote editing with improved enum handling"""
     quote = db.query(Quote).filter(Quote.id == quote_id).first()
@@ -246,6 +240,17 @@ async def edit_quote_post(
         raise HTTPException(status_code=403, detail="Permission denied")
 
     try:
+        # Parse form data
+        form_data = await request.form()
+        
+        # Extract basic quote fields
+        client_id = int(form_data.get("client_id"))
+        quote_number = form_data.get("quote_number")
+        status = form_data.get("status")
+        issue_date = form_data.get("issue_date")
+        valid_until = form_data.get("valid_until")
+        notes = form_data.get("notes")
+
         # Store original values for debugging
         original_status = quote.status
         print(f"Updating quote {quote_id}: {original_status} -> {status}")
@@ -271,11 +276,74 @@ async def edit_quote_post(
         else:
             quote.valid_until = None
 
+        # Process items
+        items_data = {}
+        for key, value in form_data.items():
+            if key.startswith("items[") and "]" in key:
+                # Parse items[index][field] format
+                parts = key.split("][")
+                if len(parts) == 2:
+                    index = int(parts[0].replace("items[", ""))
+                    field = parts[1].replace("]", "")
+                    if index not in items_data:
+                        items_data[index] = {}
+                    items_data[index][field] = value
+
+        # Update or create items
+        existing_item_ids = set()
+        for index, item_data in items_data.items():
+            item_id = item_data.get("id")
+            if item_id and item_id.isdigit():
+                # Update existing item
+                item_id = int(item_id)
+                existing_item_ids.add(item_id)
+                item = db.query(QuoteItem).filter(QuoteItem.id == item_id, QuoteItem.quote_id == quote_id).first()
+                if item:
+                    item.product_name = item_data.get("name", "")
+                    item.description = item_data.get("description", "")
+                    item.quantity = float(item_data.get("quantity", 0))
+                    item.unit_price = float(item_data.get("price", 0))
+                    item.discount_percentage = float(item_data.get("discount", 0))
+                    item.tax_rate = float(item_data.get("tax_rate", 0))
+                    # Recalculate totals
+                    item.subtotal = item.quantity * item.unit_price
+                    item.discount_amount = item.subtotal * (item.discount_percentage / 100)
+                    item.tax_amount = (item.subtotal - item.discount_amount) * (item.tax_rate / 100)
+                    item.total = item.subtotal - item.discount_amount + item.tax_amount
+            else:
+                # Create new item
+                new_item = QuoteItem(
+                    quote_id=quote_id,
+                    product_name=item_data.get("name", ""),
+                    description=item_data.get("description", ""),
+                    quantity=float(item_data.get("quantity", 0)),
+                    unit_price=float(item_data.get("price", 0)),
+                    discount_percentage=float(item_data.get("discount", 0)),
+                    tax_rate=float(item_data.get("tax_rate", 0)),
+                )
+                # Calculate totals
+                new_item.subtotal = new_item.quantity * new_item.unit_price
+                new_item.discount_amount = new_item.subtotal * (new_item.discount_percentage / 100)
+                new_item.tax_amount = (new_item.subtotal - new_item.discount_amount) * (new_item.tax_rate / 100)
+                new_item.total = new_item.subtotal - new_item.discount_amount + new_item.tax_amount
+                db.add(new_item)
+
+        # Remove items that are no longer in the form
+        for item in quote.items:
+            if item.id not in existing_item_ids:
+                db.delete(item)
+
+        # Recalculate quote totals
+        quote.subtotal = sum(item.subtotal for item in quote.items)
+        quote.item_tax_total = sum(item.tax_amount for item in quote.items)
+        quote.total = sum(item.total for item in quote.items)
+        quote.balance = quote.total
+
         # Update timestamp
         quote.updated_at = datetime.utcnow()
 
         db.commit()
-        print(f"Quote {quote_id} updated successfully")
+        print(f"Quote {quote_id} updated successfully with {len(items_data)} items")
 
         return RedirectResponse(url=f"/quotes/{quote.id}", status_code=302)
 

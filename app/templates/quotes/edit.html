@@ -148,6 +148,7 @@
                                             {% for item in quote.items %}
                                             <tr data-item-id="{{ item.id }}">
                                                 <td>
+                                                    <input type="hidden" name="items[{{ loop.index0 }}][id]" value="{{ item.id }}">
                                                     <button type="button" class="btn btn-sm btn-outline-danger" data-action="remove-item">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
