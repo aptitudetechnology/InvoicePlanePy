@@ -87,12 +87,9 @@ class Quote(BaseModel):
         return (self.valid_until - date.today()).days
 
     @property
-    def can_be_converted(self) -> bool:
-        """Check if quote can be converted to invoice"""
-        # --- UPDATED: Use the relationship for more robust status checking ---
-        if not self.status_object:
-            return False
-        return self.status_object.name == QuoteStatus.ACCEPTED.value
+    def discount_amount(self) -> float:
+        """Calculate total discount amount from all items"""
+        return sum(item.discount_amount or 0 for item in self.items)
 
 class QuoteItem(BaseModel):
     __tablename__ = "quote_items"

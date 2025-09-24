@@ -36,6 +36,8 @@ class Invoice(BaseModel):
     # Calculated fields
     subtotal = Column(Numeric(10, 2), default=0)
     tax_total = Column(Numeric(10, 2), default=0)
+    discount_amount = Column(Numeric(10, 2), default=0)
+    discount_percentage = Column(Numeric(5, 2), default=0)
     total = Column(Numeric(10, 2), default=0)
     paid_amount = Column(Numeric(10, 2), default=0)
     balance = Column(Numeric(10, 2), default=0)
@@ -94,6 +96,7 @@ class InvoiceItem(BaseModel):
     # Calculated amounts
     subtotal = Column(Numeric(10, 2))
     tax_amount = Column(Numeric(10, 2))
+    discount_amount = Column(Numeric(10, 2))
     total = Column(Numeric(10, 2))
 
     # Relationships

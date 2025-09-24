@@ -440,18 +440,14 @@ async def convert_quote_to_invoice(
             invoice_number=invoice_number,
             issue_date=date.today(),
             due_date=date.today() + timedelta(days=30),
-            status="draft",
-            #terms=quote.terms,
-            #tems=quote.notes,
+            status=1,  # DRAFT status
+            notes=quote.notes,
             subtotal=quote.subtotal or 0,
-            tax_amount=quote.tax_amount or 0,
+            tax_total=quote.tax_amount or 0,  # Map tax_amount to tax_total
             discount_amount=quote.discount_amount or 0,
-            total=quote.total or 0,
             discount_percentage=quote.discount_percentage or 0,
-            tax_rate=quote.tax_rate or 0,
-            currency=quote.currency or "USD",
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            total=quote.total or 0,
+            balance=quote.balance or quote.total or 0,  # Set initial balance
         )
 
         db.add(invoice)
@@ -467,6 +463,7 @@ async def convert_quote_to_invoice(
                 price=item.unit_price or 0,
                 subtotal=item.subtotal or 0,
                 tax_amount=item.tax_amount or 0,
+                discount_amount=item.discount_amount or 0,
                 total=item.total or 0,
             )
             db.add(invoice_item)
