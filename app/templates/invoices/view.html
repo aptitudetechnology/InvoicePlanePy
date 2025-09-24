@@ -1,53 +1,180 @@
 {% extends "base.html" %}
+
 {% block content %}
 <div class="row">
-<div class="col-12">
-<div class="d-flex justify-content-between align-items-center mb-4">
-<h2>Create Invoice</h2>
-<a href="/invoices" class="btn btn-secondary">
-<i class="bi bi-arrow-left"></i> Back to Invoices
-</a>
-</div>
-<div class="card">
-<div class="card-body">
-<form method="post" action="/invoices/create">
-<!-- Client Information Section -->
-<div class="row mb-4">
-<div class="col-md-6">
-<h5>Client Information</h5>
-<div class="mb-3">
-<label for="client_id" class="form-label">Client</label>
-<select class="form-select" id="client_id" name="client_id" required>
-<option value="">Select a client...</option>
-<!-- TODO: Populate with clients -->
-</select>
-</div>
-<!-- Client details will be populated via JavaScript when client is selected -->
-<div id="client_details" class="border p-3 bg-light" style="display: none;">
-<div id="client_name"></div>
-<div id="client_address"></div>
-<div id="client_email"></div>
+  <div class="col-12">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2>Invoice #{{ invoice.invoice_number }}</h2>
+      <a href="/invoices" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Invoices
+      </a>
+    </div>
+
+    <!-- Toolbar -->
+<div class="card mb-4">
+<div class="card-body py-2">
+<div class="d-flex flex-wrap gap-2">
+<button type="button" class="btn btn-outline-success btn-sm" onclick="downloadPDF()">
+<i class="bi bi-file-earmark-pdf"></i> Download PDF
+</button>
+<button type="button" class="btn btn-outline-info btn-sm" onclick="sendEmail()">
+<i class="bi bi-envelope"></i> Send Email
+</button>
+<button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyInvoice()">
+<i class="bi bi-files"></i> Copy Invoice
+</button>
+<button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteInvoice()">
+<i class="bi bi-trash"></i> Delete
+</button>
 </div>
 </div>
-<div class="col-md-6">
-<h5>Invoice Details</h5>
-<div class="row">
-<div class="col-md-6 mb-3">
-<label for="invoice_number" class="form-label">Invoice #</label>
-<input type="text" class="form-control" id="invoice_number" name="invoice_number" placeholder="Not set yet">
 </div>
-<div class="col-md-6 mb-3">
-<label for="status" class="form-label">Status <small class="text-muted">(Can be changed)</small></label>
-<select class="form-select" id="status" name="status">
-<option value="draft">Draft</option>
-<option value="sent">Sent</option>
-<option value="viewed">Viewed</option>
-<option value="paid">Paid</option>
-</select>
+
+
+    <div class="card">
+      <div class="card-body">
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <h5>Client Information</h5>
+            <div class="mb-3">
+              <strong>{{ invoice.client.name }}</strong><br>
+              {{ invoice.client.address }}<br>
+              {{ invoice.client.email }}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <h5>Invoice Details</h5>
+            <div class="mb-3">
+              <strong>Invoice #:</strong> {{ invoice.invoice_number }}<br>
+              <strong>Status:</strong> {{ invoice.status|capitalize }}<br>
+              <strong>Date:</strong> {{ invoice.issue_date }}<br>
+              <strong>Due:</strong> {{ invoice.due_date }}
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <h5>Items</h5>
+          <div class="table-responsive">
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Description</th>
+                  <th>Quantity</th>
+                  <th>Unit</th>
+                  <th>Price</th>
+                  <th>Discount</th>
+                  <th>Tax Amount</th>
+                  <th>Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in invoice.items %}
+                <tr>
+                  <td>{{ item.name }}</td>
+                  <td>{{ item.description }}</td>
+                  <td>{{ item.quantity }}</td>
+                  <td></td>
+                  <td>${{ "%.2f"|format(item.price) }}</td>
+                  <td>${{ "%.2f"|format(item.discount_amount or 0) }}</td>
+                  <td>${{ "%.2f"|format(item.tax_amount or 0) }}</td>
+                  <td>${{ "%.2f"|format(item.subtotal or 0) }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="row mb-4">
+          <div class="col-md-6"></div>
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-body">
+                <div class="row mb-2">
+                  <div class="col-6"><strong>Subtotal:</strong></div>
+                  <div class="col-6 text-end">${{ "%.2f"|format(invoice.subtotal or 0) }}</div>
+                </div>
+                <div class="row mb-2">
+                  <div class="col-6"><strong>Tax Total:</strong></div>
+                  <div class="col-6 text-end">${{ "%.2f"|format(invoice.tax_total or 0) }}</div>
+                </div>
+                <div class="row mb-2">
+                  <div class="col-6"><strong>Discount:</strong></div>
+                  <div class="col-6 text-end">${{ "%.2f"|format(invoice.discount_amount or 0) }}</div>
+                </div>
+                <hr>
+                <div class="row">
+                  <div class="col-6"><strong>Total:</strong></div>
+                  <div class="col-6 text-end"><strong>${{ "%.2f"|format(invoice.total or 0) }}</strong></div>
+                </div>
+                <div class="row">
+                  <div class="col-6"><strong>Balance:</strong></div>
+                  <div class="col-6 text-end"><strong>${{ "%.2f"|format(invoice.balance or 0) }}</strong></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label"><strong>Notes</strong></label>
+              <div class="border p-3 bg-light">{{ invoice.notes }}</div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label"><strong>Terms</strong></label>
+              <div class="border p-3 bg-light">{{ invoice.terms }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-</div>
-<div class="row">
-<div class="col-md-6 mb-3">
+
+<script>
+function downloadPDF() {
+    window.location.href = '/invoices/{{ invoice.id }}/pdf';
+}
+
+function sendEmail() {
+    window.location.href = '/invoices/{{ invoice.id }}/email';
+}
+
+function copyInvoice() {
+    if (confirm('Create a copy of this invoice?')) {
+        window.location.href = '/invoices/{{ invoice.id }}/copy';
+    }
+}
+
+function deleteInvoice() {
+    if (confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) {
+        fetch('/invoices/{{ invoice.id }}/delete', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.href = '/invoices';
+            } else {
+                alert('Error deleting invoice');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting invoice');
+        });
+    }
+}
+</script>
+{% endblock %}
 <label for="invoice_date" class="form-label">Date</label>
 <input type="date" class="form-control" id="invoice_date" name="invoice_date" required>
 </div>

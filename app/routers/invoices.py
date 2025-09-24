@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -32,6 +32,34 @@ async def invoices_list(
             "user": current_user,
             "invoices": invoices
         }
+    )
+
+
+@router.get("/{invoice_id}", response_class=HTMLResponse)
+async def view_invoice(
+    invoice_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """View a specific invoice"""
+    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+
+    # Check permissions
+    if not current_user.is_admin and invoice.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    return templates.TemplateResponse(
+        "invoices/view.html",
+        {
+            "request": request,
+            "user": current_user,
+            "invoice": invoice,
+            "title": f"Invoice #{invoice.invoice_number}",
+        },
     )
 """
 @router.get("/create", response_class=HTMLResponse)
