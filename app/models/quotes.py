@@ -46,7 +46,6 @@ class Quote(BaseModel):
     discount_percentage = Column(Numeric(5, 2), default=0.00)
     notes = Column(Text)
     url_key = Column(String(32), unique=True)
-   #terms = Column(Text, nullable=True)  # Added to support 'terms' field
 
     # Status - Integer FK to quote_statuses table
     status = Column(Integer, ForeignKey("quote_statuses.id"), nullable=False)
@@ -87,7 +86,7 @@ class Quote(BaseModel):
         return (self.valid_until - date.today()).days
 
     @property
-    def discount_amount(self) -> float:
+    def calculated_discount_amount(self) -> float:
         """Calculate total discount amount from all items"""
         return sum(item.discount_amount or 0 for item in self.items)
 

@@ -342,6 +342,9 @@ async def edit_quote_post(
             if item.id not in existing_item_ids:
                 db.delete(item)
 
+        # Flush changes to ensure items are updated
+        db.flush()
+
         # Recalculate quote totals
         quote.subtotal = sum(item.subtotal for item in quote.items)
         quote.item_tax_total = sum(item.tax_amount for item in quote.items)
@@ -352,14 +355,17 @@ async def edit_quote_post(
         print(f"DEBUG: Quote {quote_id} totals recalculated:")
         print(f"  Items: {len(quote.items)}")
         for item in quote.items:
-            print(f"    Item {item.id}: qty={item.quantity}, price={item.unit_price}, subtotal={item.subtotal}, total={item.total}")
-        print(f"  Quote totals: subtotal={quote.subtotal}, tax_total={quote.item_tax_total}, total={quote.total}")
+            print(f"    Item {item.id}: qty={item.quantity}, price={item.unit_price}, subtotal={item.subtotal}, tax_amount={item.tax_amount}, total={item.total}")
+        print(f"  Quote totals before commit: subtotal={quote.subtotal}, tax_total={quote.item_tax_total}, total={quote.total}, balance={quote.balance}")
 
         # Update timestamp
         quote.updated_at = datetime.utcnow()
 
         db.commit()
-        print(f"Quote {quote_id} updated successfully with {len(items_data)} items")
+        # Reload quote with updated items to ensure totals are correct
+        quote = db.query(Quote).options(joinedload(Quote.items)).filter(Quote.id == quote_id).first()
+        print(f"Quote {quote_id} updated successfully with {len(quote.items)} items")
+        print(f"  Quote totals after reload: subtotal={quote.subtotal}, tax_total={quote.item_tax_total}, total={quote.total}, balance={quote.balance}")
 
         return RedirectResponse(url=f"/quotes/{quote.id}", status_code=302)
 
@@ -451,7 +457,7 @@ async def convert_quote_to_invoice(
             notes=quote.notes,
             subtotal=quote.subtotal or 0,
             tax_total=quote.tax_amount or 0,  # Map tax_amount to tax_total
-            discount_amount=quote.discount_amount or 0,
+            discount_amount=quote.calculated_discount_amount or 0,
             discount_percentage=quote.discount_percentage or 0,
             total=quote.total or 0,
             balance=quote.balance or quote.total or 0,  # Set initial balance
