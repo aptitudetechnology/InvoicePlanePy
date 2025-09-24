@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Debug: Check if tax rates are available
   console.log('Tax rates available:', window.taxRates);
+  console.log('Tax rates type:', typeof window.taxRates);
+  console.log('Tax rates length:', window.taxRates ? window.taxRates.length : 'undefined');
 
   // Utility to parse floats safely
   function parseNumber(value) {
@@ -125,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Debug: Log tax rates when adding new row
     console.log('Adding new row, tax rates:', window.taxRates);
+    console.log('Tax rates available for new row:', window.taxRates ? 'YES' : 'NO');
 
     const newRow = document.createElement('tr');
     newRow.setAttribute('data-item-id', `new-${itemCounter++}`);

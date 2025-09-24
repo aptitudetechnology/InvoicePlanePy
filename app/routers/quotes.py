@@ -213,6 +213,9 @@ async def edit_quote(
     
     # Convert tax rates to dictionaries for JSON serialization
     tax_rates_dict = [{"id": tr.id, "name": tr.name, "rate": tr.rate} for tr in tax_rates]
+    
+    # Debug: Print tax rates being passed to template
+    print(f"DEBUG: Passing {len(tax_rates_dict)} tax rates to template: {tax_rates_dict}")
 
     return templates.TemplateResponse(
         "quotes/edit.html",

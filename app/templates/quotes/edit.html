@@ -282,6 +282,9 @@
 <script>
     // Pass tax rates to JavaScript
     window.taxRates = {{ tax_rates | tojson }};
+    // Debug: Log what was passed to JavaScript
+    console.log('DEBUG: window.taxRates set to:', window.taxRates);
+    console.log('DEBUG: tax_rates from template:', {{ tax_rates | tojson }});
 </script>
 
 <!-- Include the external JavaScript module -->
