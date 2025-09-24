@@ -11,7 +11,7 @@
         <div class="card">
             <div class="card-body">
                 {# Form action points to an update endpoint, typically including the invoice ID #}
-                <form method="post" action="/invoices/{{ invoice.id }}/edit"> {# 'quote' here probably means 'invoice' object #}
+                <form method="post" action="/invoices/{{ invoice.id }}/edit"> {# Invoice edit form #}
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <h5>Client Information:</h5>
@@ -25,17 +25,17 @@
                                                 data-name="{{ client.name }}"
                                                 data-address="{{ client.address }}"
                                                 data-email="{{ client.email }}"
-                                                {% if quote.client_id == client.id %}selected{% endif %}>
+                                                {% if invoice.client_id == client.id %}selected{% endif %}>
                                             {{ client.name }}
                                         </option>
                                     {% endfor %}
                                 </select>
                             </div>
                             {# Client details will be populated via JavaScript when client is selected #}
-                            <div id="client_details" class="border p-3 bg-light" style="{% if quote.client_id %}display: block;{% else %}display: none;{% endif %}">
-                                <div id="client_name">{{ quote.client.name if quote.client else '' }}</div>
-                                <div id="client_address">{{ quote.client.address if quote.client else '' }}</div>
-                                <div id="client_email">{{ quote.client.email if quote.client else '' }}</div>
+                            <div id="client_details" class="border p-3 bg-light" style="{% if invoice.client_id %}display: block;{% else %}display: none;{% endif %}">
+                                <div id="client_name">{{ invoice.client.name if invoice.client else '' }}</div>
+                                <div id="client_address">{{ invoice.client.address if invoice.client else '' }}</div>
+                                <div id="client_email">{{ invoice.client.email if invoice.client else '' }}</div>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -43,26 +43,26 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="invoice_number" class="form-label">Invoice #</label>
-                                    <input type="text" class="form-control" id="invoice_number" name="invoice_number" value="{{ quote.invoice_number if quote.invoice_number else '' }}" placeholder="Not set yet">
+                                    <input type="text" class="form-control" id="invoice_number" name="invoice_number" value="{{ invoice.invoice_number if invoice.invoice_number else '' }}" placeholder="Not set yet">
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="status" class="form-label">Status <small class="text-muted">(Can be changed)</small></label>
                                     <select class="form-select" id="status" name="status">
-                                        <option value="draft" {% if quote.status == 'draft' %}selected{% endif %}>Draft</option>
-                                        <option value="sent" {% if quote.status == 'sent' %}selected{% endif %}>Sent</option>
-                                        <option value="viewed" {% if quote.status == 'viewed' %}selected{% endif %}>Viewed</option>
-                                        <option value="paid" {% if quote.status == 'paid' %}selected{% endif %}>Paid</option>
+                                        <option value="draft" {% if invoice.status_string == 'draft' %}selected{% endif %}>Draft</option>
+                                        <option value="sent" {% if invoice.status_string == 'sent' %}selected{% endif %}>Sent</option>
+                                        <option value="viewed" {% if invoice.status_string == 'viewed' %}selected{% endif %}>Viewed</option>
+                                        <option value="paid" {% if invoice.status_string == 'paid' %}selected{% endif %}>Paid</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="invoice_date" class="form-label">Date</label>
-                                    <input type="date" class="form-control" id="invoice_date" name="invoice_date" value="{{ quote.invoice_date.strftime('%Y-%m-%d') if quote.invoice_date else '' }}" required>
+                                    <input type="date" class="form-control" id="invoice_date" name="invoice_date" value="{{ invoice.issue_date.strftime('%Y-%m-%d') if invoice.issue_date else '' }}" required>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="due_date" class="form-label">Due Date</label>
-                                    <input type="date" class="form-control" id="due_date" name="due_date" value="{{ quote.due_date.strftime('%Y-%m-%d') if quote.due_date else '' }}">
+                                    <input type="date" class="form-control" id="due_date" name="due_date" value="{{ invoice.due_date.strftime('%Y-%m-%d') if invoice.due_date else '' }}">
                                 </div>
                             </div>
                             <div class="row">
@@ -70,17 +70,17 @@
                                     <label for="payment_method" class="form-label">Payment Method</label>
                                     <select class="form-select" id="payment_method" name="payment_method">
                                         <option value="">Select the Payment Method</option>
-                                        <option value="cash" {% if quote.payment_method == 'cash' %}selected{% endif %}>Cash</option>
-                                        <option value="check" {% if quote.payment_method == 'check' %}selected{% endif %}>Check</option>
-                                        <option value="credit_card" {% if quote.payment_method == 'credit_card' %}selected{% endif %}>Credit Card</option>
-                                        <option value="bank_transfer" {% if quote.payment_method == 'bank_transfer' %}selected{% endif %}>Bank Transfer</option>
-                                        <option value="paypal" {% if quote.payment_method == 'paypal' %}selected{% endif %}>PayPal</option>
-                                        <option value="other" {% if quote.payment_method == 'other' %}selected{% endif %}>Other</option>
+                                        <option value="cash" {% if invoice.payment_method == 'cash' %}selected{% endif %}>Cash</option>
+                                        <option value="check" {% if invoice.payment_method == 'check' %}selected{% endif %}>Check</option>
+                                        <option value="credit_card" {% if invoice.payment_method == 'credit_card' %}selected{% endif %}>Credit Card</option>
+                                        <option value="bank_transfer" {% if invoice.payment_method == 'bank_transfer' %}selected{% endif %}>Bank Transfer</option>
+                                        <option value="paypal" {% if invoice.payment_method == 'paypal' %}selected{% endif %}>PayPal</option>
+                                        <option value="other" {% if invoice.payment_method == 'other' %}selected{% endif %}>Other</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="pdf_password" class="form-label">PDF password (optional)</label>
-                                    <input type="password" class="form-control" id="pdf_password" name="pdf_password" value="{{ quote.pdf_password if quote.pdf_password else '' }}">
+                                    <input type="password" class="form-control" id="pdf_password" name="pdf_password" value="{{ invoice.pdf_password if invoice.pdf_password else '' }}">
                                     <small class="form-text text-muted">not-implemented yet</small>
                                 </div>
                             </div>
@@ -104,8 +104,8 @@
                                 </thead>
                                 <tbody>
                                     {# Loop through existing items if available, otherwise display one empty row #}
-    {% if quote.items %}
-        {% for item in quote.items %}
+    {% if invoice.items %}
+        {% for item in invoice.items %}
         <tr>
             <td>
                 <input type="hidden" name="item_id_{{ loop.index0 }}" value="{{ item.id }}">
@@ -187,7 +187,7 @@
                             </table>
                         </div>
                         {# This hidden input tracks the total number of item rows for backend processing #}
-                        <input type="hidden" name="items_count" id="items_count" value="{{ quote.items|length if quote.items else 1 }}">
+                        <input type="hidden" name="items_count" id="items_count" value="{{ invoice.items|length if invoice.items else 1 }}">
                         <div class="mb-3">
                             <button type="button" class="btn btn-outline-primary me-2" onclick="addNewRow()">
                                 <i class="bi bi-plus"></i> Add new row
@@ -209,39 +209,39 @@
                                 <div class="card-body">
                                     <div class="row mb-2">
                                         <div class="col-6"><strong>Subtotal:</strong></div>
-                                        <div class="col-6 text-end" id="subtotal">${{ '%.2f'|format(quote.subtotal) if quote.subtotal is not none else '0.00' }}</div>
+                                        <div class="col-6 text-end" id="subtotal">${{ '%.2f'|format(invoice.subtotal) if invoice.subtotal is not none else '0.00' }}</div>
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col-6"><strong>Item Tax:</strong></div>
-                                        <div class="col-6 text-end" id="item_tax">${{ '%.2f'|format(quote.item_tax) if quote.item_tax is not none else '0.00' }}</div>
+                                        <div class="col-6 text-end" id="item_tax">${{ '%.2f'|format(invoice.tax_total) if invoice.tax_total is not none else '0.00' }}</div>
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col-6"><strong>Invoice Tax:</strong></div>
-                                        <div class="col-6 text-end" id="invoice_tax">${{ '%.2f'|format(quote.invoice_tax) if quote.invoice_tax is not none else '0.00' }}</div>
+                                        <div class="col-6 text-end" id="invoice_tax">${{ '%.2f'|format(invoice.tax_total) if invoice.tax_total is not none else '0.00' }}</div>
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col-6">
                                             <strong>Discount:</strong>
                                             <div class="input-group input-group-sm mt-1">
-                                                <input type="number" class="form-control" id="discount_percentage" name="discount_percentage" min="0" max="100" step="0.01" placeholder="0" value="{{ quote.discount_percentage if quote.discount_percentage is not none else 0 }}" onchange="calculateTotals()">
+                                                <input type="number" class="form-control" id="discount_percentage" name="discount_percentage" min="0" max="100" step="0.01" placeholder="0" value="{{ invoice.discount_percentage if invoice.discount_percentage is not none else 0 }}" onchange="calculateTotals()">
                                                 <span class="input-group-text">%</span>
-                                                <input type="number" class="form-control" id="discount_amount_input" name="discount_amount" min="0" step="0.01" placeholder="0.00" value="{{ quote.discount_amount if quote.discount_amount is not none else 0 }}" onchange="calculateTotals()">
+                                                <input type="number" class="form-control" id="discount_amount_input" name="discount_amount" min="0" step="0.01" placeholder="0.00" value="{{ invoice.discount_amount if invoice.discount_amount is not none else 0 }}" onchange="calculateTotals()">
                                             </div>
                                         </div>
-                                        <div class="col-6 text-end" id="discount_amount">${{ '%.2f'|format(quote.discount_amount_calculated) if quote.discount_amount_calculated is not none else '0.00' }}</div>
+                                        <div class="col-6 text-end" id="discount_amount">${{ '%.2f'|format(invoice.discount_amount) if invoice.discount_amount is not none else '0.00' }}</div>
                                     </div>
                                     <hr>
                                     <div class="row mb-2">
                                         <div class="col-6"><strong>Total:</strong></div>
-                                        <div class="col-6 text-end"><strong id="total">${{ '%.2f'|format(quote.total) if quote.total is not none else '0.00' }}</strong></div>
+                                        <div class="col-6 text-end"><strong id="total">${{ '%.2f'|format(invoice.total) if invoice.total is not none else '0.00' }}</strong></div>
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col-6"><strong>Paid:</strong></div>
-                                        <div class="col-6 text-end" id="paid">${{ '%.2f'|format(quote.paid) if quote.paid is not none else '0.00' }}</div>
+                                        <div class="col-6 text-end" id="paid">${{ '%.2f'|format(invoice.paid_amount) if invoice.paid_amount is not none else '0.00' }}</div>
                                     </div>
                                     <div class="row">
                                         <div class="col-6"><strong>Balance:</strong></div>
-                                        <div class="col-6 text-end"><strong id="balance">${{ '%.2f'|format(quote.balance) if quote.balance is not none else '0.00' }}</strong></div>
+                                        <div class="col-6 text-end"><strong id="balance">${{ '%.2f'|format(invoice.balance) if invoice.balance is not none else '0.00' }}</strong></div>
                                     </div>
                                 </div>
                             </div>
@@ -351,7 +351,7 @@
     }
 
     // Initialize itemCounter based on the number of existing items or 1 if none
-    let itemCounter = parseInt('{{ quote.items|length if quote.items else 1 }}', 10) || 1;
+    let itemCounter = parseInt('{{ invoice.items|length if invoice.items else 1 }}', 10) || 1;
 
     /**
      * Adds a new row to the items table, cloning the structure of the first row
@@ -492,7 +492,7 @@
         document.getElementById('total').textContent = `$${total.toFixed(2)}`;
 
         // Calculate balance (assuming 'paid' is a value from the backend, not dynamically input here)
-        const paidAmount = parseFloat('{{ quote.paid if quote.paid is not none else 0 }}') || 0;
+        const paidAmount = parseFloat('{{ invoice.paid_amount if invoice.paid_amount is not none else 0 }}') || 0;
         const balance = total - paidAmount;
         document.getElementById('paid').textContent = `$${paidAmount.toFixed(2)}`;
         document.getElementById('balance').textContent = `$${balance.toFixed(2)}`;

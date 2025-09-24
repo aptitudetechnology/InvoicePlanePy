@@ -58,6 +58,19 @@ class Invoice(BaseModel):
     def status_enum(self, value: InvoiceStatus):
         """Set status using enum"""
         self.status = value.value
+    
+    @property
+    def status_string(self) -> str:
+        """Get status as string for templates"""
+        status_map = {
+            InvoiceStatus.DRAFT: 'draft',
+            InvoiceStatus.SENT: 'sent',
+            InvoiceStatus.VIEWED: 'viewed',
+            InvoiceStatus.PAID: 'paid',
+            InvoiceStatus.OVERDUE: 'overdue',
+            InvoiceStatus.CANCELLED: 'cancelled'
+        }
+        return status_map.get(self.status_enum, 'draft')
 
     @property
     def status_name(self) -> str:
