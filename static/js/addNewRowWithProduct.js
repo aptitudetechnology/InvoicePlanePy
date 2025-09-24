@@ -5,19 +5,19 @@
   let itemCounter = window.itemCounter || 0; // Initialize or retrieve from global scope
 
   function addNewRowWithProduct(productName, price, productId, tableBodyId = 'quote-items', defaultTaxRates = []) {
-    itemCounter++;
-    window.itemCounter = itemCounter; // Persist globally if needed
-
     const tableBody = document.getElementById(tableBodyId);
     if (!tableBody) {
       console.error('Quote/Invoice items table body not found!');
       return;
     }
 
+    // Get the current index based on existing rows
+    const index = tableBody.children.length;
+
     // Create new row
     const row = document.createElement('tr');
     row.setAttribute('data-product-id', productId || '');
-    row.setAttribute('data-item-id', itemCounter); // Add a unique identifier for the row
+    row.setAttribute('data-item-id', `new-${index}`); // Add a unique identifier for the row
 
     // Generate tax rate options
     let taxOptionsHtml = '<option value="0">None (0%)</option>';
@@ -38,26 +38,27 @@
 
 
     row.innerHTML = `
-      <td>${itemCounter}</td>
       <td>
-          <input type="text" name="product_name_${itemCounter}" value="${productName}" class="form-control" readonly>
-          <textarea name="description_${itemCounter}" class="form-control mt-1" placeholder="Description"></textarea>
+        <button type="button" class="btn btn-danger btn-sm remove-row-btn">Remove</button>
       </td>
-      <td><input type="number" name="quantity_${itemCounter}" value="${initialQuantity}" min="1" class="form-control quantity-input"></td>
-      <td><input type="text" name="price_${itemCounter}" value="${initialPrice.toFixed(2)}" class="form-control price-input"></td>
-      <td><input type="text" name="item_discount_amount_${itemCounter}" value="${initialItemDiscountAmount.toFixed(2)}" class="form-control item-discount-input"></td>
       <td>
-          <select name="tax_rate_${itemCounter}" class="form-control tax-rate-select">
+          <input type="text" name="items[${index}][name]" value="${productName}" class="form-control" readonly>
+          <textarea name="items[${index}][description]" class="form-control mt-1" placeholder="Description"></textarea>
+      </td>
+      <td><input type="number" name="items[${index}][quantity]" value="${initialQuantity}" min="1" class="form-control quantity-input"></td>
+      <td><input type="text" name="items[${index}][price]" value="${initialPrice.toFixed(2)}" class="form-control price-input"></td>
+      <td><input type="text" name="items[${index}][discount]" value="${initialItemDiscountAmount.toFixed(2)}" class="form-control item-discount-input"></td>
+      <td>
+          <select name="items[${index}][tax_rate]" class="form-control tax-rate-select">
               ${taxOptionsHtml}
           </select>
       </td>
-      <td><input type="text" name="subtotal_${itemCounter}" value="${initialSubtotal.toFixed(2)}" class="form-control subtotal-input" readonly></td>
-      <td><input type="text" name="calculated_item_discount_${itemCounter}" value="${initialItemCalculatedDiscount.toFixed(2)}" class="form-control calculated-item-discount-input" readonly></td>
-      <td><input type="text" name="tax_amount_${itemCounter}" value="${initialTax.toFixed(2)}" class="form-control item-tax-input" readonly></td>
-      <td><input type="text" name="line_total_${itemCounter}" value="${initialLineTotal.toFixed(2)}" class="form-control line-total-input" readonly></td>
+      <td><input type="text" name="subtotal_${index}" value="${initialSubtotal.toFixed(2)}" class="form-control subtotal-input" readonly></td>
+      <td><input type="text" name="calculated_item_discount_${index}" value="${initialItemCalculatedDiscount.toFixed(2)}" class="form-control calculated-item-discount-input" readonly></td>
+      <td><input type="text" name="tax_amount_${index}" value="${initialTax.toFixed(2)}" class="form-control item-tax-input" readonly></td>
+      <td><input type="text" name="line_total_${index}" value="${initialLineTotal.toFixed(2)}" class="form-control line-total-input" readonly></td>
       <td>
-          <input type="hidden" name="product_id_${itemCounter}" value="${productId || ''}">
-          <button type="button" class="btn btn-danger btn-sm remove-row-btn">Remove</button>
+          <input type="hidden" name="product_id_${index}" value="${productId || ''}">
       </td>
     `;
 
