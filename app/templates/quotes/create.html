@@ -31,10 +31,11 @@
 <div class="mb-3">
 <label for="status" class="form-label">Status</label>
 <select class="form-select" id="status" name="status">
-<option value="draft">Draft</option>
-<option value="sent">Sent</option>
-<option value="accepted">Accepted</option>
-<option value="rejected">Rejected</option>
+    {% for status in quote_statuses %}
+    <option value="{{ status.value }}" {% if status.value == 'DRAFT' %}selected{% endif %}>
+        {{ status.value|capitalize }}
+    </option>
+    {% endfor %}
 </select>
 </div>
 <div class="mb-3">

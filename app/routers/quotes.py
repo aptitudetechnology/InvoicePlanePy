@@ -260,6 +260,10 @@ async def edit_quote_post(
         valid_until = form_data.get("valid_until")
         notes = form_data.get("notes")
 
+        # Debug logging for status
+        print(f"DEBUG: Form data status: '{status}' (type: {type(status)})")
+        print(f"DEBUG: All form keys: {list(form_data.keys())}")
+
         # Store original values for debugging
         original_status = quote.status
         print(f"Updating quote {quote_id}: {original_status} -> {status}")
@@ -270,9 +274,12 @@ async def edit_quote_post(
         
         # Use improved status parsing
         quote_status = parse_quote_status(status)
+        print(f"DEBUG: Parsed status enum: {quote_status}")
         from app.utils.status_helpers import get_status_id
-        quote.status = get_status_id(db, quote_status)
-        print(f"Parsed status: {quote.status}")
+        status_id = get_status_id(db, quote_status)
+        print(f"DEBUG: Status ID from database: {status_id}")
+        quote.status = status_id
+        print(f"DEBUG: Set quote.status to: {quote.status}")
         
         quote.notes = notes
 
@@ -365,6 +372,7 @@ async def edit_quote_post(
         # Reload quote with updated items to ensure totals are correct
         quote = db.query(Quote).options(joinedload(Quote.items)).filter(Quote.id == quote_id).first()
         print(f"Quote {quote_id} updated successfully with {len(quote.items)} items")
+        print(f"  Final quote status: {quote.status} (object: {quote.status_object.name if quote.status_object else 'None'})")
         print(f"  Quote totals after reload: subtotal={quote.subtotal}, tax_total={quote.item_tax_total}, total={quote.total}, balance={quote.balance}")
 
         return RedirectResponse(url=f"/quotes/{quote.id}", status_code=302)

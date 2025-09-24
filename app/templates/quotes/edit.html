@@ -83,7 +83,7 @@
                                             <label for="status" class="form-label">Status</label>
                                             <select class="form-select" id="status" name="status">
                                                 {% for status in quote_statuses %}
-                                                <option value="{{ status.value }}" {% if status == quote.status %}selected{% endif %}>
+                                                <option value="{{ status.value }}" {% if status.value == quote.status_object.name %}selected{% endif %}>
                                                     {{ status.value|capitalize }}
                                                 </option>
                                                 {% endfor %}
