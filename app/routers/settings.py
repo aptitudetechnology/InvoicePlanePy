@@ -8,6 +8,8 @@ from app.dependencies import get_current_user
 from app.models.user import User
 from app.models.api_key import ApiKey
 from app.models.invoicesettings import InvoiceSettings
+from app.models.company_settings import CompanySettings
+from app.models.tax_rate import TaxRate
 import logging
 
 # Add this at the top of your file
@@ -37,37 +39,49 @@ async def company_settings(
     current_user: User = Depends(get_current_user)
 ):
     """Show company settings"""
-    # Add default settings for the template
+    # Load settings from database or create default if none exist
+    company_settings = db.query(CompanySettings).first()
+    if not company_settings:
+        company_settings = CompanySettings()
+        db.add(company_settings)
+        db.commit()
+        db.refresh(company_settings)
+    
+    # Load tax rates for the dropdown
+    tax_rates = db.query(TaxRate).all()
+    
+    # Convert settings to dict for template
     settings = {
-        "language": "english",
-        "theme": "invoiceplane-default",
-        "first_day_week": "monday",
-        "date_format": "m/d/Y",
-        "default_country": "US",
-        "items_per_page": "25",
-        "currency_symbol": "$",
-        "currency_placement": "before",
-        "currency_code": "USD",
-        "tax_decimal_places": "2",
-        "number_format": "comma_dot",
-        "company_name": "",
-        "company_address": "",
-        "company_address_2": "",
-        "company_city": "",
-        "company_state": "",
-        "company_zip": "",
-        "company_country": "",
-        "company_phone": "",
-        "company_email": "",
-        "default_invoice_tax": "none",
-        "default_invoice_tax_placement": "after",
-        "default_item_tax": "none",
+        "language": company_settings.language,
+        "theme": company_settings.theme,
+        "first_day_week": company_settings.first_day_week,
+        "date_format": company_settings.date_format,
+        "default_country": company_settings.default_country,
+        "items_per_page": str(company_settings.items_per_page),
+        "currency_symbol": company_settings.currency_symbol,
+        "currency_placement": company_settings.currency_placement,
+        "currency_code": company_settings.currency_code,
+        "tax_decimal_places": str(company_settings.tax_decimal_places),
+        "number_format": company_settings.number_format,
+        "company_name": company_settings.company_name or "",
+        "company_address": company_settings.company_address or "",
+        "company_address_2": company_settings.company_address_2 or "",
+        "company_city": company_settings.company_city or "",
+        "company_state": company_settings.company_state or "",
+        "company_zip": company_settings.company_zip or "",
+        "company_country": company_settings.company_country or "",
+        "company_phone": company_settings.company_phone or "",
+        "company_email": company_settings.company_email or "",
+        "default_invoice_tax": company_settings.default_invoice_tax,
+        "default_invoice_tax_placement": company_settings.default_invoice_tax_placement,
+        "default_item_tax": company_settings.default_item_tax,
     }
     
     return templates.TemplateResponse("settings/company.html", {
         "request": request,
         "user": current_user,
         "settings": settings,
+        "tax_rates": tax_rates,
         "title": "Company Settings"
     })
 
@@ -102,75 +116,89 @@ async def company_settings_post(
 ):
     """Handle company settings form submission"""
     try:
-        # For now, we'll just log the settings and show success
-        # In a real implementation, you'd save these to a settings table
-        settings_data = {
-            "language": language,
-            "theme": theme,
-            "first_day_week": first_day_week,
-            "date_format": date_format,
-            "default_country": default_country,
-            "items_per_page": items_per_page,
-            "currency_symbol": currency_symbol,
-            "currency_placement": currency_placement,
-            "currency_code": currency_code,
-            "tax_decimal_places": tax_decimal_places,
-            "number_format": number_format,
-            "company_name": company_name,
-            "company_address": company_address,
-            "company_address_2": company_address_2,
-            "company_city": company_city,
-            "company_state": company_state,
-            "company_zip": company_zip,
-            "company_country": company_country,
-            "company_phone": company_phone,
-            "company_email": company_email,
-            "default_invoice_tax": default_invoice_tax,
-            "default_invoice_tax_placement": default_invoice_tax_placement,
-            "default_item_tax": default_item_tax,
-        }
+        # Load or create company settings
+        company_settings = db.query(CompanySettings).first()
+        if not company_settings:
+            company_settings = CompanySettings()
+            db.add(company_settings)
         
-        logger.info(f"Company settings updated by user {current_user.id}: {settings_data}")
+        # Update settings from form data
+        company_settings.language = language or "english"
+        company_settings.theme = theme or "invoiceplane-default"
+        company_settings.first_day_week = first_day_week or "monday"
+        company_settings.date_format = date_format or "m/d/Y"
+        company_settings.default_country = default_country or "US"
+        company_settings.items_per_page = int(items_per_page) if items_per_page else 25
+        company_settings.currency_symbol = currency_symbol or "$"
+        company_settings.currency_placement = currency_placement or "before"
+        company_settings.currency_code = currency_code or "USD"
+        company_settings.tax_decimal_places = int(tax_decimal_places) if tax_decimal_places else 2
+        company_settings.number_format = number_format or "comma_dot"
+        company_settings.company_name = company_name
+        company_settings.company_address = company_address
+        company_settings.company_address_2 = company_address_2
+        company_settings.company_city = company_city
+        company_settings.company_state = company_state
+        company_settings.company_zip = company_zip
+        company_settings.company_country = company_country
+        company_settings.company_phone = company_phone
+        company_settings.company_email = company_email
+        company_settings.default_invoice_tax = default_invoice_tax or "none"
+        company_settings.default_invoice_tax_placement = default_invoice_tax_placement or "after"
+        company_settings.default_item_tax = default_item_tax or "none"
         
-        # Create settings dict for template with the submitted values
+        db.commit()
+        db.refresh(company_settings)
+        
+        logger.info(f"Company settings updated by user {current_user.id}")
+        
+        # Load tax rates for the template
+        tax_rates = db.query(TaxRate).all()
+        
+        # Convert settings back to dict for template
         settings = {
-            "language": language or "english",
-            "theme": theme or "invoiceplane-default",
-            "first_day_week": first_day_week or "monday",
-            "date_format": date_format or "m/d/Y",
-            "default_country": default_country or "US",
-            "items_per_page": items_per_page or "25",
-            "currency_symbol": currency_symbol or "$",
-            "currency_placement": currency_placement or "before",
-            "currency_code": currency_code or "USD",
-            "tax_decimal_places": tax_decimal_places or "2",
-            "number_format": number_format or "comma_dot",
-            "company_name": company_name or "",
-            "company_address": company_address or "",
-            "company_address_2": company_address_2 or "",
-            "company_city": company_city or "",
-            "company_state": company_state or "",
-            "company_zip": company_zip or "",
-            "company_country": company_country or "",
-            "company_phone": company_phone or "",
-            "company_email": company_email or "",
-            "default_invoice_tax": default_invoice_tax or "none",
-            "default_invoice_tax_placement": default_invoice_tax_placement or "after",
-            "default_item_tax": default_item_tax or "none",
+            "language": company_settings.language,
+            "theme": company_settings.theme,
+            "first_day_week": company_settings.first_day_week,
+            "date_format": company_settings.date_format,
+            "default_country": company_settings.default_country,
+            "items_per_page": str(company_settings.items_per_page),
+            "currency_symbol": company_settings.currency_symbol,
+            "currency_placement": company_settings.currency_placement,
+            "currency_code": company_settings.currency_code,
+            "tax_decimal_places": str(company_settings.tax_decimal_places),
+            "number_format": company_settings.number_format,
+            "company_name": company_settings.company_name or "",
+            "company_address": company_settings.company_address or "",
+            "company_address_2": company_settings.company_address_2 or "",
+            "company_city": company_settings.company_city or "",
+            "company_state": company_settings.company_state or "",
+            "company_zip": company_settings.company_zip or "",
+            "company_country": company_settings.company_country or "",
+            "company_phone": company_settings.company_phone or "",
+            "company_email": company_settings.company_email or "",
+            "default_invoice_tax": company_settings.default_invoice_tax,
+            "default_invoice_tax_placement": company_settings.default_invoice_tax_placement,
+            "default_item_tax": company_settings.default_item_tax,
         }
         
         return templates.TemplateResponse("settings/company.html", {
             "request": request,
             "user": current_user,
             "settings": settings,
+            "tax_rates": tax_rates,
             "success_message": "Company settings saved successfully!",
             "title": "Company Settings"
         })
         
     except Exception as e:
         logger.error(f"Error saving company settings: {str(e)}")
+        db.rollback()
         
-        # Return with error
+        # Load tax rates for error template
+        tax_rates = db.query(TaxRate).all()
+        
+        # Return with error - use submitted values
         settings = {
             "language": language or "english",
             "theme": theme or "invoiceplane-default",
@@ -201,6 +229,7 @@ async def company_settings_post(
             "request": request,
             "user": current_user,
             "settings": settings,
+            "tax_rates": tax_rates,
             "error_message": f"Error saving settings: {str(e)}",
             "title": "Company Settings"
         })

@@ -199,10 +199,11 @@
                                 <label for="default-invoice-tax" class="form-label">Default Invoice Tax Rate</label>
                                 <select id="default-invoice-tax" name="default_invoice_tax" class="form-select">
                                     <option value="none" {% if settings.default_invoice_tax == 'none' %}selected{% endif %}>None</option>
-                                    <option value="gst-10" {% if settings.default_invoice_tax == 'gst-10' %}selected{% endif %}>GST (10%)</option>
-                                    <option value="vat-20" {% if settings.default_invoice_tax == 'vat-20' %}selected{% endif %}>VAT (20%)</option>
-                                    <option value="sales-tax-8" {% if settings.default_invoice_tax == 'sales-tax-8' %}selected{% endif %}>Sales Tax (8%)</option>
-                                    <option value="custom" {% if settings.default_invoice_tax == 'custom' %}selected{% endif %}>Custom Rate</option>
+                                    {% for tax_rate in tax_rates %}
+                                    <option value="{{ tax_rate.rate }}" {% if settings.default_invoice_tax|string == tax_rate.rate|string %}selected{% endif %}>
+                                        {{ tax_rate.name }} ({{ tax_rate.rate }}%)
+                                    </option>
+                                    {% endfor %}
                                 </select>
                             </div>
                         </div>
@@ -225,10 +226,11 @@
                                 <label for="default-item-tax" class="form-label">Default Item Tax Rate</label>
                                 <select id="default-item-tax" name="default_item_tax" class="form-select">
                                     <option value="none" {% if settings.default_item_tax == 'none' %}selected{% endif %}>None</option>
-                                    <option value="gst-10" {% if settings.default_item_tax == 'gst-10' %}selected{% endif %}>GST (10%)</option>
-                                    <option value="vat-20" {% if settings.default_item_tax == 'vat-20' %}selected{% endif %}>VAT (20%)</option>
-                                    <option value="sales-tax-8" {% if settings.default_item_tax == 'sales-tax-8' %}selected{% endif %}>Sales Tax (8%)</option>
-                                    <option value="custom" {% if settings.default_item_tax == 'custom' %}selected{% endif %}>Custom Rate</option>
+                                    {% for tax_rate in tax_rates %}
+                                    <option value="{{ tax_rate.rate }}" {% if settings.default_item_tax|string == tax_rate.rate|string %}selected{% endif %}>
+                                        {{ tax_rate.name }} ({{ tax_rate.rate }}%)
+                                    </option>
+                                    {% endfor %}
                                 </select>
                             </div>
                         </div>
