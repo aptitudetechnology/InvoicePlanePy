@@ -348,6 +348,13 @@ async def edit_quote_post(
         quote.total = sum(item.total for item in quote.items)
         quote.balance = quote.total
 
+        # Debug logging
+        print(f"DEBUG: Quote {quote_id} totals recalculated:")
+        print(f"  Items: {len(quote.items)}")
+        for item in quote.items:
+            print(f"    Item {item.id}: qty={item.quantity}, price={item.unit_price}, subtotal={item.subtotal}, total={item.total}")
+        print(f"  Quote totals: subtotal={quote.subtotal}, tax_total={quote.item_tax_total}, total={quote.total}")
+
         # Update timestamp
         quote.updated_at = datetime.utcnow()
 
