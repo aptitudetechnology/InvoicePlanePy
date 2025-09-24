@@ -7,6 +7,7 @@ from app.database import get_db
 from app.models.user import User
 from app.models.invoice import Invoice
 from app.models.client import Client
+from app.models.invoicesettings import InvoiceSettings
 from app.dependencies import get_current_user
 
 router = APIRouter()
@@ -85,6 +86,14 @@ async def edit_invoice(
         raise HTTPException(status_code=403, detail="Permission denied")
 
     clients = db.query(Client).all()
+    
+    # Load invoice settings
+    invoice_settings = db.query(InvoiceSettings).first()
+    if not invoice_settings:
+        invoice_settings = InvoiceSettings()
+        db.add(invoice_settings)
+        db.commit()
+        db.refresh(invoice_settings)
 
     return templates.TemplateResponse(
         "invoices/edit.html",
@@ -93,6 +102,7 @@ async def edit_invoice(
             "user": current_user,
             "invoice": invoice,
             "clients": clients,
+            "invoice_settings": invoice_settings,
             "title": f"Edit Invoice #{invoice.invoice_number}",
         },
     )
