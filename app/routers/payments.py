@@ -74,7 +74,7 @@ async def get_payments_api(
                 "amount": float(payment.amount) if payment.amount is not None else None,
                 "payer": payment.payer,
                 "reference": payment.reference if payment.reference else None,
-                "date": str(payment.payment_date) if payment.payment_date else None,
+                "date": str(payment.date) if payment.date else None,
                 "status": payment.status if hasattr(payment, 'status') else 'completed'
             })
         

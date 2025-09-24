@@ -17,8 +17,18 @@ class Payment(BaseModel):
     
     # Additional fields for API compatibility
     payer = Column(String(100))  # For API compatibility
-    date = Column(Date)  # Alias for payment_date
+    date_created = Column(Date)  # Alias for payment_date
     status = Column(String(20), default="completed")  # Payment status
     
     # Relationships
     invoice = relationship("Invoice", back_populates="payments")
+    
+    @property
+    def date(self):
+        """Alias for payment_date for API compatibility"""
+        return self.payment_date
+    
+    @date.setter
+    def date(self, value):
+        """Setter for date property"""
+        self.payment_date = value

@@ -243,7 +243,7 @@ CREATE TABLE IF NOT EXISTS payments (
     reference VARCHAR(100),
     notes TEXT,
     payer VARCHAR(100),
-    date DATE,
+    date_created DATE,
     status VARCHAR(20) DEFAULT 'completed',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
