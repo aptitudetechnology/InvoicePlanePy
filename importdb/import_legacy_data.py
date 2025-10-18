@@ -59,6 +59,10 @@ FIELD_MAP_PRODUCTS = {
     "product_price": "price",
     "product_sku": "sku",
     "product_tax_rate": "tax_rate",
+    "product_provider_name": "provider_name",
+    "product_purchase_price": "purchase_price",
+    "product_sumex": "sumex",
+    "product_tariff": "tariff",
     # Add more as needed
 }
 
@@ -268,6 +272,22 @@ def import_products(dry_run=False, sql_file=None):
                     mapped["tax_rate"] = float(row["product_tax_rate"])
                 except ValueError:
                     mapped["tax_rate"] = 0.00
+
+            # Type conversions for additional fields
+            if 'product_purchase_price' in row and row['product_purchase_price'] not in ['NULL', '']:
+                try:
+                    mapped["purchase_price"] = float(row["product_purchase_price"])
+                except ValueError:
+                    mapped["purchase_price"] = None
+
+            if 'product_sumex' in row and row['product_sumex'] not in ['NULL', '']:
+                mapped["sumex"] = bool(int(row["product_sumex"]) if row["product_sumex"].isdigit() else 0)
+
+            if 'product_tariff' in row and row['product_tariff'] not in ['NULL', '']:
+                try:
+                    mapped["tariff"] = float(row["product_tariff"])
+                except ValueError:
+                    mapped["tariff"] = None
 
             # Generate unique SKU if missing
             if not mapped.get("sku"):
