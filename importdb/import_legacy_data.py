@@ -380,8 +380,8 @@ def import_invoices(dry_run=False, sql_file=None):
                 mapped["due_date"] = parse_date(row["invoice_date_due"])
 
             # Skip invoices without required fields
-            if not mapped.get("user_id") or not mapped.get("client_id"):
-                logger.warning(f"Skipping invoice without required user_id or client_id: {row}")
+            if not mapped.get("user_id") or not mapped.get("client_id") or not mapped.get("invoice_number"):
+                logger.warning(f"Skipping invoice without required user_id, client_id, or invoice_number: {row}")
                 skipped += 1
                 continue
 
@@ -401,6 +401,15 @@ def import_invoices(dry_run=False, sql_file=None):
                 existing_user = session.query(User).filter_by(id=user_id).first()
                 if not existing_user:
                     logger.warning(f"Skipping invoice with non-existent user_id {user_id}: {row}")
+                    skipped += 1
+                    continue
+
+            # Check if invoice_number is unique
+            invoice_number = mapped.get("invoice_number")
+            if invoice_number:
+                existing_invoice = session.query(Invoice).filter_by(invoice_number=invoice_number).first()
+                if existing_invoice:
+                    logger.warning(f"Skipping invoice with duplicate invoice_number {invoice_number}: {row}")
                     skipped += 1
                     continue
 
