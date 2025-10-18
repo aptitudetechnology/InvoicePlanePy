@@ -205,7 +205,7 @@ class SetupManager:
     
     def create_admin_user(self, username: str = "admin", 
                          email: str = "admin@invoiceplane.com", 
-                         password: str = "admin123") -> SetupStep:
+                         password: str = "Admin123!") -> SetupStep:
         """Create admin user"""
         step = SetupStep("create_admin_user", "Creating admin user")
         
@@ -402,7 +402,7 @@ class SetupManager:
                 print("📱 Web interface: http://localhost:8080")
                 print("🔑 Admin credentials:")
                 print("   Username: admin")
-                print("   Password: admin123")
+                print("   Password: Admin123!")
                 print("")
                 return True
                 
