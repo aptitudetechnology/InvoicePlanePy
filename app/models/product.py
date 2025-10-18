@@ -41,6 +41,12 @@ class Product(BaseModel):
     price = Column(Numeric(10, 2), nullable=True)  # Changed to nullable=True
     sku = Column(String(100), unique=True, nullable=False)  # Updated length and made required
     tax_rate = Column(Numeric(5, 2), default=0.00)
+    
+    # Additional optional fields
+    provider_name = Column(String(255), nullable=True)
+    purchase_price = Column(Numeric(10, 2), nullable=True)
+    sumex = Column(Boolean, default=False)
+    tariff = Column(Numeric(10, 2), nullable=True)
 
     # Foreign keys
     user_id = Column(ForeignKey("users.id"), nullable=True)
