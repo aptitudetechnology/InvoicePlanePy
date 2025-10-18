@@ -269,6 +269,23 @@ def import_products(dry_run=False, sql_file=None):
                 except ValueError:
                     mapped["tax_rate"] = 0.00
 
+            # Generate unique SKU if missing
+            if not mapped.get("sku"):
+                import uuid
+                # Generate a unique SKU based on product name or use a UUID
+                base_name = mapped.get("name", "product").replace(" ", "_").lower()[:20]
+                mapped["sku"] = f"{base_name}_{uuid.uuid4().hex[:8]}"
+
+            # Ensure SKU uniqueness by checking existing records
+            original_sku = mapped["sku"]
+            counter = 1
+            while True:
+                existing = session.query(Product).filter_by(sku=mapped["sku"]).first()
+                if not existing:
+                    break
+                mapped["sku"] = f"{original_sku}_{counter}"
+                counter += 1
+
             # Create product object
             try:
                 product = Product(**mapped)
