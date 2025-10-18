@@ -286,6 +286,12 @@ def import_products(dry_run=False, sql_file=None):
                 mapped["sku"] = f"{original_sku}_{counter}"
                 counter += 1
 
+            # Skip products without names (required field)
+            if not mapped.get("name"):
+                logger.warning(f"Skipping product without name: {row}")
+                skipped += 1
+                continue
+
             # Create product object
             try:
                 product = Product(**mapped)
@@ -352,6 +358,12 @@ def import_invoices(dry_run=False, sql_file=None):
             if 'invoice_date_due' in row:
                 mapped["due_date"] = parse_date(row["invoice_date_due"])
 
+            # Skip invoices without required fields
+            if not mapped.get("user_id") or not mapped.get("client_id"):
+                logger.warning(f"Skipping invoice without required user_id or client_id: {row}")
+                skipped += 1
+                continue
+
             # Create invoice object
             try:
                 invoice = Invoice(**mapped)
@@ -388,6 +400,11 @@ def import_invoices(dry_run=False, sql_file=None):
                                         item_mapped["price"] = float(item_row["item_price"])
                                     except ValueError:
                                         item_mapped["price"] = 0.00
+
+                                # Skip invoice items without required fields
+                                if not item_mapped.get("name") or item_mapped.get("quantity") is None or item_mapped.get("price") is None:
+                                    logger.warning(f"Skipping invoice item without required name, quantity, or price: {item_row}")
+                                    continue
 
                                 try:
                                     invoice_item = InvoiceItem(**item_mapped)
