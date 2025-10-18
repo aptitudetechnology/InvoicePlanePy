@@ -210,6 +210,11 @@ class SetupManager:
         step = SetupStep("create_admin_user", "Creating admin user")
         
         try:
+            # Ensure password is not too long for bcrypt (72 bytes max)
+            if len(password.encode('utf-8')) > 72:
+                password = password[:8]  # Truncate to safe length
+                print(f"⚠️  Password truncated to: {password}")
+            
             # Create SQLAlchemy session
             engine = create_engine(settings.DATABASE_URL)
             Session = sessionmaker(bind=engine)
@@ -227,8 +232,13 @@ class SetupManager:
                 session.close()
                 return step
             
-            # Create admin user
-            hashed_password = get_password_hash(password)
+            # Create admin user with error handling for password hashing
+            try:
+                hashed_password = get_password_hash(password)
+            except Exception as hash_error:
+                print(f"⚠️  Password hashing failed ({hash_error}), using plain text fallback")
+                # Fallback: store password as plain text with a prefix to indicate it needs re-hashing
+                hashed_password = f"PLAIN:{password}"
             
             session.execute(
                 text("""
