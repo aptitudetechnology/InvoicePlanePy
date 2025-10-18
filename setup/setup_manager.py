@@ -412,7 +412,7 @@ class SetupManager:
                 print("📱 Web interface: http://localhost:8080")
                 print("🔑 Admin credentials:")
                 print("   Username: admin")
-                print("   Password: Admin123!")
+                print("   Password: admin123")
                 print("")
                 return True
                 

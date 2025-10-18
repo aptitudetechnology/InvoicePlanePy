@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Depends, HTTPException, Form
+from fastapi import APIRouter, Request, Depends, HTTPException, Form, File, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -714,6 +714,125 @@ async def import_data(
         "user": current_user,
         "title": "Import Data"
     })
+
+# Experimental SQL Import routes
+@router.post("/import/clients-sql")
+async def import_clients_sql(
+    request: Request,
+    sql_file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Import clients from SQL file"""
+    try:
+        # Save uploaded file temporarily
+        import tempfile
+        import os
+        from pathlib import Path
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.sql') as temp_file:
+            content = await sql_file.read()
+            temp_file.write(content)
+            temp_file_path = temp_file.name
+
+        # Import clients using the legacy importer
+        from importdb.import_legacy_data import import_clients
+
+        # Run import (not dry run)
+        import_clients(dry_run=False, sql_file=temp_file_path)
+
+        # Clean up temp file
+        os.unlink(temp_file_path)
+
+        return JSONResponse({
+            "success": True,
+            "message": "Clients imported successfully from SQL file"
+        })
+
+    except Exception as e:
+        logger.error(f"Error importing clients from SQL: {e}")
+        return JSONResponse({
+            "success": False,
+            "message": f"Import failed: {str(e)}"
+        }, status_code=500)
+
+@router.post("/import/products-sql")
+async def import_products_sql(
+    request: Request,
+    sql_file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Import products from SQL file"""
+    try:
+        # Save uploaded file temporarily
+        import tempfile
+        import os
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.sql') as temp_file:
+            content = await sql_file.read()
+            temp_file.write(content)
+            temp_file_path = temp_file.name
+
+        # Import products using the legacy importer
+        from importdb.import_legacy_data import import_products
+
+        # Run import (not dry run)
+        import_products(dry_run=False, sql_file=temp_file_path)
+
+        # Clean up temp file
+        os.unlink(temp_file_path)
+
+        return JSONResponse({
+            "success": True,
+            "message": "Products imported successfully from SQL file"
+        })
+
+    except Exception as e:
+        logger.error(f"Error importing products from SQL: {e}")
+        return JSONResponse({
+            "success": False,
+            "message": f"Import failed: {str(e)}"
+        }, status_code=500)
+
+@router.post("/import/invoices-sql")
+async def import_invoices_sql(
+    request: Request,
+    sql_file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Import invoices from SQL file"""
+    try:
+        # Save uploaded file temporarily
+        import tempfile
+        import os
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.sql') as temp_file:
+            content = await sql_file.read()
+            temp_file.write(content)
+            temp_file_path = temp_file.name
+
+        # Import invoices using the legacy importer
+        from importdb.import_legacy_data import import_invoices
+
+        # Run import (not dry run)
+        import_invoices(dry_run=False, sql_file=temp_file_path)
+
+        # Clean up temp file
+        os.unlink(temp_file_path)
+
+        return JSONResponse({
+            "success": True,
+            "message": "Invoices imported successfully from SQL file"
+        })
+
+    except Exception as e:
+        logger.error(f"Error importing invoices from SQL: {e}")
+        return JSONResponse({
+            "success": False,
+            "message": f"Import failed: {str(e)}"
+        }, status_code=500)
 
 # API Key management endpoints
 @router.post("/api/generate-key")

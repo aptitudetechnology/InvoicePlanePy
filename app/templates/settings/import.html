@@ -105,8 +105,123 @@
                 </div>
             </div>
         </div>
+
+        <!-- Experimental SQL Import Section -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            Experimental SQL Import
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-warning">
+                            <strong>⚠️ Experimental Feature:</strong> These imports work with raw SQL dump files from legacy InvoicePlane installations.
+                            Please backup your database before proceeding. This feature is in beta and may have compatibility issues.
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100 border-warning">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-people fs-1 text-warning mb-3"></i>
+                                        <h5>Import Clients (SQL)</h5>
+                                        <p class="text-muted">Import client data from legacy SQL dumps</p>
+                                        <form action="/settings/import/clients-sql" method="post" enctype="multipart/form-data">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <div class="mb-2">
+                                                <input type="file" name="sql_file" accept=".sql" class="form-control" required>
+                                            </div>
+                                            <button type="submit" class="btn btn-warning">
+                                                <i class="bi bi-upload"></i> Import SQL
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100 border-warning">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-box-seam fs-1 text-warning mb-3"></i>
+                                        <h5>Import Products (SQL)</h5>
+                                        <p class="text-muted">Import product data from legacy SQL dumps</p>
+                                        <form action="/settings/import/products-sql" method="post" enctype="multipart/form-data">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <div class="mb-2">
+                                                <input type="file" name="sql_file" accept=".sql" class="form-control" required>
+                                            </div>
+                                            <button type="submit" class="btn btn-warning">
+                                                <i class="bi bi-upload"></i> Import SQL
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100 border-warning">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-receipt fs-1 text-warning mb-3"></i>
+                                        <h5>Import Invoices (SQL)</h5>
+                                        <p class="text-muted">Import invoice data from legacy SQL dumps</p>
+                                        <form action="/settings/import/invoices-sql" method="post" enctype="multipart/form-data">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <div class="mb-2">
+                                                <input type="file" name="sql_file" accept=".sql" class="form-control" required>
+                                            </div>
+                                            <button type="submit" class="btn btn-warning">
+                                                <i class="bi bi-upload"></i> Import SQL
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <h6>SQL Import Requirements</h6>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="bg-light p-3 rounded">
+                                        <strong>Expected SQL Format:</strong><br>
+                                        <small>
+                                        Raw SQL dump files containing INSERT statements for legacy InvoicePlane tables (ip_clients, ip_products, ip_invoices, etc.).
+                                        The importer will automatically parse and map legacy field names to the new schema.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <h6>Supported Tables</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="bg-light p-2 rounded text-center">
+                                        <strong>ip_clients</strong><br>
+                                        <small>Client information and contact details</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="bg-light p-2 rounded text-center">
+                                        <strong>ip_products</strong><br>
+                                        <small>Product catalog and pricing</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="bg-light p-2 rounded text-center">
+                                        <strong>ip_invoices</strong><br>
+                                        <small>Invoice headers and line items</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-
-<!-- Import Modals would be added here -->
-{% endblock %}

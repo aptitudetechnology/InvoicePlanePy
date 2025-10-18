@@ -15,6 +15,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from app.config import settings
 from app.models.client import Client
+from app.models.product import Product
+from app.models.invoice import Invoice, InvoiceItem
 # TODO: Import other models as needed
 
 # Configure logging
@@ -47,6 +49,38 @@ FIELD_MAP_CLIENTS = {
     "client_birthdate": "birthdate",
     "client_company": "company",
     "client_active": "is_active",
+    # Add more as needed
+}
+
+FIELD_MAP_PRODUCTS = {
+    # Legacy field : New model field
+    "product_name": "name",
+    "product_description": "description",
+    "product_price": "price",
+    "product_sku": "sku",
+    "product_tax_rate": "tax_rate",
+    # Add more as needed
+}
+
+FIELD_MAP_INVOICES = {
+    # Legacy field : New model field
+    "invoice_number": "invoice_number",
+    "invoice_date_created": "issue_date",
+    "invoice_date_due": "due_date",
+    "invoice_terms": "terms",
+    "invoice_status_id": "status",
+    "user_id": "user_id",
+    "client_id": "client_id",
+    # Add more as needed
+}
+
+FIELD_MAP_INVOICE_ITEMS = {
+    # Legacy field : New model field
+    "item_name": "name",
+    "item_description": "description",
+    "item_quantity": "quantity",
+    "item_price": "price",
+    "item_order": "order",
     # Add more as needed
 }
 
@@ -125,15 +159,17 @@ def parse_inserts(sql_file, table):
             vals = [v.strip("'") for v in vals]
             yield dict(zip(fields, vals))
 
-def import_clients(dry_run=False):
+def import_clients(dry_run=False, sql_file=None):
     """Import clients from legacy ip_clients table."""
+    if sql_file is None:
+        sql_file = SQL_FILE
     session = get_session()
     imported = 0
     skipped = 0
 
     try:
         logger.info("Starting client import...")
-        rows = list(parse_inserts(SQL_FILE, "ip_clients"))
+        rows = list(parse_inserts(sql_file, "ip_clients"))
         total = len(rows)
         logger.info(f"Found {total} client records to import")
 
@@ -192,6 +228,183 @@ def import_clients(dry_run=False):
     finally:
         session.close()
 
+def import_products(dry_run=False, sql_file=None):
+    """Import products from legacy ip_products table."""
+    if sql_file is None:
+        sql_file = SQL_FILE
+    session = get_session()
+    imported = 0
+    skipped = 0
+
+    try:
+        logger.info("Starting product import...")
+        rows = list(parse_inserts(sql_file, "ip_products"))
+        total = len(rows)
+        logger.info(f"Found {total} product records to import")
+
+        for i, row in enumerate(rows):
+            if (i + 1) % 10 == 0:
+                logger.info(f"Processing record {i+1}/{total}")
+
+            # Map fields
+            mapped = {}
+            for legacy_field, new_field in FIELD_MAP_PRODUCTS.items():
+                if legacy_field in row:
+                    value = row[legacy_field]
+                    if value == 'NULL' or value == '':
+                        mapped[new_field] = None
+                    else:
+                        mapped[new_field] = value
+
+            # Type conversions
+            if 'product_price' in row and row['product_price'] not in ['NULL', '']:
+                try:
+                    mapped["price"] = float(row["product_price"])
+                except ValueError:
+                    mapped["price"] = 0.00
+
+            if 'product_tax_rate' in row and row['product_tax_rate'] not in ['NULL', '']:
+                try:
+                    mapped["tax_rate"] = float(row["product_tax_rate"])
+                except ValueError:
+                    mapped["tax_rate"] = 0.00
+
+            # Create product object
+            try:
+                product = Product(**mapped)
+                if not dry_run:
+                    session.add(product)
+                imported += 1
+            except Exception as e:
+                logger.error(f"Error creating product from row {row}: {e}")
+                skipped += 1
+                continue
+
+        if not dry_run:
+            session.commit()
+            logger.info(f"Successfully imported {imported} products")
+        else:
+            logger.info(f"Dry run: Would import {imported} products")
+
+        if skipped > 0:
+            logger.warning(f"Skipped {skipped} records due to errors")
+
+    except SQLAlchemyError as e:
+        logger.error(f"Database error during import: {e}")
+        session.rollback()
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error during import: {e}")
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+def import_invoices(dry_run=False, sql_file=None):
+    """Import invoices from legacy ip_invoices and ip_invoice_items tables."""
+    if sql_file is None:
+        sql_file = SQL_FILE
+    session = get_session()
+    imported = 0
+    skipped = 0
+
+    try:
+        logger.info("Starting invoice import...")
+        rows = list(parse_inserts(sql_file, "ip_invoices"))
+        total = len(rows)
+        logger.info(f"Found {total} invoice records to import")
+
+        for i, row in enumerate(rows):
+            if (i + 1) % 10 == 0:
+                logger.info(f"Processing record {i+1}/{total}")
+
+            # Map fields
+            mapped = {}
+            for legacy_field, new_field in FIELD_MAP_INVOICES.items():
+                if legacy_field in row:
+                    value = row[legacy_field]
+                    if value == 'NULL' or value == '':
+                        mapped[new_field] = None
+                    else:
+                        mapped[new_field] = value
+
+            # Type conversions
+            if 'invoice_date_created' in row:
+                mapped["issue_date"] = parse_date(row["invoice_date_created"])
+
+            if 'invoice_date_due' in row:
+                mapped["due_date"] = parse_date(row["invoice_date_due"])
+
+            # Create invoice object
+            try:
+                invoice = Invoice(**mapped)
+                if not dry_run:
+                    session.add(invoice)
+                    session.flush()  # Get invoice ID for items
+
+                    # Import invoice items
+                    invoice_id = row.get("invoice_id")
+                    if invoice_id:
+                        item_rows = list(parse_inserts(sql_file, "ip_invoice_items"))
+                        for item_row in item_rows:
+                            if item_row.get("invoice_id") == invoice_id:
+                                item_mapped = {}
+                                for legacy_field, new_field in FIELD_MAP_INVOICE_ITEMS.items():
+                                    if legacy_field in item_row:
+                                        value = item_row[legacy_field]
+                                        if value == 'NULL' or value == '':
+                                            item_mapped[new_field] = None
+                                        else:
+                                            item_mapped[new_field] = value
+
+                                item_mapped["invoice_id"] = invoice.id
+
+                                # Type conversions for items
+                                if 'item_quantity' in item_row and item_row['item_quantity'] not in ['NULL', '']:
+                                    try:
+                                        item_mapped["quantity"] = float(item_row["item_quantity"])
+                                    except ValueError:
+                                        item_mapped["quantity"] = 1.0
+
+                                if 'item_price' in item_row and item_row['item_price'] not in ['NULL', '']:
+                                    try:
+                                        item_mapped["price"] = float(item_row["item_price"])
+                                    except ValueError:
+                                        item_mapped["price"] = 0.00
+
+                                try:
+                                    invoice_item = InvoiceItem(**item_mapped)
+                                    session.add(invoice_item)
+                                except Exception as e:
+                                    logger.error(f"Error creating invoice item: {e}")
+                                    continue
+
+                imported += 1
+            except Exception as e:
+                logger.error(f"Error creating invoice from row {row}: {e}")
+                skipped += 1
+                continue
+
+        if not dry_run:
+            session.commit()
+            logger.info(f"Successfully imported {imported} invoices")
+        else:
+            logger.info(f"Dry run: Would import {imported} invoices")
+
+        if skipped > 0:
+            logger.warning(f"Skipped {skipped} records due to errors")
+
+    except SQLAlchemyError as e:
+        logger.error(f"Database error during import: {e}")
+        session.rollback()
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error during import: {e}")
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == "--dry-run":
         dry_run = True
@@ -223,6 +436,20 @@ def main():
         if table == "ip_clients":
             try:
                 import_clients(dry_run=dry_run)
+                print("Import completed successfully!")
+            except Exception as e:
+                logger.error(f"Import failed: {e}")
+                print("Import failed. Check logs for details.")
+        elif table == "ip_products":
+            try:
+                import_products(dry_run=dry_run)
+                print("Import completed successfully!")
+            except Exception as e:
+                logger.error(f"Import failed: {e}")
+                print("Import failed. Check logs for details.")
+        elif table == "ip_invoices":
+            try:
+                import_invoices(dry_run=dry_run)
                 print("Import completed successfully!")
             except Exception as e:
                 logger.error(f"Import failed: {e}")
