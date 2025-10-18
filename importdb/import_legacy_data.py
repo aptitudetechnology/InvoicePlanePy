@@ -17,6 +17,7 @@ from app.config import settings
 from app.models.client import Client
 from app.models.product import Product
 from app.models.invoice import Invoice, InvoiceItem
+from app.models.user import User
 # TODO: Import other models as needed
 
 # Configure logging
@@ -384,6 +385,25 @@ def import_invoices(dry_run=False, sql_file=None):
                 skipped += 1
                 continue
 
+            # Check if referenced client exists
+            client_id = mapped.get("client_id")
+            if client_id:
+                existing_client = session.query(Client).filter_by(id=client_id).first()
+                if not existing_client:
+                    logger.warning(f"Skipping invoice with non-existent client_id {client_id}: {row}")
+                    skipped += 1
+                    continue
+
+            # Check if referenced user exists
+            user_id = mapped.get("user_id")
+            if user_id:
+                from app.models.user import User
+                existing_user = session.query(User).filter_by(id=user_id).first()
+                if not existing_user:
+                    logger.warning(f"Skipping invoice with non-existent user_id {user_id}: {row}")
+                    skipped += 1
+                    continue
+
             # Create invoice object
             try:
                 invoice = Invoice(**mapped)
@@ -425,6 +445,14 @@ def import_invoices(dry_run=False, sql_file=None):
                                 if not item_mapped.get("name") or item_mapped.get("quantity") is None or item_mapped.get("price") is None:
                                     logger.warning(f"Skipping invoice item without required name, quantity, or price: {item_row}")
                                     continue
+
+                                # Check if referenced product exists (if product_id is provided)
+                                product_id = item_mapped.get("product_id")
+                                if product_id:
+                                    existing_product = session.query(Product).filter_by(id=product_id).first()
+                                    if not existing_product:
+                                        logger.warning(f"Skipping invoice item with non-existent product_id {product_id}: {item_row}")
+                                        continue
 
                                 try:
                                     invoice_item = InvoiceItem(**item_mapped)
