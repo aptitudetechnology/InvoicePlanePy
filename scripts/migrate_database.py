@@ -125,6 +125,31 @@ def migrate_create_api_keys_table():
         logger.error(f"❌ Error creating api_keys table: {e}")
         raise
 
+def migrate_add_api_key_prefix_column():
+    """Add missing key_prefix column to api_keys table"""
+    try:
+        with engine.begin() as conn:
+            # Check if key_prefix column exists
+            result = conn.execute(text("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = 'api_keys' AND column_name = 'key_prefix'
+            """))
+
+            if result.fetchone() is None:
+                logger.info("Adding missing 'key_prefix' column to api_keys table...")
+
+                # Add the key_prefix column
+                conn.execute(text("ALTER TABLE api_keys ADD COLUMN key_prefix VARCHAR(10) NOT NULL DEFAULT 'sk-'"))
+
+                logger.info("✅ Successfully added 'key_prefix' column to api_keys table")
+            else:
+                logger.info("✅ 'key_prefix' column already exists in api_keys table")
+
+    except Exception as e:
+        logger.error(f"❌ Error adding 'key_prefix' column: {e}")
+        raise
+
 def migrate_update_clients_table():
     """Add missing columns to clients table"""
     try:
@@ -286,8 +311,12 @@ def run_migrations():
         migrate_add_role_column()
         migrate_add_profile_columns()
         migrate_create_api_keys_table()
+        migrate_add_api_key_prefix_column()
         migrate_update_clients_table()
         migrate_create_product_tables()
+        migrate_add_quote_invoice_id()
+        migrate_seed_quote_statuses()
+        migrate_seed_quote_statuses()
         logger.info("✅ All database migrations completed successfully")
     except Exception as e:
         logger.error(f"❌ Database migration failed: {e}")
@@ -336,6 +365,7 @@ def run_migrations():
         migrate_add_role_column()
         migrate_add_profile_columns()
         migrate_create_api_keys_table()
+        migrate_add_api_key_prefix_column()
         migrate_update_clients_table()
         migrate_create_product_tables()
         migrate_add_quote_invoice_id()
