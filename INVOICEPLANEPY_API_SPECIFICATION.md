@@ -11,19 +11,20 @@ http://your-invoiceplane-instance:8000
 
 ## Authentication
 
-The API supports two authentication methods:
+The API supports three authentication methods:
 
-### 1. JWT Token Authentication (Recommended for API integration)
+### 1. API Key Authentication (Recommended for API integration)
+- **Header**: `Authorization: Bearer sk_abc123def456...`
+- **API Key Generation**: Via web interface at `/settings/api-keys`
+- **Format**: API keys start with `sk_` prefix
+
+### 2. JWT Token Authentication
 - **Header**: `Authorization: Bearer {jwt_token}`
-- **Token Generation**: Login via `/auth/login` endpoint or use API keys
+- **Token Generation**: Login via `/auth/login` endpoint
 
-### 2. Session Cookie Authentication
+### 3. Session Cookie Authentication
 - **Cookie**: `session_token={session_token}`
 - **Login**: POST to `/auth/login` with form data
-
-### API Key Authentication (For future implementation)
-- API keys can be generated via the web interface at `/settings/api-keys`
-- Use API key as JWT token in Authorization header
 
 ## Common Response Format
 
@@ -283,37 +284,33 @@ Retrieve tax rates configuration.
 
 ---
 
-## 🔑 API Keys Management
+## 🔑 API Key Management
 
-### GET /api/keys
+### Generating API Keys
 
-List API keys for authenticated user.
+1. **Log in** to InvoicePlanePy web interface as an admin user
+2. **Navigate** to **Settings** in the top navigation
+3. **Click** on **API Keys** in the settings menu (`/settings/api-keys`)
+4. **Click** the **"Generate New API Key"** button
+5. **Enter** a descriptive name (e.g., "Business Plugin Middleware")
+6. **Click** **"Generate Key"**
+7. **Important**: Copy the full API key immediately - it will only be shown once!
+8. **Store securely** - API keys have the same access as your user account
 
-### POST /api/keys/generate
+### API Key Format
+- **Prefix**: `sk_` (for "secret key")
+- **Length**: 43 characters total
+- **Example**: `sk_abc123def456ghi789jkl012mno345pqr678stu`
 
-Generate a new API key.
+### API Key Permissions
+- API keys inherit the permissions of the user who created them
+- **Admin users**: Access to all data
+- **Regular users**: Access only to their own records
 
-#### Request Body
-```json
-{
-  "name": "Business Plugin Middleware"
-}
-```
-
-#### Response
-```json
-{
-  "key": "sk_abc123def456...",
-  "key_info": {
-    "id": 1,
-    "name": "Business Plugin Middleware",
-    "key_prefix": "sk_abc123",
-    "is_active": true,
-    "created_at": "2024-01-01T00:00:00Z",
-    "last_used_at": null
-  }
-}
-```
+### Managing API Keys
+- **List keys**: View all your API keys at `/settings/api-keys`
+- **Delete keys**: Remove compromised or unused keys
+- **Monitor usage**: Check `last_used_at` timestamp for activity
 
 ---
 
@@ -382,24 +379,40 @@ password: yourpassword
 
 ## 🧪 Testing the API
 
-### 1. Get Authentication Token
+### Method 1: Using API Keys (Recommended)
+
+1. **Generate API Key**:
+   - Log in to web interface
+   - Go to Settings → API Keys
+   - Generate a new key named "Test Key"
+   - Copy the key immediately
+
+2. **Test API Access**:
+```bash
+# Replace sk_your_key_here with your actual API key
+curl -X GET "http://localhost:8000/invoices/api?page=1&limit=5" \
+  -H "Authorization: Bearer sk_your_key_here"
+```
+
+### Method 2: Using JWT Tokens
+
+1. **Get JWT Token**:
 ```bash
 curl -X POST "http://localhost:8000/auth/login" \
   -d "username=admin&password=admin123" \
   -H "Content-Type: application/x-www-form-urlencoded"
 ```
 
-### 2. Use Token to Access API
+2. **Extract Token** from response and use it:
 ```bash
-curl -X GET "http://localhost:8000/invoices/api?page=1&limit=10" \
+curl -X GET "http://localhost:8000/invoices/api?page=1&limit=5" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
-### 3. Test with API Key (Future)
-```bash
-curl -X GET "http://localhost:8000/invoices/api" \
-  -H "Authorization: Bearer YOUR_API_KEY"
-```
+### Method 4: Using Test Script
+- Run the included test script: `python scripts/test_api_keys.py`
+- Edit the `API_KEY` variable with your generated key
+- The script will test authentication and multiple endpoints
 
 ---
 
@@ -423,13 +436,13 @@ curl -X GET "http://localhost:8000/invoices/api" \
 ### Sample Integration Code (JavaScript/Node.js)
 
 ```javascript
-const INVOICEPLANE_BASE_URL = 'http://your-instance:8000';
-const JWT_TOKEN = 'your-jwt-token';
+const INVOICEPLANE_BASE_URL = 'http://your-invoiceplane-instance:8000';
+const API_KEY = 'sk_your_api_key_here'; // Generated from /settings/api-keys
 
 async function fetchInvoices(page = 1, limit = 100) {
   const response = await fetch(`${INVOICEPLANE_BASE_URL}/invoices/api?page=${page}&limit=${limit}`, {
     headers: {
-      'Authorization': `Bearer ${JWT_TOKEN}`,
+      'Authorization': `Bearer ${API_KEY}`,
       'Content-Type': 'application/json'
     }
   });
@@ -440,26 +453,6 @@ async function fetchInvoices(page = 1, limit = 100) {
 
   const data = await response.json();
   return data;
-}
-
-// Fetch all invoices
-async function syncAllInvoices() {
-  let allInvoices = [];
-  let page = 1;
-  let hasMore = true;
-
-  while (hasMore) {
-    const data = await fetchInvoices(page, 100);
-    allInvoices = allInvoices.concat(data.invoices);
-
-    if (page >= data.pagination.total_pages) {
-      hasMore = false;
-    } else {
-      page++;
-    }
-  }
-
-  return allInvoices;
 }
 ```
 

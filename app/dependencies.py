@@ -2,9 +2,12 @@ from fastapi import Depends, HTTPException, status, Cookie
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import Optional
+from datetime import datetime
 from app.database import get_db
 from app.models.user import User
+from app.models.api_key import ApiKey
 from app.core.security import verify_token
+import hashlib
 
 security = HTTPBearer(auto_error=False)
 
@@ -15,27 +18,63 @@ def get_current_user_optional(
 ) -> Optional[User]:
     """Get current user if authenticated (optional)"""
     token = None
-    
+
     # Try to get token from Authorization header first
     if credentials:
         token = credentials.credentials
+
+        # Check if it's an API key (starts with 'sk_')
+        if token.startswith('sk_'):
+            return _authenticate_api_key(token, db)
+
     # Fall back to session cookie
     elif session_token:
         token = session_token
-    
+
     if not token:
         return None
-    
+
     payload = verify_token(token)
     if not payload:
         return None
-    
+
     user_id = payload.get("sub")
     if user_id is None:
         return None
-    
+
     user = db.query(User).filter(User.id == user_id).first()
     return user
+
+def _authenticate_api_key(api_key: str, db: Session) -> Optional[User]:
+    """Authenticate using API key"""
+    try:
+        # Hash the provided key
+        key_hash = hashlib.sha256(api_key.encode()).hexdigest()
+
+        # Find the API key in database
+        api_key_record = db.query(ApiKey).filter(
+            ApiKey.key_hash == key_hash,
+            ApiKey.is_active == True
+        ).first()
+
+        if not api_key_record:
+            return None
+
+        # Check if key has expired
+        if api_key_record.expires_at:
+            from datetime import datetime
+            if datetime.utcnow() > api_key_record.expires_at:
+                return None
+
+        # Update last used timestamp
+        api_key_record.last_used_at = datetime.utcnow()
+        db.commit()
+
+        # Return the associated user
+        return api_key_record.user
+
+    except Exception:
+        return None
 
 def get_current_user(current_user: Optional[User] = Depends(get_current_user_optional)) -> User:
     """Get current authenticated user (required)"""
