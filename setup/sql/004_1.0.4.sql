@@ -5,3 +5,9 @@
 
 -- Add key_prefix column to api_keys table if it doesn't exist
 ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS key_prefix VARCHAR(10) NOT NULL DEFAULT 'sk-';
+
+-- Add last_used_at column to api_keys table if it doesn't exist
+ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS last_used_at TIMESTAMP;
+
+-- Add expires_at column to api_keys table if it doesn't exist
+ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP;

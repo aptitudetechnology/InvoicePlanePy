@@ -146,8 +146,42 @@ def migrate_add_api_key_prefix_column():
             else:
                 logger.info("✅ 'key_prefix' column already exists in api_keys table")
 
+            # Check if last_used_at column exists
+            result = conn.execute(text("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = 'api_keys' AND column_name = 'last_used_at'
+            """))
+
+            if result.fetchone() is None:
+                logger.info("Adding missing 'last_used_at' column to api_keys table...")
+
+                # Add the last_used_at column
+                conn.execute(text("ALTER TABLE api_keys ADD COLUMN last_used_at TIMESTAMP WITH TIME ZONE"))
+
+                logger.info("✅ Successfully added 'last_used_at' column to api_keys table")
+            else:
+                logger.info("✅ 'last_used_at' column already exists in api_keys table")
+
+            # Check if expires_at column exists
+            result = conn.execute(text("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = 'api_keys' AND column_name = 'expires_at'
+            """))
+
+            if result.fetchone() is None:
+                logger.info("Adding missing 'expires_at' column to api_keys table...")
+
+                # Add the expires_at column
+                conn.execute(text("ALTER TABLE api_keys ADD COLUMN expires_at TIMESTAMP WITH TIME ZONE"))
+
+                logger.info("✅ Successfully added 'expires_at' column to api_keys table")
+            else:
+                logger.info("✅ 'expires_at' column already exists in api_keys table")
+
     except Exception as e:
-        logger.error(f"❌ Error adding 'key_prefix' column: {e}")
+        logger.error(f"❌ Error adding columns to api_keys table: {e}")
         raise
 
 def migrate_update_clients_table():

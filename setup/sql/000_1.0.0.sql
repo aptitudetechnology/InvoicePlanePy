@@ -268,6 +268,8 @@ CREATE TABLE IF NOT EXISTS api_keys (
     key_prefix VARCHAR(10) NOT NULL DEFAULT 'sk-',
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_used_at TIMESTAMP,
+    expires_at TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
