@@ -1,6 +1,6 @@
 from fastapi import Depends, HTTPException, status, Cookie
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import Optional
 from datetime import datetime
 from app.database import get_db
@@ -51,8 +51,10 @@ def _authenticate_api_key(api_key: str, db: Session) -> Optional[User]:
         # Hash the provided key
         key_hash = hashlib.sha256(api_key.encode()).hexdigest()
 
-        # Find the API key in database
-        api_key_record = db.query(ApiKey).filter(
+        # Find the API key in database with user relationship loaded
+        api_key_record = db.query(ApiKey).options(
+            joinedload(ApiKey.user)
+        ).filter(
             ApiKey.key_hash == key_hash,
             ApiKey.is_active == True
         ).first()
@@ -70,10 +72,15 @@ def _authenticate_api_key(api_key: str, db: Session) -> Optional[User]:
         api_key_record.last_used_at = datetime.utcnow()
         db.commit()
 
-        # Return the associated user
-        return api_key_record.user
+        # Return the associated user (should be loaded due to joinedload)
+        user = api_key_record.user
+        if not user or not user.is_active:
+            return None
+            
+        return user
 
-    except Exception:
+    except Exception as e:
+        print(f"API key authentication error: {e}")
         return None
 
 def get_current_user(current_user: Optional[User] = Depends(get_current_user_optional)) -> User:
