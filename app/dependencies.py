@@ -48,8 +48,11 @@ def get_current_user_optional(
 def _authenticate_api_key(api_key: str, db: Session) -> Optional[User]:
     """Authenticate using API key"""
     try:
+        print(f"DEBUG: Authenticating API key: {api_key[:10]}...")
+        
         # Hash the provided key
         key_hash = hashlib.sha256(api_key.encode()).hexdigest()
+        print(f"DEBUG: Generated hash: {key_hash}")
 
         # Find the API key in database with user relationship loaded
         api_key_record = db.query(ApiKey).options(
@@ -60,27 +63,38 @@ def _authenticate_api_key(api_key: str, db: Session) -> Optional[User]:
         ).first()
 
         if not api_key_record:
+            print(f"DEBUG: No API key record found for hash")
             return None
 
+        print(f"DEBUG: Found API key record: ID={api_key_record.id}, UserID={api_key_record.user_id}")
+
         # Check if key has expired
-        if api_key_record.expires_at:
-            from datetime import datetime
-            if datetime.utcnow() > api_key_record.expires_at:
-                return None
+        if api_key_record.expires_at and datetime.utcnow() > api_key_record.expires_at:
+            print(f"DEBUG: API key has expired")
+            return None
 
         # Update last used timestamp
         api_key_record.last_used_at = datetime.utcnow()
         db.commit()
+        print(f"DEBUG: Updated last_used_at timestamp")
 
         # Return the associated user (should be loaded due to joinedload)
         user = api_key_record.user
-        if not user or not user.is_active:
+        if not user:
+            print(f"DEBUG: No user associated with API key")
             return None
             
+        if not user.is_active:
+            print(f"DEBUG: User is not active")
+            return None
+            
+        print(f"DEBUG: Authentication successful for user: {user.username}")
         return user
 
     except Exception as e:
-        print(f"API key authentication error: {e}")
+        print(f"DEBUG: API key authentication error: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 def get_current_user(current_user: Optional[User] = Depends(get_current_user_optional)) -> User:
