@@ -160,11 +160,19 @@
                                                 Created: {{ key.created_at.strftime('%Y-%m-%d') if key.created_at else 'Unknown' }}
                                                 {% if key.last_used_at %} | Last used: {{ key.last_used_at.strftime('%Y-%m-%d %H:%M') }}{% endif %}
                                             </small>
+                                            <br>
+                                            <small class="text-warning">
+                                                <i class="bi bi-exclamation-triangle"></i>
+                                                Full key shown only once at creation. Generate new key if lost.
+                                            </small>
                                         </div>
                                         <div>
                                             <span class="badge bg-{{ 'success' if key.is_active else 'secondary' }}">
                                                 {{ 'Active' if key.is_active else 'Inactive' }}
                                             </span>
+                                            <button class="btn btn-sm btn-outline-warning ms-2" onclick="regenerateApiKey({{ key.id }})" title="Regenerate Key">
+                                                <i class="bi bi-arrow-repeat"></i>
+                                            </button>
                                             <button class="btn btn-sm btn-outline-danger ms-2" onclick="deleteApiKey({{ key.id }})">
                                                 <i class="bi bi-trash"></i>
                                             </button>
@@ -391,6 +399,32 @@ function copyNewApiKey() {
     input.select();
     document.execCommand('copy');
     showAlert('API key copied to clipboard!', 'success');
+}
+
+function regenerateApiKey(keyId) {
+    if (confirm('This will deactivate the current key and create a new one. The old key will stop working. Continue?')) {
+        fetch(`/settings/api/keys/${keyId}/regenerate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showApiKey(data.key);
+                showAlert('API key regenerated successfully!', 'success');
+                // Refresh the page to show the updated key
+                setTimeout(() => window.location.reload(), 2000);
+            } else {
+                showAlert('Failed to regenerate API key', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Failed to regenerate API key', 'danger');
+        });
+    }
 }
 
 function showAlert(message, type) {

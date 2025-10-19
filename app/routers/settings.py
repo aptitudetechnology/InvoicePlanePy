@@ -910,6 +910,44 @@ async def delete_api_key(
     
     return JSONResponse({"success": True, "message": "API key deleted"})
 
+@router.post("/api/keys/{key_id}/regenerate")
+async def regenerate_api_key(
+    key_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Regenerate an existing API key"""
+    import secrets
+    import hashlib
+
+    # Find the existing key
+    api_key = db.query(ApiKey).filter(
+        ApiKey.id == key_id,
+        ApiKey.user_id == current_user.id
+    ).first()
+
+    if not api_key:
+        raise HTTPException(status_code=404, detail="API key not found")
+
+    # Generate a new secure random key
+    raw_key = f"sk_{secrets.token_urlsafe(32)}"
+
+    # Hash the new key
+    key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
+
+    # Update the existing record
+    api_key.key_hash = key_hash
+    api_key.key_prefix = raw_key[:8]
+    api_key.last_used_at = None  # Reset last used time
+
+    db.commit()
+
+    return JSONResponse({
+        "success": True,
+        "key": raw_key,
+        "message": "API key regenerated successfully"
+    })
+
 @router.get("/quote-settings", response_class=HTMLResponse)
 async def quote_settings(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Show quote settings page (placeholder)"""
