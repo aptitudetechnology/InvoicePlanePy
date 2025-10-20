@@ -363,4 +363,75 @@ async def invoice_create_post(
         "message": "Invoice POST received"
     })
 
-    
+@router.get("/{invoice_id}/api", response_class=JSONResponse)
+async def get_invoice_api(
+    invoice_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get a specific invoice as JSON data"""
+    from sqlalchemy.orm import joinedload
+    invoice = db.query(Invoice).options(
+        joinedload(Invoice.client),
+        joinedload(Invoice.items).joinedload(InvoiceItem.product),
+        joinedload(Invoice.user)
+    ).filter(Invoice.id == invoice_id).first()
+
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+
+    # Check permissions
+    if not current_user.is_admin and invoice.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    # Convert invoice to dictionary
+    invoice_data = {
+        "id": invoice.id,
+        "invoice_number": invoice.invoice_number,
+        "status": invoice.status,
+        "status_name": invoice.status_name,
+        "issue_date": invoice.issue_date.isoformat() if invoice.issue_date else None,
+        "due_date": invoice.due_date.isoformat() if invoice.due_date else None,
+        "created_at": invoice.created_at.isoformat() if invoice.created_at else None,
+        "updated_at": invoice.updated_at.isoformat() if invoice.updated_at else None,
+        "subtotal": float(invoice.subtotal or 0),
+        "tax_total": float(invoice.tax_total or 0),
+        "discount_amount": float(invoice.discount_amount or 0),
+        "total": float(invoice.total or 0),
+        "balance": float(invoice.balance or 0),
+        "notes": invoice.notes,
+        "terms": invoice.terms,
+        "client": {
+            "id": invoice.client.id,
+            "name": invoice.client.name,
+            "email": invoice.client.email,
+            "address": invoice.client.address,
+            "phone": invoice.client.phone,
+        } if invoice.client else None,
+        "user": {
+            "id": invoice.user.id,
+            "username": invoice.user.username,
+            "email": invoice.user.email,
+        } if invoice.user else None,
+        "items": [
+            {
+                "id": item.id,
+                "name": item.name,
+                "description": item.description,
+                "quantity": float(item.quantity or 0),
+                "price": float(item.price or 0),
+                "discount_amount": float(item.discount_amount or 0),
+                "tax_amount": float(item.tax_amount or 0),
+                "subtotal": float(item.subtotal or 0),
+                "product": {
+                    "id": item.product.id,
+                    "name": item.product.name,
+                    "sku": item.product.sku,
+                } if item.product else None,
+            }
+            for item in invoice.items
+        ]
+    }
+
+    return JSONResponse(content=invoice_data)
+

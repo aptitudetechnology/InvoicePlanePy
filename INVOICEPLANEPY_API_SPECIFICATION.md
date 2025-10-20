@@ -157,6 +157,104 @@ curl -X GET "http://localhost:8000/invoices/api?page=1&limit=50&status=paid" \
   -H "Authorization: Bearer your-jwt-token"
 ```
 
+### GET /invoices/{invoice_id}
+
+Retrieve the full HTML representation of a specific invoice document. This endpoint returns a complete, formatted HTML page that can be displayed directly in a web browser or embedded in other applications.
+
+#### Path Parameters
+- `invoice_id` (integer, required): The unique identifier of the invoice
+
+#### Response Format
+Returns complete HTML document with:
+- Invoice header with number and client information
+- Complete item table with quantities, prices, and totals
+- Client and invoice details
+- Payment status and balance information
+- Formatted totals section
+- Action buttons (PDF download, email, etc.)
+
+#### Example Request
+```bash
+curl -X GET "http://localhost:8000/invoices/123" \
+  -H "Authorization: Bearer sk_your_api_key_here"
+```
+
+#### Use Cases
+- Display invoice in web applications
+- Generate printable invoice views
+- Embed invoice content in other systems
+- Provide direct links to invoice documents
+
+### GET /invoices/{invoice_id}/api
+
+Retrieve complete JSON data for a specific invoice including all line items, client information, and calculated totals.
+
+#### Path Parameters
+- `invoice_id` (integer, required): The unique identifier of the invoice
+
+#### Response Format
+
+```json
+{
+  "id": 1,
+  "invoice_number": "INV-001",
+  "status": 4,
+  "status_name": "paid",
+  "issue_date": "2024-01-15",
+  "due_date": "2024-02-15",
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-01-20T14:15:00Z",
+  "subtotal": 1000.00,
+  "tax_total": 100.00,
+  "discount_amount": 0.00,
+  "total": 1100.00,
+  "balance": 0.00,
+  "notes": "Thank you for your business",
+  "terms": "Payment due within 30 days",
+  "client": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com",
+    "address": "123 Main St, City, State 12345",
+    "phone": "+1-555-0123"
+  },
+  "user": {
+    "id": 1,
+    "username": "admin",
+    "email": "admin@example.com"
+  },
+  "items": [
+    {
+      "id": 1,
+      "name": "Web Development Service",
+      "description": "Website development project",
+      "quantity": 40.0,
+      "price": 25.00,
+      "discount_amount": 0.00,
+      "tax_amount": 100.00,
+      "subtotal": 1000.00,
+      "product": {
+        "id": 1,
+        "name": "Web Development",
+        "sku": "WEB-001"
+      }
+    }
+  ]
+}
+```
+
+#### Example Request
+```bash
+curl -X GET "http://localhost:8000/invoices/123/api" \
+  -H "Authorization: Bearer sk_your_api_key_here"
+```
+
+#### Use Cases
+- Retrieve structured invoice data for processing
+- Integrate invoice information into external systems
+- Generate custom invoice reports or exports
+- Sync invoice data with accounting software
+
 ---
 
 ## 📦 Products API
