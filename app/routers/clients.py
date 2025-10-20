@@ -131,49 +131,6 @@ async def client_create_post(
         # For now, we'll just redirect back to the form
         return RedirectResponse(url="/clients/create", status_code=302)
 
-@router.get("/{client_id}", response_class=HTMLResponse)
-async def client_view(
-    client_id: int,
-    request: Request,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """View a specific client"""
-    client = db.query(Client).filter(Client.id == client_id).first()
-    if not client:
-        return RedirectResponse(url="/clients", status_code=302)
-    
-    return templates.TemplateResponse(
-        "clients/view.html", 
-        {
-            "request": request, 
-            "user": current_user,
-            "client": client
-        }
-    )
-
-@router.get("/{client_id}/edit", response_class=HTMLResponse)
-async def client_edit(
-    client_id: int,
-    request: Request,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Edit a specific client"""
-    client = db.query(Client).filter(Client.id == client_id).first()
-    if not client:
-        return RedirectResponse(url="/clients", status_code=302)
-    
-    return templates.TemplateResponse(
-        "clients/edit.html", 
-        {
-            "request": request, 
-            "user": current_user,
-            "client": client
-        }
-    )
-
-
 @router.get("/api")
 async def get_clients_api(
     db: Session = Depends(get_db),
@@ -305,6 +262,49 @@ async def get_clients_api(
     except Exception as e:
         logging.error(f"Unexpected error in get_clients_api: {str(e)}")
         raise HTTPException(status_code=500, detail="An unexpected error occurred")
+
+
+@router.get("/{client_id}", response_class=HTMLResponse)
+async def client_view(
+    client_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """View a specific client"""
+    client = db.query(Client).filter(Client.id == client_id).first()
+    if not client:
+        return RedirectResponse(url="/clients", status_code=302)
+    
+    return templates.TemplateResponse(
+        "clients/view.html", 
+        {
+            "request": request, 
+            "user": current_user,
+            "client": client
+        }
+    )
+
+@router.get("/{client_id}/edit", response_class=HTMLResponse)
+async def client_edit(
+    client_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Edit a specific client"""
+    client = db.query(Client).filter(Client.id == client_id).first()
+    if not client:
+        return RedirectResponse(url="/clients", status_code=302)
+    
+    return templates.TemplateResponse(
+        "clients/edit.html", 
+        {
+            "request": request, 
+            "user": current_user,
+            "client": client
+        }
+    )
 
 
 @router.get("/{client_id}/api", response_class=JSONResponse)
