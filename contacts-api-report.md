@@ -4,18 +4,30 @@
 
 During integration testing of the Business Plugin Middleware with InvoicePlane, we discovered inconsistent authentication behavior between bulk and individual client API endpoints. The bulk `/clients/api` endpoint returns 401 Unauthorized, while individual `/clients/{id}/api` endpoints work correctly with the same Bearer token authentication.
 
+**RESOLVED**: The issue was caused by FastAPI route ordering. The generic `/{client_id}` route was defined before the specific `/api` route, causing `/clients/api` requests to be matched against the `/{client_id}` pattern where `client_id="api"`. This has been fixed by reordering the routes in `app/routers/clients.py`.
+
 ## Issue Details
 
-### Problem Description
-- **Bulk Clients Endpoint**: `GET /clients/api` returns HTTP 401 Unauthorized
-- **Individual Client Endpoint**: `GET /clients/{id}/api` returns HTTP 200 with full client data
-- **Authentication Method**: Both endpoints use identical Bearer token authentication
-- **API Key**: `sk_DLzUCdnXX5z6pnb5bDVHAvokYUA6WxhCisEajYUSmgk`
+### Root Cause
+- **Route Ordering Problem**: FastAPI matches routes in the order they are defined
+- **Generic Route First**: `GET /{client_id}` was defined before `GET /api`
+- **Pattern Matching**: `/clients/api` matched `/{client_id}` with `client_id="api"`
+- **Authentication Failure**: The HTML view route expected an integer `client_id`, causing validation/parsing issues
+
+### Solution Implemented
+- **Route Reordering**: Moved `GET /api` route before `GET /{client_id}` route
+- **Specific Before Generic**: Specific routes now take precedence over generic parameterized routes
+- **Maintained Functionality**: All existing routes continue to work as expected
 
 ### Test Results
 
-#### Working Endpoints
+#### Working Endpoints (After Fix)
 ```bash
+# Bulk clients access - NOW WORKS
+curl -H "Authorization: Bearer sk_DLzUCdnXX5z6pnb5bDVHAvokYUA6WxhCisEajYUSmgk" \
+     "https://invoiceplane.example.com/clients/api"
+# Returns: 200 OK with JSON array of clients
+
 # Individual client access - WORKS
 curl -H "Authorization: Bearer sk_DLzUCdnXX5z6pnb5bDVHAvokYUA6WxhCisEajYUSmgk" \
      "https://invoiceplane.example.com/clients/123/api"
@@ -27,27 +39,21 @@ curl -H "Authorization: Bearer sk_DLzUCdnXX5z6pnb5bDVHAvokYUA6WxhCisEajYUSmgk" \
 # Returns: 200 OK with JSON invoice array
 ```
 
-#### Failing Endpoints
-```bash
-# Bulk clients access - FAILS
-curl -H "Authorization: Bearer sk_DLzUCdnXX5z6pnb5bDVHAvokYUA6WxhCisEajYUSmgk" \
-     "https://invoiceplane.example.com/clients/api"
-# Returns: 401 Unauthorized
-
-# Alternative patterns tested - ALL FAIL
-curl -H "Authorization: Bearer sk_DLzUCdnXX5z6pnb5bDVHAvokYUA6WxhCisEajYUSmgk" \
-     "https://invoiceplane.example.com/api/clients"
-# Returns: 404 Not Found
-```
-
 ## Workaround Implementation
 
-### Current Solution
-We implemented a workaround that bypasses the broken bulk endpoint by:
+### Previous Solution (No Longer Needed)
+We implemented a workaround that bypassed the broken bulk endpoint by:
 
 1. **Fetch Recent Invoices**: Use the working `/invoices/api` endpoint to get recent invoice data
 2. **Extract Client IDs**: Parse invoice data to collect unique client IDs
 3. **Fetch Individual Clients**: Use the working `/clients/{id}/api` endpoint for each client ID
+
+### Current Solution (Direct API Access)
+With the route ordering fix, the Business Plugin Middleware can now directly use:
+
+1. **Direct Bulk Access**: Use `/clients/api` for efficient bulk client data retrieval
+2. **Pagination Support**: Leverage built-in pagination, filtering, and sorting
+3. **Consistent Authentication**: Same Bearer token authentication across all endpoints
 4. **Aggregate Results**: Combine individual client data into a complete client list
 
 ### Code Implementation
