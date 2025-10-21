@@ -17,6 +17,7 @@ adminer.php
 /patches
 /.php_cs.cache
 /doc
+sql1/
 *.bak
 npm-debug.log
 yarn-error.log

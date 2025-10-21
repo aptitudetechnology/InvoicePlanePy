@@ -85,6 +85,7 @@ FIELD_MAP_INVOICE_ITEMS = {
     "item_description": "description",
     "item_quantity": "quantity",
     "item_price": "price",
+    "item_discount_amount": "discount_amount",
     "item_order": "order",
     # Add more as needed
 }
@@ -463,12 +464,40 @@ def import_invoices(dry_run=False, sql_file=None):
                                         logger.warning(f"Skipping invoice item with non-existent product_id {product_id}: {item_row}")
                                         continue
 
+                                # Calculate item totals
+                                quantity = item_mapped.get("quantity", 0)
+                                price = item_mapped.get("price", 0)
+                                discount_amount = item_mapped.get("discount_amount", 0) or 0
+
+                                item_mapped["subtotal"] = quantity * price
+                                item_mapped["discount_amount"] = discount_amount
+                                item_mapped["tax_amount"] = 0.0  # TODO: Calculate based on tax_rate_id
+                                item_mapped["total"] = item_mapped["subtotal"] - discount_amount + item_mapped["tax_amount"]
+
                                 try:
                                     invoice_item = InvoiceItem(**item_mapped)
                                     session.add(invoice_item)
                                 except Exception as e:
                                     logger.error(f"Error creating invoice item: {e}")
                                     continue
+
+                    # Calculate invoice totals from items
+                    session.flush()  # Ensure all items are saved
+                    items = session.query(InvoiceItem).filter_by(invoice_id=invoice.id).all()
+
+                    if items:
+                        invoice.subtotal = sum(item.subtotal for item in items)
+                        invoice.tax_total = sum(item.tax_amount for item in items)
+                        invoice.discount_amount = sum(item.discount_amount for item in items)
+                        invoice.total = sum(item.total for item in items)
+                        invoice.balance = invoice.total - invoice.paid_amount if invoice.paid_amount else invoice.total
+                    else:
+                        # No items, set defaults
+                        invoice.subtotal = 0
+                        invoice.tax_total = 0
+                        invoice.discount_amount = 0
+                        invoice.total = 0
+                        invoice.balance = 0
 
                 imported += 1
             except Exception as e:
