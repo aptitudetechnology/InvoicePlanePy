@@ -427,14 +427,27 @@ def import_invoices(dry_run=False, sql_file=None):
                         item_rows = list(parse_inserts(sql_file, "ip_invoice_items"))
                         for item_row in item_rows:
                             if item_row.get("invoice_id") == invoice_id:
+                                logger.debug(f"Processing invoice item: {item_row}")
                                 item_mapped = {}
                                 for legacy_field, new_field in FIELD_MAP_INVOICE_ITEMS.items():
                                     if legacy_field in item_row:
                                         value = item_row[legacy_field]
-                                        if value == 'NULL' or value == '':
-                                            item_mapped[new_field] = None
+                                        if value == 'NULL':
+                                            # Handle NULL values - set to None for optional fields, empty string for text fields
+                                            if new_field in ['description']:
+                                                item_mapped[new_field] = ""
+                                            else:
+                                                item_mapped[new_field] = None
+                                        elif value == '':
+                                            # Handle empty strings - keep as empty string for text fields
+                                            if new_field in ['name', 'description']:
+                                                item_mapped[new_field] = ""
+                                            else:
+                                                item_mapped[new_field] = None
                                         else:
                                             item_mapped[new_field] = value
+                                
+                                logger.debug(f"Mapped invoice item: {item_mapped}")
 
                                 item_mapped["invoice_id"] = invoice.id
 
@@ -452,8 +465,16 @@ def import_invoices(dry_run=False, sql_file=None):
                                         item_mapped["price"] = 0.00
 
                                 # Skip invoice items without required fields
-                                if not item_mapped.get("name") or item_mapped.get("quantity") is None or item_mapped.get("price") is None:
-                                    logger.warning(f"Skipping invoice item without required name, quantity, or price: {item_row}")
+                                if not item_mapped.get("name") or item_mapped.get("name") == "":
+                                    logger.warning(f"Skipping invoice item without required name: {item_row}")
+                                    continue
+                                
+                                if item_mapped.get("quantity") is None:
+                                    logger.warning(f"Skipping invoice item without quantity: {item_row}")
+                                    continue
+                                    
+                                if item_mapped.get("price") is None:
+                                    logger.warning(f"Skipping invoice item without price: {item_row}")
                                     continue
 
                                 # Check if referenced product exists (if product_id is provided)
