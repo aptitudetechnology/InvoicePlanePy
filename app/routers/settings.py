@@ -795,7 +795,59 @@ async def import_products_sql(
             "message": f"Import failed: {str(e)}"
         }, status_code=500)
 
-@router.post("/import/invoices-sql")
+@router.post("/diagnostic")
+async def run_import_diagnostic(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Run import diagnostic and return results"""
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin privileges required")
+
+    try:
+        # Import the diagnostic functions
+        import sys
+        import os
+        sys.path.append('/app')
+
+        from importdb.diagnostic import check_database_content, run_verification, test_sql_parsing
+        import io
+        from contextlib import redirect_stdout, redirect_stderr
+
+        # Capture output
+        output_buffer = io.StringIO()
+
+        with redirect_stdout(output_buffer), redirect_stderr(output_buffer):
+            print("🔍 InvoicePlane Import Diagnostic Tool")
+            print("="*50)
+
+            try:
+                test_sql_parsing()
+                check_database_content()
+                run_verification()
+
+                print("\n" + "="*50)
+                print("✅ DIAGNOSTIC COMPLETE")
+                print("="*50)
+
+            except Exception as e:
+                print(f"\n❌ DIAGNOSTIC FAILED: {e}")
+                import traceback
+                traceback.print_exc()
+
+        output = output_buffer.getvalue()
+
+        return JSONResponse({
+            "success": True,
+            "output": output
+        })
+
+    except Exception as e:
+        return JSONResponse({
+            "success": False,
+            "error": str(e)
+        }, status_code=500)
 async def import_invoices_sql(
     request: Request,
     sql_file: UploadFile = File(...),
