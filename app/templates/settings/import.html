@@ -5,9 +5,14 @@
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>Import Data</h2>
-            <a href="/settings" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> Back to Settings
-            </a>
+            <div class="d-flex gap-2">
+                <a href="/invoices/import" class="btn btn-primary">
+                    <i class="bi bi-upload"></i> Invoice Import Dashboard
+                </a>
+                <a href="/settings" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Settings
+                </a>
+            </div>
         </div>
 
         <div class="card">
@@ -216,6 +221,20 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Import Verification Section -->
+                        <div class="mt-4">
+                            <h6>Import Verification</h6>
+                            <p class="text-muted">After importing data, verify that all records have complete information:</p>
+                            <button id="verifyImportBtn" class="btn btn-outline-info btn-sm" onclick="verifyImport()">
+                                <i class="bi bi-check-circle"></i> Verify Import Results
+                            </button>
+
+                            <div id="verifyResult" class="mt-3" style="display: none;">
+                                <div id="verifyAlert" class="alert"></div>
+                                <div id="verifyDetails"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -223,4 +242,100 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function verifyImport() {
+    const verifyBtn = document.getElementById('verifyImportBtn');
+    const verifyResult = document.getElementById('verifyResult');
+
+    verifyBtn.disabled = true;
+    verifyBtn.innerHTML = '<i class="bi bi-hourglass"></i> Verifying...';
+
+    try {
+        const response = await fetch('/invoices/verify-import');
+        const result = await response.json();
+
+        verifyResult.style.display = 'block';
+
+        if (response.ok) {
+            showVerificationResult(result);
+        } else {
+            document.getElementById('verifyAlert').className = 'alert alert-danger';
+            document.getElementById('verifyAlert').innerHTML = `Verification failed: ${result.detail}`;
+        }
+
+    } catch (error) {
+        verifyResult.style.display = 'block';
+        document.getElementById('verifyAlert').className = 'alert alert-danger';
+        document.getElementById('verifyAlert').innerHTML = `Error: ${error.message}`;
+    }
+
+    verifyBtn.disabled = false;
+    verifyBtn.innerHTML = '<i class="bi bi-check-circle"></i> Verify Import Results';
+}
+
+function showVerificationResult(result) {
+    const alertDiv = document.getElementById('verifyAlert');
+    const detailsDiv = document.getElementById('verifyDetails');
+
+    if (result.status === 'success') {
+        alertDiv.className = 'alert alert-success';
+        alertDiv.innerHTML = '<i class="bi bi-check-circle"></i> All imported data verified successfully!';
+    } else if (result.status === 'no_invoices') {
+        alertDiv.className = 'alert alert-info';
+        alertDiv.innerHTML = '<i class="bi bi-info-circle"></i> No invoices found to verify.';
+        return;
+    } else {
+        alertDiv.className = 'alert alert-warning';
+        alertDiv.innerHTML = `<i class="bi bi-exclamation-triangle"></i> Issues found during verification.`;
+    }
+
+    detailsDiv.innerHTML = formatVerificationDetails(result);
+}
+
+function formatVerificationDetails(result) {
+    let html = `
+        <div class="row text-center mb-3">
+            <div class="col">
+                <div class="h4 mb-0">${result.total_invoices}</div>
+                <small class="text-muted">Total Invoices</small>
+            </div>
+            <div class="col">
+                <div class="h4 mb-0">${result.invoices_with_items}</div>
+                <small class="text-muted">With Items</small>
+            </div>
+            <div class="col">
+                <div class="h4 mb-0">${result.invoices_with_totals}</div>
+                <small class="text-muted">With Totals</small>
+            </div>
+        </div>
+    `;
+
+    if (result.issues && result.issues.length > 0) {
+        html += '<h6>Issues Found:</h6><ul class="small">';
+        result.issues.slice(0, 10).forEach(issue => {
+            html += `<li class="text-danger">${issue}</li>`;
+        });
+        if (result.issues.length > 10) {
+            html += `<li class="text-muted">... and ${result.issues.length - 10} more issues</li>`;
+        }
+        html += '</ul>';
+    }
+
+    if (result.sample_invoices && result.sample_invoices.length > 0) {
+        html += '<h6>Sample Invoices:</h6>';
+        result.sample_invoices.forEach(invoice => {
+            const statusIcon = invoice.has_items && invoice.has_totals ? '✅' : '❌';
+            html += `<div class="small border rounded p-2 mb-2">
+                <strong>${statusIcon} Invoice ${invoice.number}</strong>
+                <div>Items: ${invoice.items.length}, Complete: ${invoice.has_items && invoice.has_totals}</div>
+            </div>`;
+        });
+    }
+
+    return html;
+}
+</script>
 {% endblock %}
