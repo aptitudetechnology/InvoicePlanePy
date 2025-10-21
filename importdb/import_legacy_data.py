@@ -93,9 +93,17 @@ FIELD_MAP_INVOICE_ITEMS = {
 
 def get_session():
     """Create and return a new database session."""
-    engine = create_engine(settings.DATABASE_URL)
-    Session = sessionmaker(bind=engine)
-    return Session()
+    logger.info("Creating database session...")
+    try:
+        engine = create_engine(settings.DATABASE_URL)
+        logger.info("Database engine created")
+        Session = sessionmaker(bind=engine)
+        session = Session()
+        logger.info("Database session created successfully")
+        return session
+    except Exception as e:
+        logger.error(f"Failed to create database session: {e}")
+        raise
 
 def parse_date(date_str):
     """Parse date string from legacy format."""
@@ -360,9 +368,18 @@ def import_products(dry_run=False, sql_file=None):
 
 def import_invoices(dry_run=False, sql_file=None):
     """Import invoices from legacy ip_invoices and ip_invoice_items tables."""
+    logger.info("import_invoices function called")
     if sql_file is None:
         sql_file = SQL_FILE
-    session = get_session()
+    logger.info(f"Using SQL file: {sql_file}")
+    
+    try:
+        session = get_session()
+        logger.info("Database session created successfully")
+    except Exception as e:
+        logger.error(f"Failed to create database session: {e}")
+        raise
+    
     imported = 0
     skipped = 0
 

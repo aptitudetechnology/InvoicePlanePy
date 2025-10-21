@@ -870,10 +870,18 @@ async def import_invoices_sql(
             temp_file.write(content)
             temp_file_path = temp_file.name
 
+        logger.info(f"Uploaded SQL file saved to: {temp_file_path}")
+
         # Import invoices using the legacy importer
-        from importdb.import_legacy_data import import_invoices
+        try:
+            from importdb.import_legacy_data import import_invoices
+            logger.info("Successfully imported import_invoices function")
+        except Exception as e:
+            logger.error(f"Failed to import import_invoices: {e}")
+            raise
 
         # Run import (not dry run)
+        logger.info("Starting invoice import...")
         import_invoices(dry_run=False, sql_file=temp_file_path)
 
         # Clean up temp file
@@ -886,10 +894,11 @@ async def import_invoices_sql(
 
     except Exception as e:
         logger.error(f"Error importing invoices from SQL: {e}")
-        error_msg = str(e) if str(e) else "Unknown error"
+        import traceback
+        logger.error(f"Full traceback: {traceback.format_exc()}")
         return JSONResponse({
             "success": False,
-            "message": f"Import failed: {type(e).__name__}: {error_msg}"
+            "message": f"Import failed: {type(e).__name__}: {str(e) or 'No message'}"
         }, status_code=500)
 
 # API Key management endpoints
