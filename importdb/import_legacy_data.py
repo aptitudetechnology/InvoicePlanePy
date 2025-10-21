@@ -85,8 +85,9 @@ FIELD_MAP_INVOICE_ITEMS = {
     "item_description": "description",
     "item_quantity": "quantity",
     "item_price": "price",
-    "item_discount_amount": "discount_amount",
     "item_order": "order",
+    "item_tax_rate_id": "tax_rate_id",
+    # Note: item_discount_amount doesn't exist in legacy schema
     # Add more as needed
 }
 
@@ -355,9 +356,19 @@ def import_invoices(dry_run=False, sql_file=None):
 
     try:
         logger.info("Starting invoice import...")
+        logger.info(f"Reading from SQL file: {sql_file}")
+        
+        # Debug: Show what tables are found
+        all_tables = list_tables(sql_file)
+        logger.info(f"Tables found in SQL file: {all_tables}")
+        
         rows = list(parse_inserts(sql_file, "ip_invoices"))
         total = len(rows)
         logger.info(f"Found {total} invoice records to import")
+        
+        if total == 0:
+            logger.warning("No invoice records found! Check if the SQL file contains ip_invoices table data.")
+            return
 
         for i, row in enumerate(rows):
             if (i + 1) % 10 == 0:
@@ -424,14 +435,21 @@ def import_invoices(dry_run=False, sql_file=None):
                     # Import invoice items
                     invoice_id = row.get("invoice_id")
                     if invoice_id:
+                        logger.info(f"Processing items for invoice {invoice_id}")
                         item_rows = list(parse_inserts(sql_file, "ip_invoice_items"))
-                        for item_row in item_rows:
-                            if item_row.get("invoice_id") == invoice_id:
+                        logger.info(f"Found {len(item_rows)} total invoice item records")
+                        
+                        # Filter items for this invoice
+                        invoice_items = [item for item in item_rows if item.get("invoice_id") == invoice_id]
+                        logger.info(f"Found {len(invoice_items)} items for invoice {invoice_id}")
+                        
+                        for item_row in invoice_items:
                                 logger.debug(f"Processing invoice item: {item_row}")
                                 item_mapped = {}
                                 for legacy_field, new_field in FIELD_MAP_INVOICE_ITEMS.items():
                                     if legacy_field in item_row:
                                         value = item_row[legacy_field]
+                                        logger.debug(f"Mapping {legacy_field}='{value}' to {new_field}")
                                         if value == 'NULL':
                                             # Handle NULL values - set to None for optional fields, empty string for text fields
                                             if new_field in ['description']:
@@ -446,7 +464,7 @@ def import_invoices(dry_run=False, sql_file=None):
                                                 item_mapped[new_field] = None
                                         else:
                                             item_mapped[new_field] = value
-                                
+
                                 logger.debug(f"Mapped invoice item: {item_mapped}")
 
                                 item_mapped["invoice_id"] = invoice.id
@@ -488,12 +506,28 @@ def import_invoices(dry_run=False, sql_file=None):
                                 # Calculate item totals
                                 quantity = item_mapped.get("quantity", 0)
                                 price = item_mapped.get("price", 0)
-                                discount_amount = item_mapped.get("discount_amount", 0) or 0
+                                # No discount_amount in legacy schema, so set to 0
+                                discount_amount = 0.0
 
                                 item_mapped["subtotal"] = quantity * price
                                 item_mapped["discount_amount"] = discount_amount
-                                item_mapped["tax_amount"] = 0.0  # TODO: Calculate based on tax_rate_id
-                                item_mapped["total"] = item_mapped["subtotal"] - discount_amount + item_mapped["tax_amount"]
+
+                                # Calculate tax amount based on tax_rate_id
+                                tax_amount = 0.0
+                                tax_rate_id = item_mapped.get("tax_rate_id")
+                                if tax_rate_id and str(tax_rate_id) != '0':
+                                    try:
+                                        from app.models.tax_rate import TaxRate
+                                        tax_rate = session.query(TaxRate).filter_by(id=tax_rate_id).first()
+                                        if tax_rate:
+                                            # Calculate tax on (subtotal - discount)
+                                            taxable_amount = item_mapped["subtotal"] - discount_amount
+                                            tax_amount = taxable_amount * (tax_rate.rate / 100)
+                                    except Exception as e:
+                                        logger.warning(f"Error calculating tax for item: {e}")
+
+                                item_mapped["tax_amount"] = tax_amount
+                                item_mapped["total"] = item_mapped["subtotal"] - discount_amount + tax_amount
 
                                 try:
                                     invoice_item = InvoiceItem(**item_mapped)

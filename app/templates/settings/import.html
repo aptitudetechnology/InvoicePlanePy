@@ -170,14 +170,23 @@
                                         <i class="bi bi-receipt fs-1 text-warning mb-3"></i>
                                         <h5>Import Invoices (SQL)</h5>
                                         <p class="text-muted">Import invoice data from legacy SQL dumps</p>
-                                        <form action="/settings/import/invoices-sql" method="post" enctype="multipart/form-data">
+                                        <form id="invoiceImportForm" enctype="multipart/form-data">
                                             <div class="mb-2">
-                                                <input type="file" name="sql_file" accept=".sql" class="form-control" required>
+                                                <input type="file" name="sql_file" accept=".sql" class="form-control" id="invoiceSqlFile" required>
                                             </div>
-                                            <button type="submit" class="btn btn-warning">
+                                            <button type="submit" class="btn btn-warning" id="invoiceImportBtn">
                                                 <i class="bi bi-upload"></i> Import SQL
                                             </button>
                                         </form>
+                                        <div id="invoiceImportProgress" class="mt-2" style="display: none;">
+                                            <div class="progress">
+                                                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
+                                            </div>
+                                            <small class="text-muted">Importing invoices...</small>
+                                        </div>
+                                        <div id="invoiceImportResult" class="mt-2" style="display: none;">
+                                            <div id="invoiceImportAlert" class="alert"></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -246,6 +255,62 @@
 
 {% block scripts %}
 <script>
+// Handle invoice import form submission
+document.getElementById('invoiceImportForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const formData = new FormData();
+    const fileInput = document.getElementById('invoiceSqlFile');
+    const importBtn = document.getElementById('invoiceImportBtn');
+    const progressDiv = document.getElementById('invoiceImportProgress');
+    const resultDiv = document.getElementById('invoiceImportResult');
+    const alertDiv = document.getElementById('invoiceImportAlert');
+
+    if (!fileInput.files[0]) {
+        alert('Please select a SQL file to import.');
+        return;
+    }
+
+    formData.append('sql_file', fileInput.files[0]);
+
+    // Show progress, hide button
+    importBtn.style.display = 'none';
+    progressDiv.style.display = 'block';
+    resultDiv.style.display = 'none';
+
+    try {
+        const response = await fetch('/settings/import/invoices-sql', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        // Hide progress
+        progressDiv.style.display = 'none';
+        resultDiv.style.display = 'block';
+
+        if (response.ok && result.success) {
+            alertDiv.className = 'alert alert-success';
+            alertDiv.innerHTML = '<i class="bi bi-check-circle"></i> ' + result.message;
+            // Auto-run verification after successful import
+            setTimeout(() => verifyImport(), 1000);
+        } else {
+            alertDiv.className = 'alert alert-danger';
+            alertDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Import failed: ' + (result.message || 'Unknown error');
+        }
+
+    } catch (error) {
+        progressDiv.style.display = 'none';
+        resultDiv.style.display = 'block';
+        alertDiv.className = 'alert alert-danger';
+        alertDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Error: ' + error.message;
+    }
+
+    // Show button again
+    importBtn.style.display = 'block';
+});
+
 async function verifyImport() {
     const verifyBtn = document.getElementById('verifyImportBtn');
     const verifyResult = document.getElementById('verifyResult');
