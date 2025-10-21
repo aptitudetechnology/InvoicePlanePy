@@ -853,6 +853,8 @@ async def run_import_diagnostic(
             "success": False,
             "error": str(e)
         }, status_code=500)
+
+@router.post("/import/invoices-sql")
 async def import_invoices_sql(
     request: Request,
     sql_file: UploadFile = File(...),
