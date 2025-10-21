@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script to delete all invoices and invoice items from the database.
+Script to delete all clients from the database.
 Use this before re-importing data with the fixed import script.
 """
 import sys
@@ -13,7 +13,7 @@ from sqlalchemy.exc import SQLAlchemyError
 sys.path.append('.')
 try:
     from app.config import settings
-    from app.models.invoice import Invoice, InvoiceItem
+    from app.models.client import Client
     from app.database import Base
 except ImportError as e:
     print(f"❌ Failed to import required modules: {e}")
@@ -30,9 +30,9 @@ def get_session():
     Session = sessionmaker(bind=engine)
     return Session()
 
-def delete_all_invoices(dry_run=False):
+def delete_all_clients(dry_run=False):
     """
-    Delete all invoices and invoice items from the database.
+    Delete all clients from the database.
 
     Args:
         dry_run: If True, only show what would be deleted without actually deleting
@@ -41,36 +41,30 @@ def delete_all_invoices(dry_run=False):
 
     try:
         # Count what we're about to delete
-        invoice_count = session.query(Invoice).count()
-        item_count = session.query(InvoiceItem).count()
+        client_count = session.query(Client).count()
 
-        print(f"📊 Found {invoice_count} invoices and {item_count} invoice items")
+        print(f"📊 Found {client_count} clients")
 
-        if invoice_count == 0 and item_count == 0:
-            print("✅ No invoices or items to delete")
+        if client_count == 0:
+            print("✅ No clients to delete")
             return True
 
         # Confirm deletion
         if not dry_run:
-            confirm = input(f"⚠️  This will permanently delete {invoice_count} invoices and {item_count} items. Continue? (yes/no): ")
+            confirm = input(f"⚠️  This will permanently delete {client_count} clients. Continue? (yes/no): ")
             if confirm.lower() not in ['yes', 'y']:
                 print("❌ Deletion cancelled")
                 return False
 
         if dry_run:
             print("🔍 DRY RUN: Would delete the following:")
-            print(f"   - {invoice_count} invoices")
-            print(f"   - {item_count} invoice items")
+            print(f"   - {client_count} clients")
             return True
 
-        # Delete in correct order (items first due to foreign keys)
-        print("🗑️  Deleting invoice items...")
-        deleted_items = session.execute(delete(InvoiceItem)).rowcount
-        print(f"   ✅ Deleted {deleted_items} invoice items")
-
-        print("🗑️  Deleting invoices...")
-        deleted_invoices = session.execute(delete(Invoice)).rowcount
-        print(f"   ✅ Deleted {deleted_invoices} invoices")
+        # Delete clients
+        print("🗑️  Deleting clients...")
+        deleted_clients = session.execute(delete(Client)).rowcount
+        print(f"   ✅ Deleted {deleted_clients} clients")
 
         # Commit the changes
         session.commit()
@@ -94,10 +88,10 @@ def delete_all_invoices(dry_run=False):
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == "--dry-run":
         print("🔍 Running in DRY RUN mode (no actual deletions)")
-        success = delete_all_invoices(dry_run=True)
+        success = delete_all_clients(dry_run=True)
     else:
         print("🗑️  Running in DELETE mode (will actually delete data)")
-        success = delete_all_invoices(dry_run=False)
+        success = delete_all_clients(dry_run=False)
 
     if success:
         print("\n🎉 Operation completed successfully!")
@@ -110,6 +104,6 @@ def main():
         sys.exit(1)
 
 if __name__ == "__main__":
-    print("🧹 InvoicePlanePy Invoice Deletion Script")
+    print("🧹 InvoicePlanePy Client Deletion Script")
     print("=" * 50)
     main()
