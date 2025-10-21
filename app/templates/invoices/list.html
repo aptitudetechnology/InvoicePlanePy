@@ -65,6 +65,9 @@
                                 <a href="#" class="btn btn-outline-success" onclick="event.preventDefault();" title="Send">
                                     <i class="bi bi-envelope"></i>
                                 </a>
+                                <button class="btn btn-outline-danger" onclick="deleteInvoice({{ invoice.id }}, '{{ invoice.invoice_number }}')" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -84,4 +87,32 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function deleteInvoice(invoiceId, invoiceNumber) {
+    // Placeholder delete functionality
+    if (confirm(`Are you sure you want to delete invoice ${invoiceNumber}? This action cannot be undone.`)) {
+        try {
+            const response = await fetch(`/invoices/${invoiceId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (response.ok) {
+                alert(`Invoice ${invoiceNumber} deleted successfully!`);
+                location.reload();
+            } else {
+                const error = await response.json();
+                alert(`Failed to delete invoice: ${error.detail || 'Unknown error'}`);
+            }
+        } catch (error) {
+            alert(`Error deleting invoice: ${error.message}`);
+        }
+    }
+}
+</script>
 {% endblock %}

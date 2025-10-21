@@ -435,3 +435,31 @@ async def get_invoice_api(
 
     return JSONResponse(content=invoice_data)
 
+
+@router.delete("/{invoice_id}")
+async def delete_invoice(
+    invoice_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Delete an invoice
+    """
+    # Find the invoice
+    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+
+    # Check permissions
+    if not current_user.is_admin and invoice.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    # Delete the invoice (cascade will handle invoice items)
+    try:
+        db.delete(invoice)
+        db.commit()
+        return {"message": f"Invoice {invoice.invoice_number} deleted successfully"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete invoice: {str(e)}")
+
