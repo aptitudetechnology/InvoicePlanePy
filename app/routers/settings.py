@@ -811,9 +811,14 @@ async def run_import_diagnostic(
         import os
         sys.path.append('/app')
 
+        from app.config import settings
+        from sqlalchemy import create_engine
         from importdb.diagnostic import check_database_content, run_verification, test_sql_parsing
         import io
         from contextlib import redirect_stdout, redirect_stderr
+
+        # Create database engine directly (not using FastAPI dependency)
+        engine = create_engine(settings.DATABASE_URL)
 
         # Capture output
         output_buffer = io.StringIO()

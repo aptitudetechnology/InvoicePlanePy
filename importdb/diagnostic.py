@@ -14,7 +14,8 @@ logging.basicConfig(
     stream=sys.stdout
 )
 
-from app.database import get_db
+from app.config import settings
+from sqlalchemy import create_engine
 from app.models.invoice import Invoice, InvoiceItem
 from app.models.tax_rate import TaxRate
 from sqlalchemy.orm import sessionmaker, joinedload
@@ -25,7 +26,7 @@ def check_database_content():
     print("DATABASE CONTENT CHECK")
     print("="*60)
 
-    engine = get_db()
+    engine = create_engine(settings.DATABASE_URL)
     Session = sessionmaker(bind=engine)
     session = Session()
 
@@ -77,7 +78,7 @@ def run_verification():
     print("IMPORT VERIFICATION")
     print("="*60)
 
-    engine = get_db()
+    engine = create_engine(settings.DATABASE_URL)
     Session = sessionmaker(bind=engine)
     session = Session()
 
