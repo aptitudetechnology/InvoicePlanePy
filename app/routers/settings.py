@@ -886,9 +886,10 @@ async def import_invoices_sql(
 
     except Exception as e:
         logger.error(f"Error importing invoices from SQL: {e}")
+        error_msg = str(e) if str(e) else "Unknown error"
         return JSONResponse({
             "success": False,
-            "message": f"Import failed: {str(e)}"
+            "message": f"Import failed: {type(e).__name__}: {error_msg}"
         }, status_code=500)
 
 # API Key management endpoints

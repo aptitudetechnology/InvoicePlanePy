@@ -128,6 +128,12 @@ def list_tables(sql_file):
     except FileNotFoundError:
         logger.error(f"SQL file not found: {sql_file}")
         return []
+    except UnicodeDecodeError as e:
+        logger.error(f"Encoding error reading SQL file {sql_file}: {e}")
+        raise ValueError(f"SQL file encoding error: {e}")
+    except Exception as e:
+        logger.error(f"Error reading SQL file {sql_file}: {e}")
+        raise
     return sorted(list(tables))
 
 def parse_inserts(sql_file, table):
@@ -139,6 +145,12 @@ def parse_inserts(sql_file, table):
     except FileNotFoundError:
         logger.error(f"SQL file not found: {sql_file}")
         return
+    except UnicodeDecodeError as e:
+        logger.error(f"Encoding error reading SQL file {sql_file}: {e}. Please ensure the file is UTF-8 encoded.")
+        raise ValueError(f"SQL file encoding error: {e}")
+    except Exception as e:
+        logger.error(f"Error reading SQL file {sql_file}: {e}")
+        raise
 
     for match in pattern.finditer(content):
         fields = [f.strip('` ') for f in match.group(1).split(',')]
@@ -362,7 +374,18 @@ def import_invoices(dry_run=False, sql_file=None):
         all_tables = list_tables(sql_file)
         logger.info(f"Tables found in SQL file: {all_tables}")
         
-        rows = list(parse_inserts(sql_file, "ip_invoices"))
+        # Check for required tables
+        required_tables = ["ip_invoices", "ip_invoice_items"]
+        missing_tables = [table for table in required_tables if table not in all_tables]
+        if missing_tables:
+            raise ValueError(f"SQL file is missing required tables: {missing_tables}. Found tables: {all_tables}")
+        
+        try:
+            rows = list(parse_inserts(sql_file, "ip_invoices"))
+        except Exception as e:
+            logger.error(f"Failed to parse invoice data from SQL file: {e}")
+            raise ValueError(f"SQL parsing error: {e}")
+        
         total = len(rows)
         logger.info(f"Found {total} invoice records to import")
         
@@ -436,7 +459,11 @@ def import_invoices(dry_run=False, sql_file=None):
                     invoice_id = row.get("invoice_id")
                     if invoice_id:
                         logger.info(f"Processing items for invoice {invoice_id}")
-                        item_rows = list(parse_inserts(sql_file, "ip_invoice_items"))
+                        try:
+                            item_rows = list(parse_inserts(sql_file, "ip_invoice_items"))
+                        except Exception as e:
+                            logger.error(f"Failed to parse invoice items from SQL file: {e}")
+                            raise ValueError(f"SQL parsing error for invoice items: {e}")
                         logger.info(f"Found {len(item_rows)} total invoice item records")
                         
                         # Filter items for this invoice
