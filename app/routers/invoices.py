@@ -463,3 +463,154 @@ async def delete_invoice(
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to delete invoice: {str(e)}")
 
+
+@router.post("/import")
+async def import_invoices_web(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Web endpoint to trigger invoice import from legacy data.
+    Requires admin privileges.
+    """
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin privileges required for import")
+
+    try:
+        # Import the import function
+        import subprocess
+        import sys
+        import os
+
+        # Run the import script
+        script_path = os.path.join(os.path.dirname(__file__), "..", "..", "importdb", "import_legacy_data.py")
+        result = subprocess.run([
+            sys.executable, script_path, "--table", "invoices"
+        ], capture_output=True, text=True, cwd=os.path.dirname(script_path))
+
+        if result.returncode == 0:
+            # Import successful, now verify the data
+            verification = await verify_imported_invoices(db)
+            return {
+                "message": "Import completed successfully",
+                "import_output": result.stdout,
+                "verification": verification
+            }
+        else:
+            return {
+                "error": "Import failed",
+                "stdout": result.stdout,
+                "stderr": result.stderr
+            }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
+
+
+@router.get("/verify-import")
+async def verify_imported_invoices(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Verify that imported invoices have all required fields populated.
+    """
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin privileges required")
+
+    try:
+        # Get all invoices with their items
+        invoices = db.query(Invoice).options(
+            joinedload(Invoice.items)
+        ).all()
+
+        verification_results = {
+            "total_invoices": len(invoices),
+            "invoices_with_items": 0,
+            "invoices_with_totals": 0,
+            "issues": [],
+            "sample_invoices": []
+        }
+
+        for invoice in invoices[:5]:  # Check first 5 invoices as samples
+            invoice_status = {
+                "id": invoice.id,
+                "number": invoice.invoice_number,
+                "has_items": len(invoice.items) > 0,
+                "has_totals": all([
+                    invoice.subtotal is not None,
+                    invoice.total is not None,
+                    invoice.balance is not None
+                ]),
+                "items": []
+            }
+
+            if invoice.items:
+                verification_results["invoices_with_items"] += 1
+
+            if invoice_status["has_totals"]:
+                verification_results["invoices_with_totals"] += 1
+
+            # Check each item
+            for item in invoice.items:
+                item_status = {
+                    "name": item.name,
+                    "description": item.description,
+                    "quantity": item.quantity,
+                    "price": item.price,
+                    "has_name": item.name and item.name.strip() != "",
+                    "has_description": item.description and item.description.strip() != "",
+                    "has_quantity": item.quantity is not None,
+                    "has_price": item.price is not None,
+                    "has_totals": all([
+                        item.subtotal is not None,
+                        item.total is not None
+                    ])
+                }
+                invoice_status["items"].append(item_status)
+
+                # Check for issues
+                if not item_status["has_name"]:
+                    verification_results["issues"].append(f"Invoice {invoice.invoice_number}: Item missing name")
+                if not item_status["has_quantity"]:
+                    verification_results["issues"].append(f"Invoice {invoice.invoice_number}: Item missing quantity")
+                if not item_status["has_price"]:
+                    verification_results["issues"].append(f"Invoice {invoice.invoice_number}: Item missing price")
+
+            verification_results["sample_invoices"].append(invoice_status)
+
+        # Overall assessment
+        if verification_results["total_invoices"] == 0:
+            verification_results["status"] = "no_invoices"
+        elif len(verification_results["issues"]) == 0 and verification_results["invoices_with_items"] == verification_results["total_invoices"]:
+            verification_results["status"] = "success"
+        else:
+            verification_results["status"] = "issues_found"
+
+        return verification_results
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Verification failed: {str(e)}")
+
+
+@router.get("/import", response_class=HTMLResponse)
+async def import_invoices_page(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Web page for invoice import operations.
+    """
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin privileges required")
+
+    return templates.TemplateResponse(
+        "invoices/import.html",
+        {
+            "request": request,
+            "user": current_user,
+            "title": "Import Invoices"
+        }
+    )
+

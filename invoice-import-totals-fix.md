@@ -64,8 +64,12 @@ Check that imported invoices now have:
 ### 4. Re-import Existing Data
 For invoices already imported without complete data:
 ```bash
-# Option 1: Delete and re-import (CAUTION: This will delete existing invoices)
-# Option 2: Use the delete button in the UI to remove specific bad imports, then re-import
+# Step 1: Delete existing bad imports (optional but recommended)
+python delete_all_invoices.py --dry-run    # See what would be deleted
+python delete_all_invoices.py              # Actually delete (asks for confirmation)
+
+# Step 2: Re-import with the fixed script
+python importdb/import_legacy_data.py --table invoices
 ```
 
 ## Debug Information
