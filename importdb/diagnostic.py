@@ -18,6 +18,8 @@ from app.config import settings
 from sqlalchemy import create_engine
 from app.models.invoice import Invoice, InvoiceItem
 from app.models.tax_rate import TaxRate
+from app.models.client import Client
+from app.models.product import Product
 from sqlalchemy.orm import sessionmaker, joinedload
 
 def check_database_content():
@@ -35,11 +37,31 @@ def check_database_content():
         invoice_count = session.query(Invoice).count()
         item_count = session.query(InvoiceItem).count()
         tax_rate_count = session.query(TaxRate).count()
+        client_count = session.query(Client).count()
+        product_count = session.query(Product).count()
 
         print(f"Database contains:")
         print(f"  - {invoice_count} invoices")
         print(f"  - {item_count} invoice items")
+        print(f"  - {client_count} clients")
+        print(f"  - {product_count} products")
         print(f"  - {tax_rate_count} tax rates")
+
+        # Check for import order issues
+        if invoice_count > 0 and product_count == 0:
+            print("\n⚠️  WARNING: Invoices exist but no products found!")
+            print("   This suggests products were not imported before invoices.")
+            print("   Invoice items may have been skipped due to missing product references.")
+
+        if invoice_count > 0 and client_count == 0:
+            print("\n⚠️  WARNING: Invoices exist but no clients found!")
+            print("   This suggests clients were not imported before invoices.")
+            print("   Invoice imports may fail due to missing client references.")
+
+        if item_count == 0 and invoice_count > 0:
+            print("\n⚠️  WARNING: Invoices exist but no invoice items found!")
+            print("   This suggests the invoice item import failed.")
+            print("   Check that products exist before importing invoices.")
 
         if invoice_count == 0:
             print("\n❌ No invoices found! Import may have failed.")
