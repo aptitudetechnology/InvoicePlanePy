@@ -549,12 +549,20 @@
         // Add product modal button logic
         const addProductBtn = document.getElementById('display-product-modal-btn');
         if (addProductBtn) {
+            console.log('Add product button found, adding click listener');
             addProductBtn.addEventListener('click', () => {
+                console.log('Add product button clicked');
                 const productModalInstance = window.productModalInstance || (window.ProductModal && window.ProductModal.getInstance && window.ProductModal.getInstance());
+                console.log('Product modal instance:', productModalInstance);
                 if (productModalInstance && typeof productModalInstance.showModal === 'function') {
+                    console.log('Calling showModal...');
                     productModalInstance.showModal();
+                } else {
+                    console.error('Product modal instance not found or showModal method missing');
                 }
             });
+        } else {
+            console.error('Add product button not found');
         }
     });
 

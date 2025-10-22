@@ -6,25 +6,30 @@ class ProductModal {
     this.modal = null;
     this.modalElement = null;
     this.selectedProducts = new Set();
+    console.log('ProductModal constructor called');
     this.init();
   }
 
   init() {
     // Wait for DOM to be ready
     if (document.readyState === 'loading') {
+      console.log('DOM loading, waiting...');
       document.addEventListener('DOMContentLoaded', () => this.setupModal());
     } else {
+      console.log('DOM ready, setting up modal...');
       this.setupModal();
     }
   }
 
   setupModal() {
+    console.log('Setting up modal...');
     this.modalElement = document.getElementById('productModal');
     if (!this.modalElement) {
       console.warn('Product modal not found');
       return;
     }
 
+    console.log('Modal element found, initializing Bootstrap modal...');
     // Initialize Bootstrap modal
     this.modal = new bootstrap.Modal(this.modalElement);
     
@@ -217,12 +222,20 @@ class ProductModal {
 
   // Load families from API and populate filter dropdown
   async loadFamilies() {
+    console.log('Loading families...');
     try {
       const response = await fetch('/products/api/families');
+      console.log('Families response status:', response.status);
       if (!response.ok) {
+        if (response.status === 401) {
+          console.error('Authentication required for families API');
+          alert('You must be logged in to access product data.');
+          return;
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
+      console.log('Families data:', data);
       
       const familyFilter = document.getElementById('familyFilter');
       if (familyFilter) {
@@ -230,12 +243,19 @@ class ProductModal {
         familyFilter.innerHTML = '<option value="">Any family</option>';
         
         // Add family options
-        data.families.forEach(family => {
-          const option = document.createElement('option');
-          option.value = family.id;
-          option.textContent = family.name;
-          familyFilter.appendChild(option);
-        });
+        if (data.families && data.families.length > 0) {
+          data.families.forEach(family => {
+            const option = document.createElement('option');
+            option.value = family.id;
+            option.textContent = family.name;
+            familyFilter.appendChild(option);
+          });
+          console.log(`Added ${data.families.length} family options`);
+        } else {
+          console.log('No families found in response');
+        }
+      } else {
+        console.error('familyFilter element not found');
       }
     } catch (error) {
       console.error('Error loading families:', error);
@@ -294,11 +314,15 @@ class ProductModal {
   }
 
   showModal() {
+    console.log('showModal called');
     if (this.modal) {
+      console.log('Showing modal and loading data...');
       this.modal.show();
       // Load families and products when modal opens
       this.loadFamilies();
       this.loadProducts();
+    } else {
+      console.error('Modal not initialized');
     }
   }
 
