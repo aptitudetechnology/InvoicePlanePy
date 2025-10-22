@@ -33,9 +33,6 @@ async def test_families_api(db: Session = Depends(get_db)):
         return {"success": False, "error": str(e)}
 
 
-router = APIRouter()
-templates = Jinja2Templates(directory="app/templates")
-
 @router.get("/", response_class=HTMLResponse)
 async def settings_page(
     request: Request,
