@@ -217,6 +217,10 @@
                             <i class="bi bi-bug"></i> Test Product Families API
                         </button>
                         <div id="familiesApiTestResult" class="mt-2 mb-3"></div>
+                        <button id="testProductsApiBtn" class="btn btn-outline-primary btn-sm w-100 mb-2" type="button">
+                            <i class="bi bi-bug"></i> Test Products API
+                        </button>
+                        <div id="productsApiTestResult" class="mt-2 mb-3"></div>
                         <button class="btn btn-outline-warning btn-sm w-100 mb-2">
                             <i class="bi bi-arrow-clockwise"></i> Clear Cache
                         </button>
@@ -474,6 +478,43 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     } else {
                         resultDiv.innerHTML = `<div class='alert alert-danger'>Error: ${data.error || 'Unknown error'}</div>`;
+                    }
+                })
+                .catch(err => {
+                    resultDiv.innerHTML = `<div class='alert alert-danger'>Request failed: ${err}</div>`;
+                });
+        });
+    }
+});
+
+// Test Products API button logic
+document.addEventListener('DOMContentLoaded', function() {
+    const btn = document.getElementById('testProductsApiBtn');
+    if (btn) {
+        btn.addEventListener('click', function() {
+            const resultDiv = document.getElementById('productsApiTestResult');
+            resultDiv.innerHTML = '<span class="text-info">Testing products API...</span>';
+            fetch('/settings/test-products-api')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.products && data.products.length >= 0) {
+                        let html = `<div class='alert alert-success'><strong>Products API returned ${data.products.length} products:</strong>`;
+                        if (data.products.length > 0) {
+                            html += '<ul>';
+                            data.products.slice(0, 5).forEach(prod => {
+                                html += `<li>ID: <code>${prod.id}</code> &mdash; <strong>${prod.name}</strong> (${prod.sku || 'No SKU'}) - $${prod.price || 'N/A'}</li>`;
+                            });
+                            if (data.products.length > 5) {
+                                html += `<li>... and ${data.products.length - 5} more products</li>`;
+                            }
+                            html += '</ul>';
+                        } else {
+                            html += '<p>No products found.</p>';
+                        }
+                        html += '</div>';
+                        resultDiv.innerHTML = html;
+                    } else {
+                        resultDiv.innerHTML = `<div class='alert alert-danger'>Error: Invalid response format</div>`;
                     }
                 })
                 .catch(err => {

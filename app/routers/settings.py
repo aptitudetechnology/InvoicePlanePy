@@ -32,6 +32,22 @@ async def test_families_api(db: Session = Depends(get_db)):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
+# Test Products API diagnostic endpoint
+@router.get("/test-products-api", response_class=JSONResponse)
+async def test_products_api(db: Session = Depends(get_db)):
+    """
+    Test the /products/api endpoint and return the result for diagnostics.
+    """
+    try:
+        # Import the products API function
+        from app.routers.products import get_products_api
+        
+        # Call the products API with default parameters
+        products_result = await get_products_api(db=db, page=1, limit=10)
+        return {"success": True, "products": products_result.get("products", [])}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 
 @router.get("/", response_class=HTMLResponse)
 async def settings_page(

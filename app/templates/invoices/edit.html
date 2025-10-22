@@ -710,17 +710,21 @@
         }
 
         async loadProducts(search = '', familyId = '') {
-            console.log('loadProducts called');
+            console.log('loadProducts called with search:', search, 'familyId:', familyId);
             try {
                 let url = '/products/api?limit=1000';
                 if (search) url += `&search=${encodeURIComponent(search)}`;
                 if (familyId) url += `&family_id=${encodeURIComponent(familyId)}`;
 
+                console.log('Loading products from URL:', url);
                 const response = await fetch(url);
+                console.log('Products response status:', response.status);
+                
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
                 const data = await response.json();
-                console.log('Products loaded:', data.products ? data.products.length : 0);
+                console.log('Products data received:', data);
+                console.log('Number of products:', data.products ? data.products.length : 0);
                 this.renderProductsTable(data.products || []);
             } catch (error) {
                 console.error('Error loading products:', error);
@@ -729,21 +733,25 @@
         }
 
         renderProductsTable(products) {
-            const tbody = document.getElementById('productsTableBody');
-            if (!tbody) return;
+            const tbody = document.getElementById('productTableBody');
+            if (!tbody) {
+                console.error('productTableBody not found');
+                return;
+            }
 
             if (products.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No products found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No products found</td></tr>';
                 return;
             }
 
             tbody.innerHTML = products.map(product => `
                 <tr>
-                    <td><input type="checkbox" class="product-checkbox" value="${product.id}" data-name="${product.name}" data-price="${product.price || 0}" data-sku="${product.sku}"></td>
-                    <td>${product.name}</td>
-                    <td>${product.sku}</td>
-                    <td>${product.price ? '$' + parseFloat(product.price).toFixed(2) : 'N/A'}</td>
+                    <td><input type="checkbox" class="product-checkbox" value="${product.id}" data-name="${product.name}" data-price="${product.price || 0}" data-sku="${product.sku}" data-description="${product.description || ''}"></td>
+                    <td>${product.sku || ''}</td>
                     <td>${product.family ? product.family.name : 'No family'}</td>
+                    <td>${product.name}</td>
+                    <td>${product.description || ''}</td>
+                    <td>${product.price ? '$' + parseFloat(product.price).toFixed(2) : 'N/A'}</td>
                 </tr>
             `).join('');
         }
@@ -751,6 +759,7 @@
         filterProductsByFamily() {
             const familyId = document.getElementById('familyFilter').value;
             const search = document.getElementById('productNameSearch').value;
+            console.log('Filtering by family:', familyId, 'search:', search);
             this.loadProducts(search, familyId);
         }
 
@@ -814,7 +823,7 @@
                 console.log('Showing modal and loading data');
                 this.modal.show();
                 this.loadFamilies();
-                this.loadProducts();
+                this.loadProducts(); // Load all products initially
             } else {
                 console.error('Modal not initialized');
             }
