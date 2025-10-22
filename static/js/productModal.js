@@ -56,15 +56,13 @@ class ProductModal {
     }
 
     // Search and reset buttons
-    const searchBtn = this.modalElement.querySelector('[onclick="searchProducts()"]');
+    const searchBtn = document.getElementById('searchProductsBtn');
     if (searchBtn) {
-      searchBtn.removeAttribute('onclick');
       searchBtn.addEventListener('click', () => this.searchProducts());
     }
 
-    const resetBtn = this.modalElement.querySelector('[onclick="resetProductSearch()"]');
+    const resetBtn = document.getElementById('resetProductSearchBtn');
     if (resetBtn) {
-      resetBtn.removeAttribute('onclick');
       resetBtn.addEventListener('click', () => this.resetProductSearch());
     }
 
@@ -131,10 +129,13 @@ class ProductModal {
 
   // Load families from API and populate filter dropdown
   async loadFamilies() {
+    console.log('loadFamilies called');
     try {
+      console.log('Fetching families from /products/api/families');
       const response = await fetch('/products/api/families', {
         credentials: 'same-origin'
       });
+      console.log('Families response status:', response.status);
       if (!response.ok) {
         if (response.status === 401) {
           console.error('Authentication required for families API');
@@ -144,6 +145,7 @@ class ProductModal {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
+      console.log('Families data received:', data);
 
       const familyFilter = document.getElementById('familyFilter');
       if (familyFilter) {
@@ -167,6 +169,7 @@ class ProductModal {
 
   // Load products from API and populate table
   async loadProducts(search = '', familyId = '') {
+    console.log('loadProducts called with search:', search, 'familyId:', familyId);
     try {
       let url = '/products/api?limit=1000'; // Load all products for modal
       if (search) {
@@ -176,13 +179,16 @@ class ProductModal {
         url += `&family_id=${encodeURIComponent(familyId)}`;
       }
 
+      console.log('Fetching products from:', url);
       const response = await fetch(url, {
         credentials: 'same-origin'
       });
+      console.log('Products response status:', response.status);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
+      console.log('Products data received:', data);
 
       this.renderProducts(data.products);
     } catch (error) {
