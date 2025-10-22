@@ -459,69 +459,69 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
             if (i + 1) % 10 == 0:
                 logger.info(f"Processing record {i+1}/{total}")
 
-            # Map fields
-            mapped = {}
-            for legacy_field, new_field in FIELD_MAP_INVOICES.items():
-                if legacy_field in row:
-                    value = row[legacy_field]
-                    if value == 'NULL' or value == '':
-                        mapped[new_field] = None
-                    else:
-                        mapped[new_field] = value
-
-            # Type conversions
-            if 'invoice_date_created' in row:
-                mapped["issue_date"] = parse_date(row["invoice_date_created"])
-
-            if 'invoice_date_due' in row:
-                mapped["due_date"] = parse_date(row["invoice_date_due"])
-
-            # Skip invoices without required fields
-            if not mapped.get("user_id") or not mapped.get("client_id") or not mapped.get("invoice_number"):
-                logger.warning(f"Skipping invoice without required user_id, client_id, or invoice_number: {row}")
-                skipped += 1
-                continue
-
-            # Map client_id using the ID mapping if provided
-            client_id = mapped.get("client_id")
-            if client_id and client_id_mapping:
-                new_client_id = client_id_mapping.get(str(client_id))
-                if new_client_id:
-                    mapped["client_id"] = new_client_id
-                    logger.debug(f"Mapped legacy client_id {client_id} to new client_id {new_client_id}")
-                else:
-                    logger.warning(f"No mapping found for legacy client_id {client_id}, skipping invoice: {row}")
-                    skipped += 1
-                    continue
-            elif client_id:
-                # Fallback: check if the legacy ID exists directly (for backward compatibility)
-                existing_client = session.query(Client).filter_by(id=client_id).first()
-                if not existing_client:
-                    logger.warning(f"Skipping invoice with non-existent client_id {client_id}: {row}")
-                    skipped += 1
-                    continue
-
-            # Check if referenced user exists
-            user_id = mapped.get("user_id")
-            if user_id:
-                from app.models.user import User
-                existing_user = session.query(User).filter_by(id=user_id).first()
-                if not existing_user:
-                    logger.warning(f"Skipping invoice with non-existent user_id {user_id}: {row}")
-                    skipped += 1
-                    continue
-
-            # Check if invoice_number is unique
-            invoice_number = mapped.get("invoice_number")
-            if invoice_number:
-                existing_invoice = session.query(Invoice).filter_by(invoice_number=invoice_number).first()
-                if existing_invoice:
-                    logger.warning(f"Skipping invoice with duplicate invoice_number {invoice_number}: {row}")
-                    skipped += 1
-                    continue
-
-            # Create invoice object
             try:
+                # Map fields
+                mapped = {}
+                for legacy_field, new_field in FIELD_MAP_INVOICES.items():
+                    if legacy_field in row:
+                        value = row[legacy_field]
+                        if value == 'NULL' or value == '':
+                            mapped[new_field] = None
+                        else:
+                            mapped[new_field] = value
+
+                # Type conversions
+                if 'invoice_date_created' in row:
+                    mapped["issue_date"] = parse_date(row["invoice_date_created"])
+
+                if 'invoice_date_due' in row:
+                    mapped["due_date"] = parse_date(row["invoice_date_due"])
+
+                # Skip invoices without required fields
+                if not mapped.get("user_id") or not mapped.get("client_id") or not mapped.get("invoice_number"):
+                    logger.warning(f"Skipping invoice without required user_id, client_id, or invoice_number: {row}")
+                    skipped += 1
+                    continue
+
+                # Map client_id using the ID mapping if provided
+                client_id = mapped.get("client_id")
+                if client_id and client_id_mapping:
+                    new_client_id = client_id_mapping.get(str(client_id))
+                    if new_client_id:
+                        mapped["client_id"] = new_client_id
+                        logger.debug(f"Mapped legacy client_id {client_id} to new client_id {new_client_id}")
+                    else:
+                        logger.warning(f"No mapping found for legacy client_id {client_id}, skipping invoice: {row}")
+                        skipped += 1
+                        continue
+                elif client_id:
+                    # Fallback: check if the legacy ID exists directly (for backward compatibility)
+                    existing_client = session.query(Client).filter_by(id=client_id).first()
+                    if not existing_client:
+                        logger.warning(f"Skipping invoice with non-existent client_id {client_id}: {row}")
+                        skipped += 1
+                        continue
+
+                # Check if referenced user exists
+                user_id = mapped.get("user_id")
+                if user_id:
+                    from app.models.user import User
+                    existing_user = session.query(User).filter_by(id=user_id).first()
+                    if not existing_user:
+                        logger.warning(f"Skipping invoice with non-existent user_id {user_id}: {row}")
+                        skipped += 1
+                        continue
+
+                # Check if invoice_number is unique
+                invoice_number = mapped.get("invoice_number")
+                if invoice_number:
+                    existing_invoice = session.query(Invoice).filter_by(invoice_number=invoice_number).first()
+                    if existing_invoice:
+                        logger.warning(f"Skipping invoice with duplicate invoice_number {invoice_number}: {row}")
+                        skipped += 1
+                        continue
+
+                # Create invoice object
                 invoice = Invoice(**mapped)
                 if not dry_run:
                     session.add(invoice)
@@ -678,14 +678,28 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
                         invoice.balance = Decimal('0')
 
                 imported += 1
+                logger.info(f"Successfully imported invoice {mapped.get('invoice_number', 'unknown')} (ID: {invoice.id if not dry_run else 'dry-run'})")
+                
             except Exception as e:
-                logger.error(f"Error creating invoice from row {row}: {e}")
+                logger.error(f"Error processing invoice {row.get('invoice_id', 'unknown')} ({row.get('invoice_number', 'unknown')}): {e}")
+                logger.error(f"Invoice data: {row}")
+                # Rollback any partial changes for this invoice
+                try:
+                    session.rollback()
+                except Exception as rollback_error:
+                    logger.error(f"Error during rollback: {rollback_error}")
                 skipped += 1
                 continue
 
         if not dry_run:
-            session.commit()
-            logger.info(f"Successfully imported {imported} invoices")
+            try:
+                session.commit()
+                logger.info(f"Successfully imported {imported} invoices")
+            except Exception as e:
+                logger.error(f"Error committing transaction: {e}")
+                session.rollback()
+                logger.warning("Rolled back all changes due to commit failure")
+                raise
         else:
             logger.info(f"Dry run: Would import {imported} invoices")
 
