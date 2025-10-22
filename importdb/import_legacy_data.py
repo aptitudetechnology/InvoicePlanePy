@@ -431,6 +431,29 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
             logger.warning("No invoice records found! Check if the SQL file contains ip_invoices table data.")
             return
 
+        # Parse all invoice items once (much more efficient)
+        logger.info("Parsing all invoice items...")
+        try:
+            all_item_rows = list(parse_inserts(sql_file, "ip_invoice_items"))
+            logger.info(f"Found {len(all_item_rows)} total invoice item records")
+            
+            # Group items by invoice_id for efficient lookup
+            items_by_invoice = {}
+            for item in all_item_rows:
+                inv_id = item.get("invoice_id")
+                if inv_id:
+                    if inv_id not in items_by_invoice:
+                        items_by_invoice[inv_id] = []
+                    items_by_invoice[inv_id].append(item)
+            
+            logger.info(f"Grouped items into {len(items_by_invoice)} invoice groups")
+            for inv_id, items in items_by_invoice.items():
+                logger.debug(f"Invoice {inv_id}: {len(items)} items")
+                
+        except Exception as e:
+            logger.error(f"Failed to parse invoice items from SQL file: {e}")
+            raise ValueError(f"SQL parsing error for invoice items: {e}")
+
         for i, row in enumerate(rows):
             if (i + 1) % 10 == 0:
                 logger.info(f"Processing record {i+1}/{total}")
@@ -503,23 +526,17 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
                     session.add(invoice)
                     session.flush()  # Get invoice ID for items
 
-                    # Import invoice items
-                    invoice_id = row.get("invoice_id")
-                    if invoice_id:
-                        logger.info(f"Processing items for invoice {invoice_id}")
-                        try:
-                            item_rows = list(parse_inserts(sql_file, "ip_invoice_items"))
-                        except Exception as e:
-                            logger.error(f"Failed to parse invoice items from SQL file: {e}")
-                            raise ValueError(f"SQL parsing error for invoice items: {e}")
-                        logger.info(f"Found {len(item_rows)} total invoice item records")
+                    # Import invoice items for this invoice
+                    legacy_invoice_id = row.get("invoice_id")
+                    if legacy_invoice_id:
+                        logger.info(f"Processing items for invoice {legacy_invoice_id} (new ID: {invoice.id})")
                         
-                        # Filter items for this invoice
-                        invoice_items = [item for item in item_rows if item.get("invoice_id") == invoice_id]
-                        logger.info(f"Found {len(invoice_items)} items for invoice {invoice_id}")
+                        # Get items for this invoice
+                        invoice_items = items_by_invoice.get(str(legacy_invoice_id), [])
+                        logger.info(f"Found {len(invoice_items)} items for invoice {legacy_invoice_id}")
                         
                         if invoice_items:
-                            logger.info(f"Sample item for invoice {invoice_id}: {invoice_items[0]}")
+                            logger.info(f"Sample item for invoice {legacy_invoice_id}: {invoice_items[0]}")
                         
                         for item_row in invoice_items:
                                 logger.debug(f"Processing invoice item: {item_row}")
