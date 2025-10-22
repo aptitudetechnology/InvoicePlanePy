@@ -20,7 +20,9 @@ class ProductModal {
   }
 
   setupModal() {
+    console.log('ProductModal.setupModal() called');
     this.modalElement = document.getElementById('productModal');
+    console.log('Modal element found:', !!this.modalElement);
     if (!this.modalElement) {
       console.warn('Product modal not found');
       return;
@@ -28,6 +30,7 @@ class ProductModal {
 
     // Initialize Bootstrap modal
     this.modal = new bootstrap.Modal(this.modalElement);
+    console.log('Bootstrap modal initialized:', !!this.modal);
 
     // Setup event listeners
     this.attachEventListeners();
@@ -130,6 +133,7 @@ class ProductModal {
 
   // Load families from API and populate filter dropdown
   async loadFamilies() {
+    console.log('=== loadFamilies() START ===');
     console.log('loadFamilies called - checking if modal is visible');
     const modalElement = document.getElementById('productModal');
     console.log('Modal element:', modalElement);
@@ -137,6 +141,7 @@ class ProductModal {
     
     // Add a small delay to ensure modal is fully rendered
     await new Promise(resolve => setTimeout(resolve, 100));
+    console.log('Delay completed, proceeding with API call');
     
     try {
       console.log('Fetching families from /products/api/families');
@@ -186,6 +191,7 @@ class ProductModal {
       console.error('Error in loadFamilies:', error);
       alert('Error loading product families: ' + error.message);
     }
+    console.log('=== loadFamilies() END ===');
   }
 
   // Load products from API and populate table
@@ -388,11 +394,15 @@ class ProductModal {
   }
 
   showModal() {
+    console.log('ProductModal.showModal() called');
     if (this.modal) {
+      console.log('Showing modal and calling loadFamilies/loadProducts');
       this.modal.show();
       // Load families and products when modal opens
       this.loadFamilies();
       this.loadProducts();
+    } else {
+      console.error('Modal not initialized');
     }
   }
 
@@ -404,6 +414,7 @@ class ProductModal {
       console.log('Creating new ProductModal instance...');
       window.productModalInstance = new ProductModal();
       console.log('Created instance:', window.productModalInstance);
+      console.log('Instance has showModal method:', typeof window.productModalInstance.showModal);
     } else {
       console.log('Using existing instance:', window.productModalInstance);
     }
@@ -416,14 +427,19 @@ console.log('ProductModal.getInstance method:', typeof ProductModal.getInstance)
 
 // Auto-initialize when DOM is ready
 console.log('Setting up ProductModal auto-initialization...');
+console.log('Current document.readyState:', document.readyState);
+console.log('Modal element exists at startup:', !!document.getElementById('productModal'));
+
 if (document.readyState === 'loading') {
   console.log('DOM not ready, waiting...');
   document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOMContentLoaded fired, calling ProductModal.getInstance()');
+    console.log('DOMContentLoaded fired, modal element now exists:', !!document.getElementById('productModal'));
+    console.log('Calling ProductModal.getInstance()');
     ProductModal.getInstance();
   });
 } else {
-  console.log('DOM already ready, calling ProductModal.getInstance()');
+  console.log('DOM already ready, modal element exists:', !!document.getElementById('productModal'));
+  console.log('Calling ProductModal.getInstance()');
   ProductModal.getInstance();
 }
 
