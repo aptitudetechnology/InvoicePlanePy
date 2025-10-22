@@ -149,6 +149,33 @@ async def get_products_api(
         logging.error(f"Unexpected error in get_products_api: {str(e)}")
         raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
+@router.get("/api/families")
+async def get_families_api(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get all active product families for the product modal.
+    """
+    try:
+        families = db.query(ProductFamily).filter(ProductFamily.is_active == True).order_by(ProductFamily.name).all()
+        
+        families_data = []
+        for family in families:
+            families_data.append({
+                "id": family.id,
+                "name": family.name
+            })
+        
+        return {"families": families_data}
+        
+    except SQLAlchemyError as e:
+        logging.error(f"Database error in get_families_api: {str(e)}")
+        raise HTTPException(status_code=500, detail="Database error occurred")
+    except Exception as e:
+        logging.error(f"Unexpected error in get_families_api: {str(e)}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred")
+
 # Existing endpoints continue below...
 
 @router.get("/", response_class=HTMLResponse)

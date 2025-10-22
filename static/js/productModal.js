@@ -101,47 +101,14 @@ class ProductModal {
 
   filterProductsByFamily() {
     const selectedFamily = document.getElementById('familyFilter').value;
-    const rows = document.querySelectorAll('.product-row');
-    
-    rows.forEach(row => {
-      const family = row.getAttribute('data-family');
-      const shouldShow = !selectedFamily || family === selectedFamily;
-      row.style.display = shouldShow ? '' : 'none';
-      
-      // Also hide corresponding details row if it exists
-      const checkbox = row.querySelector('.product-checkbox');
-      if (checkbox) {
-        const productId = checkbox.getAttribute('data-product-id');
-        const detailsRow = document.getElementById(`details-${productId}`);
-        if (detailsRow) {
-          detailsRow.style.display = shouldShow ? detailsRow.style.display : 'none';
-        }
-      }
-    });
+    const searchTerm = document.getElementById('productNameSearch').value;
+    this.loadProducts(searchTerm, selectedFamily);
   }
 
   filterProductsByName() {
-    const searchTerm = document.getElementById('productNameSearch').value.toLowerCase();
-    const rows = document.querySelectorAll('.product-row');
-    
-    rows.forEach(row => {
-      const productNameCell = row.cells[3];
-      if (productNameCell) {
-        const productName = productNameCell.textContent.toLowerCase();
-        const shouldShow = !searchTerm || productName.includes(searchTerm);
-        row.style.display = shouldShow ? '' : 'none';
-        
-        // Also hide corresponding details row if it exists
-        const checkbox = row.querySelector('.product-checkbox');
-        if (checkbox) {
-          const productId = checkbox.getAttribute('data-product-id');
-          const detailsRow = document.getElementById(`details-${productId}`);
-          if (detailsRow) {
-            detailsRow.style.display = shouldShow ? detailsRow.style.display : 'none';
-          }
-        }
-      }
-    });
+    const searchTerm = document.getElementById('productNameSearch').value;
+    const selectedFamily = document.getElementById('familyFilter').value;
+    this.loadProducts(searchTerm, selectedFamily);
   }
 
   searchProducts() {
@@ -158,23 +125,8 @@ class ProductModal {
     if (familyFilter) familyFilter.value = '';
     if (productNameSearch) productNameSearch.value = '';
     
-    // Show all product rows
-    const rows = document.querySelectorAll('.product-row');
-    rows.forEach(row => {
-      row.style.display = '';
-    });
-
-    // Hide all details rows
-    const detailRows = document.querySelectorAll('.product-details-row');
-    detailRows.forEach(row => {
-      row.style.display = 'none';
-    });
-
-    // Reset expand icons
-    const expandIcons = document.querySelectorAll('.expand-icon');
-    expandIcons.forEach(icon => {
-      icon.className = 'bi bi-chevron-right expand-icon';
-    });
+    // Reload all products
+    this.loadProducts();
   }
 
   toggleProductDetails(row) {
@@ -263,9 +215,92 @@ class ProductModal {
     }
   }
 
+  // Load families from API and populate filter dropdown
+  async loadFamilies() {
+    try {
+      const response = await fetch('/products/api/families');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      
+      const familyFilter = document.getElementById('familyFilter');
+      if (familyFilter) {
+        // Clear existing options except "Any family"
+        familyFilter.innerHTML = '<option value="">Any family</option>';
+        
+        // Add family options
+        data.families.forEach(family => {
+          const option = document.createElement('option');
+          option.value = family.id;
+          option.textContent = family.name;
+          familyFilter.appendChild(option);
+        });
+      }
+    } catch (error) {
+      console.error('Error loading families:', error);
+    }
+  }
+
+  // Load products from API and populate table
+  async loadProducts(search = '', familyId = '') {
+    try {
+      let url = '/products/api?limit=1000'; // Load all products for modal
+      if (search) {
+        url += `&search=${encodeURIComponent(search)}`;
+      }
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      
+      this.renderProducts(data.products, familyId);
+    } catch (error) {
+      console.error('Error loading products:', error);
+    }
+  }
+
+  // Render products in the table
+  renderProducts(products, filterFamilyId = '') {
+    const tbody = document.getElementById('productTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    products.forEach(product => {
+      // Apply family filter if specified
+      if (filterFamilyId && product.family && product.family.id != filterFamilyId) {
+        return;
+      }
+      
+      const row = document.createElement('tr');
+      row.className = 'product-row';
+      row.setAttribute('data-family', product.family ? product.family.name.toLowerCase().replace(/\s+/g, '-') : '');
+      
+      row.innerHTML = `
+        <td>
+          <input type="checkbox" class="form-check-input product-checkbox" 
+                 value="${product.id}" data-product-id="${product.id}">
+        </td>
+        <td>${product.sku || ''}</td>
+        <td>${product.family ? product.family.name : ''}</td>
+        <td>${product.name}</td>
+        <td>${product.description || ''}</td>
+        <td>$${parseFloat(product.price || 0).toFixed(2)}</td>
+      `;
+      
+      tbody.appendChild(row);
+    });
+  }
+
   showModal() {
     if (this.modal) {
       this.modal.show();
+      // Load families and products when modal opens
+      this.loadFamilies();
+      this.loadProducts();
     }
   }
 

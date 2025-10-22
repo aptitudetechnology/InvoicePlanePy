@@ -12,10 +12,7 @@
           <div class="col-md-3">
             <select class="form-select" id="familyFilter">
               <option value="">Any family</option>
-              <option value="ram">RAM</option>
-              <option value="storage">Storage</option>
-              <option value="cables">Cables</option>
-              <option value="systems">Complete Systems</option>
+              <!-- Families will be loaded dynamically -->
             </select>
           </div>
           <div class="col-md-6">
@@ -43,125 +40,8 @@
               </tr>
             </thead>
             <tbody id="productTableBody">
-              <!-- RAM Product -->
-              <tr class="product-row" data-family="ram">
-                <td>
-                  <input type="checkbox" class="form-check-input product-checkbox" value="1" data-product-id="1">
-                </td>
-                <td>CM508GX3M1C1600C11</td>
-                <td></td>
-                <td>Corsair 8GB (1x8GB) CM508GX3M1C1600C11 1600MHz Value Select DDR3L SODIMM RAM</td>
-                <td>High-performance DDR3L SODIMM memory module</td>
-                <td>$54.90</td>
-              </tr>
-
-              <!-- Cable Product -->
-              <tr class="product-row" data-family="cables">
-                <td>
-                  <input type="checkbox" class="form-check-input product-checkbox" value="2" data-product-id="2">
-                </td>
-                <td></td>
-                <td></td>
-                <td>dvi to display port cable</td>
-                <td>DVI-D to DisplayPort adapter cable for video connections</td>
-                <td>$10.00</td>
-              </tr>
-
-              <!-- Storage Product -->
-              <tr class="product-row" data-family="storage">
-                <td>
-                  <input type="checkbox" class="form-check-input product-checkbox" value="3" data-product-id="3">
-                </td>
-                <td></td>
-                <td></td>
-                <td>Kingston 1TB NV2 2280 NVMe SSD</td>
-                <td>High-speed NVMe solid state drive for enhanced performance</td>
-                <td>$70.00</td>
-              </tr>
-
-              <!-- Complete System Product (Expandable) -->
-              <tr class="product-row" data-family="systems" style="cursor: pointer;">
-                <td>
-                  <input type="checkbox" class="form-check-input product-checkbox" value="4" data-product-id="4">
-                </td>
-                <td></td>
-                <td></td>
-                <td>
-                  <i class="bi bi-chevron-right expand-icon"></i>
-                  Leader Corporate S44-i5 Slim Desktop, Intel i5-13400,16GB DDR5 RAM, 500GB M.2 NVMe SSD, 300W GOLD PSU, Win 11 Pro, 3 Years "4 Hour" Onsite Warranty
-                </td>
-                <td>Complete business desktop solution with warranty</td>
-                <td>$1,500.00</td>
-              </tr>
-
-              <!-- Expandable Details Row (Hidden by default) -->
-              <tr class="product-details-row" id="details-4" style="display: none;">
-                <td></td>
-                <td colspan="5">
-                  <div class="p-3 bg-light">
-                    <div class="row">
-                      <div class="col-12">
-                        <h6>DESCRIPTION</h6>
-                        
-                        <div class="mb-2">
-                          <strong>CPU</strong><br>
-                          Intel Core i5 13400 CPU 3.3GHz (4.6GHz Turbo) 13th Gen LGA1700 10-Cores 16-Threads 20MB 65W
-                        </div>
-
-                        <div class="mb-2">
-                          <strong>Mainboard</strong><br>
-                          ASUS Pro CSM Corporate Motherboard B760M
-                        </div>
-
-                        <div class="mb-2">
-                          <strong>Graphics</strong><br>
-                          Intel UHD graphics 730
-                        </div>
-
-                        <div class="mb-2">
-                          <strong>Memory</strong><br>
-                          Crucial 16GB (1x16GB) DDR5 UDIMM 4800MHz CL40 Desktop PC Memory
-                        </div>
-
-                        <div class="mb-2">
-                          <strong>Optical</strong><br>
-                          24X DVD+/-R/RW DVD Burner with software.
-                        </div>
-
-                        <div class="mb-2">
-                          <strong>Storage</strong><br>
-                          500GB M.2 NVMe SSD
-                        </div>
-
-                        <div class="mb-2">
-                          <strong>Case</strong><br>
-                          Leader Intel Certified mATX slimline Silver/Black Thermal case. Advanced cooling and noise reduction features. Gold 80+ 300W PSU
-                        </div>
-
-                        <div class="mb-2">
-                          <strong>Keyboard</strong><br>
-                          Wired Full Size Keyboard
-                        </div>
-
-                        <div class="mb-2">
-                          <strong>Mouse</strong><br>
-                          Wired Full Size Mouse
-                        </div>
-
-                        <div class="mb-2">
-                          <strong>Operating System</strong><br>
-                          Windows 11 Professional
-                        </div>
-
-                        <div class="mb-2">
-                          <strong>LAN</strong><br>
-                          Gigabit Ethernet
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </td>
-              </tr>
+              <!-- Products will be loaded dynamically -->
+            </tbody>
             </tbody>
           </table>
         </div>
