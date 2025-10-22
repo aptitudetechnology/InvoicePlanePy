@@ -86,9 +86,9 @@ FIELD_MAP_INVOICE_ITEMS = {
     "item_quantity": "quantity",
     "item_price": "price",
     "item_order": "order",
-    "item_tax_rate_id": "tax_rate_id",
     "item_product_id": "product_id",
     # Note: item_discount_amount doesn't exist in legacy schema
+    # Note: tax_rate_id is used for calculation but not stored on invoice items
     # Add more as needed
 }
 
@@ -601,7 +601,7 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
 
                                 # Calculate tax amount based on tax_rate_id
                                 tax_amount = 0.0
-                                tax_rate_id = item_mapped.get("tax_rate_id")
+                                tax_rate_id = item_row.get("item_tax_rate_id")
                                 if tax_rate_id and str(tax_rate_id) != '0':
                                     try:
                                         from app.models.tax_rate import TaxRate
