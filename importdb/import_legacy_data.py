@@ -540,105 +540,120 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
                         
                         for item_row in invoice_items:
                                 logger.debug(f"Processing invoice item: {item_row}")
-                                item_mapped = {}
-                                for legacy_field, new_field in FIELD_MAP_INVOICE_ITEMS.items():
-                                    if legacy_field in item_row:
-                                        value = item_row[legacy_field]
-                                        logger.debug(f"Mapping {legacy_field}='{value}' to {new_field}")
-                                        if value == 'NULL':
-                                            # Handle NULL values - set to None for optional fields, empty string for text fields
-                                            if new_field in ['description']:
-                                                item_mapped[new_field] = ""
-                                            else:
-                                                item_mapped[new_field] = None
-                                        elif value == '':
-                                            # Handle empty strings - keep as empty string for text fields
-                                            if new_field in ['name', 'description']:
-                                                item_mapped[new_field] = ""
-                                            else:
-                                                item_mapped[new_field] = None
-                                        else:
-                                            item_mapped[new_field] = value
-
-                                logger.debug(f"Mapped invoice item: {item_mapped}")
-
-                                item_mapped["invoice_id"] = invoice.id
-
-                                # Type conversions for items
-                                if 'item_quantity' in item_row and item_row['item_quantity'] not in ['NULL', '']:
-                                    try:
-                                        item_mapped["quantity"] = float(item_row["item_quantity"])
-                                    except ValueError:
-                                        item_mapped["quantity"] = 1.0
-
-                                if 'item_price' in item_row and item_row['item_price'] not in ['NULL', '']:
-                                    try:
-                                        item_mapped["price"] = float(item_row["item_price"])
-                                    except ValueError:
-                                        item_mapped["price"] = 0.00
-
-                                # Skip invoice items without required fields
-                                if not item_mapped.get("name") or item_mapped.get("name") == "":
-                                    logger.warning(f"Skipping invoice item without required name: {item_row}")
-                                    continue
                                 
-                                if item_mapped.get("quantity") is None:
-                                    logger.warning(f"Skipping invoice item without quantity: {item_row}")
-                                    continue
-                                    
-                                if item_mapped.get("price") is None:
-                                    logger.warning(f"Skipping invoice item without price: {item_row}")
-                                    continue
-
-                                # Map product_id using the ID mapping if provided
-                                product_id = item_mapped.get("product_id")
-                                if product_id and product_id_mapping:
-                                    new_product_id = product_id_mapping.get(str(product_id))
-                                    if new_product_id:
-                                        item_mapped["product_id"] = new_product_id
-                                        logger.debug(f"Mapped legacy product_id {product_id} to new product_id {new_product_id}")
-                                    else:
-                                        logger.warning(f"No mapping found for legacy product_id {product_id}, skipping invoice item: {item_row}")
-                                        continue
-                                elif product_id:
-                                    # Fallback: check if the legacy ID exists directly (for backward compatibility)
-                                    existing_product = session.query(Product).filter_by(id=product_id).first()
-                                    if not existing_product:
-                                        logger.warning(f"Skipping invoice item with non-existent product_id {product_id}: {item_row}")
-                                        continue
-
-                                # Calculate item totals
-                                quantity = item_mapped.get("quantity", 0)
-                                price = item_mapped.get("price", 0)
-                                # No discount_amount in legacy schema, so set to 0
-                                discount_amount = 0.0
-
-                                item_mapped["subtotal"] = quantity * price
-                                item_mapped["discount_amount"] = discount_amount
-
-                                # Calculate tax amount based on tax_rate_id
-                                tax_amount = 0.0
-                                tax_rate_id = item_row.get("item_tax_rate_id")
-                                if tax_rate_id and str(tax_rate_id) != '0':
-                                    try:
-                                        from app.models.tax_rate import TaxRate
-                                        tax_rate = session.query(TaxRate).filter_by(id=tax_rate_id).first()
-                                        if tax_rate:
-                                            # Calculate tax on (subtotal - discount)
-                                            taxable_amount = item_mapped["subtotal"] - discount_amount
-                                            tax_amount = taxable_amount * (tax_rate.rate / 100)
-                                    except Exception as e:
-                                        logger.warning(f"Error calculating tax for item: {e}")
-
-                                item_mapped["tax_amount"] = tax_amount
-                                item_mapped["total"] = item_mapped["subtotal"] - discount_amount + tax_amount
-
                                 try:
-                                    invoice_item = InvoiceItem(**item_mapped)
-                                    session.add(invoice_item)
-                                    logger.debug(f"Successfully created invoice item: {item_mapped}")
+                                    item_mapped = {}
+                                    for legacy_field, new_field in FIELD_MAP_INVOICE_ITEMS.items():
+                                        if legacy_field in item_row:
+                                            value = item_row[legacy_field]
+                                            logger.debug(f"Mapping {legacy_field}='{value}' to {new_field}")
+                                            if value == 'NULL':
+                                                # Handle NULL values - set to None for optional fields, empty string for text fields
+                                                if new_field in ['description']:
+                                                    item_mapped[new_field] = ""
+                                                else:
+                                                    item_mapped[new_field] = None
+                                            elif value == '':
+                                                # Handle empty strings - keep as empty string for text fields
+                                                if new_field in ['name', 'description']:
+                                                    item_mapped[new_field] = ""
+                                                else:
+                                                    item_mapped[new_field] = None
+                                            else:
+                                                item_mapped[new_field] = value
+
+                                    logger.debug(f"Mapped invoice item: {item_mapped}")
+
+                                    item_mapped["invoice_id"] = invoice.id
+
+                                    # Type conversions for items
+                                    if 'item_quantity' in item_row and item_row['item_quantity'] not in ['NULL', '']:
+                                        try:
+                                            item_mapped["quantity"] = float(item_row["item_quantity"])
+                                        except ValueError:
+                                            item_mapped["quantity"] = 1.0
+
+                                    if 'item_price' in item_row and item_row['item_price'] not in ['NULL', '']:
+                                        try:
+                                            item_mapped["price"] = float(item_row["item_price"])
+                                        except ValueError:
+                                            item_mapped["price"] = 0.00
+
+                                    # Skip invoice items without required fields
+                                    if not item_mapped.get("name") or item_mapped.get("name") == "":
+                                        logger.warning(f"Skipping invoice item without required name: {item_row}")
+                                        continue
+                                    
+                                    if item_mapped.get("quantity") is None:
+                                        logger.warning(f"Skipping invoice item without quantity: {item_row}")
+                                        continue
+                                        
+                                    if item_mapped.get("price") is None:
+                                        logger.warning(f"Skipping invoice item without price: {item_row}")
+                                        continue
+
+                                    # Map product_id using the ID mapping if provided
+                                    product_id = item_mapped.get("product_id")
+                                    if product_id and product_id_mapping:
+                                        new_product_id = product_id_mapping.get(str(product_id))
+                                        if new_product_id:
+                                            item_mapped["product_id"] = new_product_id
+                                            logger.debug(f"Mapped legacy product_id {product_id} to new product_id {new_product_id}")
+                                        else:
+                                            logger.warning(f"No mapping found for legacy product_id {product_id}, skipping invoice item: {item_row}")
+                                            continue
+                                    elif product_id:
+                                        # Fallback: check if the legacy ID exists directly (for backward compatibility)
+                                        existing_product = session.query(Product).filter_by(id=product_id).first()
+                                        if not existing_product:
+                                            logger.warning(f"Skipping invoice item with non-existent product_id {product_id}: {item_row}")
+                                            continue
+
+                                    # Calculate item totals
+                                    quantity = item_mapped.get("quantity", 0)
+                                    price = item_mapped.get("price", 0)
+                                    # No discount_amount in legacy schema, so set to 0
+                                    discount_amount = 0.0
+
+                                    item_mapped["subtotal"] = quantity * price
+                                    item_mapped["discount_amount"] = discount_amount
+
+                                    # Calculate tax amount - default to 10% GST
+                                    tax_amount = 0.0
+                                    tax_rate_percent = 10.0  # Default to 10% GST
+                                    
+                                    # Try to get tax rate from legacy data
+                                    tax_rate_id = item_row.get("item_tax_rate_id")
+                                    if tax_rate_id and str(tax_rate_id) != '0':
+                                        try:
+                                            from app.models.tax_rate import TaxRate
+                                            tax_rate = session.query(TaxRate).filter_by(id=tax_rate_id).first()
+                                            if tax_rate:
+                                                tax_rate_percent = tax_rate.rate
+                                        except Exception as e:
+                                            logger.warning(f"Error looking up tax rate {tax_rate_id}: {e}")
+                                    
+                                    # Calculate tax on (subtotal - discount) using the determined rate
+                                    taxable_amount = item_mapped["subtotal"] - discount_amount
+                                    tax_amount = taxable_amount * (tax_rate_percent / 100)
+                                    
+                                    logger.debug(f"Applied {tax_rate_percent}% tax to item: taxable={taxable_amount}, tax={tax_amount}")
+
+                                    item_mapped["tax_amount"] = tax_amount
+                                    item_mapped["total"] = item_mapped["subtotal"] - discount_amount + tax_amount
+
+                                    try:
+                                        invoice_item = InvoiceItem(**item_mapped)
+                                        session.add(invoice_item)
+                                        logger.debug(f"Successfully created invoice item: {item_mapped}")
+                                    except Exception as e:
+                                        logger.error(f"Error creating invoice item: {e}")
+                                        logger.error(f"Item data: {item_mapped}")
+                                        continue
+                                        
                                 except Exception as e:
-                                    logger.error(f"Error creating invoice item: {e}")
+                                    logger.error(f"Unexpected error processing invoice item: {e}")
+                                    logger.error(f"Item row: {item_row}")
                                     continue
 
                     # Calculate invoice totals from items
