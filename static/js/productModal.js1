@@ -104,22 +104,30 @@ class ProductModal {
   }
 
   resetProductSearch() {
-    document.getElementById('productNameSearch').value = '';
-    document.getElementById('familyFilter').value = '';
+    // Clear filter inputs
+    const familyFilter = document.getElementById('familyFilter');
+    const productNameSearch = document.getElementById('productNameSearch');
+
+    if (familyFilter) familyFilter.value = '';
+    if (productNameSearch) productNameSearch.value = '';
+
+    // Reload all products
     this.loadProducts();
   }
 
   updateSelectionSummary() {
-    const selectedCount = this.selectedProducts.size;
-    const summaryElement = document.getElementById('selectionSummary');
-    if (summaryElement) {
-      summaryElement.textContent = `${selectedCount} product${selectedCount !== 1 ? 's' : ''} selected`;
-    }
+    const selectedCheckboxes = document.querySelectorAll('.product-checkbox:checked');
+    const summaryDiv = document.getElementById('selectionSummary');
+    const addButton = document.getElementById('addProductsBtn');
 
-    // Enable/disable add button
-    const addBtn = document.getElementById('addProductsBtn');
-    if (addBtn) {
-      addBtn.disabled = selectedCount === 0;
+    if (!summaryDiv || !addButton) return;
+
+    if (selectedCheckboxes.length === 0) {
+      summaryDiv.innerHTML = '<small class="text-muted">No products selected</small>';
+      addButton.disabled = true;
+    } else {
+      summaryDiv.innerHTML = `<small class="text-success">${selectedCheckboxes.length} product(s) selected</small>`;
+      addButton.disabled = false;
     }
   }
 
@@ -130,16 +138,16 @@ class ProductModal {
     const modalElement = document.getElementById('productModal');
     console.log('Modal element:', modalElement);
     console.log('Modal is visible:', modalElement && modalElement.classList.contains('show'));
-
+    
     // Add a small delay to ensure modal is fully rendered
     await new Promise(resolve => setTimeout(resolve, 100));
     console.log('Delay completed, proceeding with API call');
-
+    
     try {
       console.log('Fetching families from /products/api/families');
       const response = await fetch('/products/api/families' /* removed credentials for testing */);
       console.log('Families response status:', response.status);
-
+      
       if (!response.ok) {
         if (response.status === 401) {
           console.error('Authentication required for families API');
@@ -199,71 +207,184 @@ class ProductModal {
       }
 
       console.log('Fetching products from:', url);
-      const response = await fetch(url);
+      const response = await fetch(url /* removed credentials for testing */);
       console.log('Products response status:', response.status);
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
       const data = await response.json();
-      console.log('Products data received, count:', data.products ? data.products.length : 0);
+      console.log('Products data received:', data);
 
-      this.renderProductsTable(data.products || []);
+      this.renderProducts(data.products);
     } catch (error) {
       console.error('Error loading products:', error);
-      this.renderProductsTable([]);
     }
   }
 
-  renderProductsTable(products) {
-    const tbody = document.getElementById('productsTableBody');
-    if (!tbody) {
-      console.error('Products table body not found');
+  // Render products in the table
+  renderProducts(products) {
+    const tbody = document.getElementById('productTableBody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    if (!products || products.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No products found</td></tr>';
       return;
     }
 
-    if (products.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="text-center">No products found</td></tr>';
-      return;
-    }
+    products.forEach(product => {
+      const row = document.createElement('tr');
+      row.className = 'product-row';
 
-    tbody.innerHTML = products.map(product => `
-      <tr>
+      row.innerHTML = `
         <td>
-          <input type="checkbox" class="product-checkbox"
-                 value="${product.id}"
-                 data-name="${product.name}"
-                 data-price="${product.price || 0}"
-                 data-sku="${product.sku}">
+          <input type="checkbox" class="form-check-input product-checkbox"
+                 value="${product.id}" data-product-id="${product.id}">
         </td>
+        <td>${product.sku || ''}</td>
+        <td>${product.family ? product.family.name : ''}</td>
         <td>${product.name}</td>
-        <td>${product.sku}</td>
-        <td>${product.price ? '$' + parseFloat(product.price).toFixed(2) : 'N/A'}</td>
-        <td>${product.family ? product.family.name : 'No family'}</td>
-      </tr>
-    `).join('');
+        <td>${product.description || ''}</td>
+        <td>$${parseFloat(product.price || 0).toFixed(2)}</td>
+      `;
+
+      tbody.appendChild(row);
+    });
   }
 
   addSelectedProducts() {
     const selectedCheckboxes = document.querySelectorAll('.product-checkbox:checked');
-    const selectedProducts = Array.from(selectedCheckboxes).map(cb => ({
-      id: cb.value,
-      name: cb.getAttribute('data-name'),
-      price: parseFloat(cb.getAttribute('data-price')) || 0,
-      sku: cb.getAttribute('data-sku')
-    }));
+    
+    if (selectedCheckboxes.length === 0) {
+      console.warn('No products selected');
+      return;
+    }
 
-    console.log('Adding selected products:', selectedProducts);
+    // Determine context (invoice vs quote) based on URL or page content
+    const isInvoicePage = window.location.pathname.includes('/invoices/') || 
+                         document.querySelector('#items_table') !== null;
 
-    // Dispatch custom event with selected products
-    const event = new CustomEvent('productsSelected', {
-      detail: { products: selectedProducts }
+    // Process each selected product
+    selectedCheckboxes.forEach(checkbox => {
+      const row = checkbox.closest('.product-row');
+      if (!row) return;
+
+      try {
+        const productName = row.cells[3]?.textContent?.trim() || '';
+        const priceText = row.cells[5]?.textContent?.replace('$', '') || '0';
+        const price = parseFloat(priceText) || 0;
+        const productId = checkbox.getAttribute('data-product-id');
+
+        if (isInvoicePage) {
+          // Use invoice-specific function
+          this.addProductToInvoice(productName, price, productId);
+        } else {
+          // Use quote-specific function
+          if (typeof window.addNewRowWithProduct === 'function') {
+            window.addNewRowWithProduct(productName, price, productId);
+          } else {
+            console.error('addNewRowWithProduct function not found. Make sure addNewRowWithProduct.js is loaded.');
+          }
+        }
+      } catch (error) {
+        console.error('Error processing product:', error);
+      }
     });
-    document.dispatchEvent(event);
-
-    // Close modal
+    
+    // Clear selections and update UI
+    this.clearSelections();
     this.hideModal();
+  }
+
+  addProductToInvoice(productName, price, productId) {
+    // Get the invoice table body
+    const tbody = document.querySelector('#items_table tbody') || document.getElementById('quote-items');
+    if (!tbody) {
+      console.error('Invoice items table body not found!');
+      return;
+    }
+
+    // Get the current item counter from the global scope
+    let itemCounter = window.itemCounter || 0;
+
+    // Create new row using invoice format
+    const newRow = document.createElement('tr');
+
+    newRow.innerHTML = `
+        <td>
+            <input type="hidden" name="item_id_${itemCounter}" value="">
+            <input type="text" class="form-control item-name" name="item_name_${itemCounter}" value="${productName}" placeholder="Item name" onchange="calculateItemTotal(this)">
+            <textarea class="form-control mt-2 item-description" name="item_description_${itemCounter}" rows="2" placeholder="Description"></textarea>
+        </td>
+        <td>
+            <input type="number" class="form-control item-quantity" name="item_quantity_${itemCounter}" min="1" value="1" onchange="calculateItemTotal(this)">
+            <select class="form-select mt-2 item-unit" name="item_unit_${itemCounter}">
+                <option value="none">None</option>
+                <option value="piece">Piece</option>
+                <option value="hour">Hour</option>
+                <option value="day">Day</option>
+                <option value="month">Month</option>
+            </select>
+        </td>
+        <td>
+            <input type="number" class="form-control item-price" name="item_price_${itemCounter}" min="0" step="0.01" value="${price.toFixed(2)}" onchange="calculateItemTotal(this)">
+        </td>
+        <td>
+            <input type="number" class="form-control item-discount" name="item_discount_${itemCounter}" min="0" step="0.01" placeholder="0.00" value="0.00" onchange="calculateItemTotal(this)">
+        </td>
+        <td>
+            ${this.createTaxRateDropdownHTML(itemCounter)}
+            <input type="hidden" class="initial-tax-rate" value="0">
+        </td>
+        <td>
+            <input type="number" class="form-control item-total" name="item_total_${itemCounter}" value="${price.toFixed(2)}" readonly>
+        </td>
+        <td>
+            <button type="button" class="btn btn-sm btn-danger remove-row-btn" onclick="removeRow(this)">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>
+    `;
+
+    tbody.appendChild(newRow);
+
+    // Populate tax rate select for the new row
+    const newTaxSelect = newRow.querySelector('.item-tax-rate');
+    if (typeof populateTaxRateDropdown === 'function') {
+      populateTaxRateDropdown(newTaxSelect);
+    }
+
+    // Update counters
+    itemCounter++;
+    window.itemCounter = itemCounter;
+    const itemsCountInput = document.getElementById('items_count');
+    if (itemsCountInput) {
+      itemsCountInput.value = itemCounter;
+    }
+
+    // Recalculate totals
+    if (typeof calculateTotals === 'function') {
+      calculateTotals();
+    }
+  }
+
+  createTaxRateDropdownHTML(itemIndex) {
+    // Get tax rates from global scope (set by the template)
+    const taxRates = window.taxRates || [];
+    let optionsHTML = '<option value="0">None (0%)</option>';
+
+    taxRates.forEach(rate => {
+      optionsHTML += `<option value="${rate.rate}">${rate.name} (${rate.rate}%)</option>`;
+    });
+
+    return `<select class="form-select item-tax-rate tax-rate-select" name="item_tax_rate_${itemIndex}" onchange="calculateItemTotal(this)">${optionsHTML}</select>`;
+  }  clearSelections() {
+    const selectedCheckboxes = document.querySelectorAll('.product-checkbox:checked');
+    selectedCheckboxes.forEach(checkbox => {
+      checkbox.checked = false;
+    });
+    this.updateSelectionSummary();
   }
 
   hideModal() {
