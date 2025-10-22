@@ -591,6 +591,264 @@
 </script>
 
 <!-- Include the external JavaScript modules for product modal -->
+<script>
+    // Temporary inline test of productModal.js
+    console.log('Inline productModal.js test loading...');
+    
+    class ProductModal {
+        constructor() {
+            this.modal = null;
+            this.modalElement = null;
+            this.selectedProducts = new Set();
+            this.init();
+        }
+
+        init() {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => this.setupModal());
+            } else {
+                this.setupModal();
+            }
+        }
+
+        setupModal() {
+            console.log('ProductModal.setupModal() called');
+            this.modalElement = document.getElementById('productModal');
+            console.log('Modal element found:', !!this.modalElement);
+            if (!this.modalElement) {
+                console.warn('Product modal not found');
+                return;
+            }
+
+            this.modal = new bootstrap.Modal(this.modalElement);
+            console.log('Bootstrap modal initialized:', !!this.modal);
+
+            this.attachEventListeners();
+            this.updateSelectionSummary();
+        }
+
+        attachEventListeners() {
+            const familyFilter = document.getElementById('familyFilter');
+            if (familyFilter) {
+                familyFilter.addEventListener('change', () => this.filterProductsByFamily());
+            }
+
+            const productNameSearch = document.getElementById('productNameSearch');
+            if (productNameSearch) {
+                productNameSearch.addEventListener('keyup', () => this.filterProductsByName());
+                productNameSearch.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        this.searchProducts();
+                    }
+                });
+            }
+
+            const searchBtn = document.getElementById('searchProductsBtn');
+            if (searchBtn) {
+                searchBtn.addEventListener('click', () => this.searchProducts());
+            }
+
+            const resetBtn = document.getElementById('resetProductSearchBtn');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => this.resetProductSearch());
+            }
+
+            const addProductsBtn = document.getElementById('addProductsBtn');
+            if (addProductsBtn) {
+                addProductsBtn.removeAttribute('onclick');
+                addProductsBtn.addEventListener('click', () => this.addSelectedProducts());
+            }
+
+            this.modalElement.addEventListener('change', (e) => {
+                if (e.target.classList.contains('product-checkbox')) {
+                    this.updateSelectionSummary();
+                }
+            });
+        }
+
+        async loadFamilies() {
+            console.log('=== loadFamilies() START ===');
+            const modalElement = document.getElementById('productModal');
+            console.log('Modal element:', modalElement);
+            
+            await new Promise(resolve => setTimeout(resolve, 100));
+            console.log('Delay completed, proceeding with API call');
+            
+            try {
+                console.log('Fetching families from /products/api/families');
+                const response = await fetch('/products/api/families');
+                console.log('Families response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                console.log('Families data received:', data);
+                console.log('Number of families:', data.families ? data.families.length : 'no families key');
+
+                const familyFilter = document.getElementById('familyFilter');
+                console.log('familyFilter element found:', !!familyFilter);
+                if (familyFilter) {
+                    familyFilter.innerHTML = '<option value="">Any family</option>';
+
+                    if (data.families && data.families.length > 0) {
+                        console.log('Adding', data.families.length, 'family options');
+                        data.families.forEach(family => {
+                            const option = document.createElement('option');
+                            option.value = family.id;
+                            option.textContent = family.name;
+                            familyFilter.appendChild(option);
+                        });
+                        console.log('Family dropdown updated');
+                    }
+                }
+            } catch (error) {
+                console.error('Error in loadFamilies:', error);
+            }
+            console.log('=== loadFamilies() END ===');
+        }
+
+        async loadProducts(search = '', familyId = '') {
+            console.log('loadProducts called');
+            try {
+                let url = '/products/api?limit=1000';
+                if (search) url += `&search=${encodeURIComponent(search)}`;
+                if (familyId) url += `&family_id=${encodeURIComponent(familyId)}`;
+
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                const data = await response.json();
+                console.log('Products loaded:', data.products ? data.products.length : 0);
+                this.renderProductsTable(data.products || []);
+            } catch (error) {
+                console.error('Error loading products:', error);
+                this.renderProductsTable([]);
+            }
+        }
+
+        renderProductsTable(products) {
+            const tbody = document.getElementById('productsTableBody');
+            if (!tbody) return;
+
+            if (products.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No products found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = products.map(product => `
+                <tr>
+                    <td><input type="checkbox" class="product-checkbox" value="${product.id}" data-name="${product.name}" data-price="${product.price || 0}" data-sku="${product.sku}"></td>
+                    <td>${product.name}</td>
+                    <td>${product.sku}</td>
+                    <td>${product.price ? '$' + parseFloat(product.price).toFixed(2) : 'N/A'}</td>
+                    <td>${product.family ? product.family.name : 'No family'}</td>
+                </tr>
+            `).join('');
+        }
+
+        filterProductsByFamily() {
+            const familyId = document.getElementById('familyFilter').value;
+            const search = document.getElementById('productNameSearch').value;
+            this.loadProducts(search, familyId);
+        }
+
+        filterProductsByName() {
+            const search = document.getElementById('productNameSearch').value;
+            const familyId = document.getElementById('familyFilter').value;
+            this.loadProducts(search, familyId);
+        }
+
+        searchProducts() {
+            this.filterProductsByFamily();
+        }
+
+        resetProductSearch() {
+            document.getElementById('productNameSearch').value = '';
+            document.getElementById('familyFilter').value = '';
+            this.loadProducts();
+        }
+
+        updateSelectionSummary() {
+            const selectedCount = this.selectedProducts.size;
+            const summaryElement = document.getElementById('selectionSummary');
+            if (summaryElement) {
+                summaryElement.textContent = `${selectedCount} product${selectedCount !== 1 ? 's' : ''} selected`;
+            }
+
+            const addBtn = document.getElementById('addProductsBtn');
+            if (addBtn) {
+                addBtn.disabled = selectedCount === 0;
+            }
+        }
+
+        addSelectedProducts() {
+            const selectedCheckboxes = document.querySelectorAll('.product-checkbox:checked');
+            const selectedProducts = Array.from(selectedCheckboxes).map(cb => ({
+                id: cb.value,
+                name: cb.getAttribute('data-name'),
+                price: parseFloat(cb.getAttribute('data-price')) || 0,
+                sku: cb.getAttribute('data-sku')
+            }));
+
+            console.log('Adding selected products:', selectedProducts);
+
+            const event = new CustomEvent('productsSelected', {
+                detail: { products: selectedProducts }
+            });
+            document.dispatchEvent(event);
+
+            this.hideModal();
+        }
+
+        hideModal() {
+            if (this.modal) {
+                this.modal.hide();
+            }
+        }
+
+        showModal() {
+            console.log('ProductModal.showModal() called');
+            if (this.modal) {
+                console.log('Showing modal and loading data');
+                this.modal.show();
+                this.loadFamilies();
+                this.loadProducts();
+            } else {
+                console.error('Modal not initialized');
+            }
+        }
+
+        static getInstance() {
+            console.log('ProductModal.getInstance() called');
+            if (!window.productModalInstance) {
+                console.log('Creating new ProductModal instance...');
+                window.productModalInstance = new ProductModal();
+                console.log('Created instance');
+            } else {
+                console.log('Using existing instance');
+            }
+            return window.productModalInstance;
+        }
+    }
+
+    console.log('ProductModal class defined inline');
+    window.ProductModal = ProductModal;
+
+    // Auto-initialize
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOMContentLoaded - initializing ProductModal');
+            ProductModal.getInstance();
+        });
+    } else {
+        console.log('DOM ready - initializing ProductModal');
+        ProductModal.getInstance();
+    }
+
+    console.log('Inline productModal.js loaded successfully');
+</script>
 <script src="/static/js/productModal.js"></script>
 <script src="/static/js/addNewRowWithProduct.js"></script>
 
