@@ -932,13 +932,13 @@ async def import_complete_sql(
         logger.info("Step 1: Importing products...")
         try:
             from importdb.import_legacy_data import import_products
-            import_products(dry_run=False, sql_file=temp_file_path)
+            product_id_mapping = import_products(dry_run=False, sql_file=temp_file_path)
             # Count products after import
             from app.models.product import Product
             results["products"]["count"] = db.query(Product).count()
             results["products"]["success"] = True
             results["products"]["message"] = f"Successfully imported {results['products']['count']} products"
-            logger.info(f"Products import completed: {results['products']['count']} products")
+            logger.info(f"Products import completed: {results['products']['count']} products, {len(product_id_mapping)} ID mappings")
         except Exception as e:
             logger.error(f"Products import failed: {e}")
             results["products"]["message"] = f"Products import failed: {str(e)}"
@@ -948,13 +948,13 @@ async def import_complete_sql(
         logger.info("Step 2: Importing clients...")
         try:
             from importdb.import_legacy_data import import_clients
-            import_clients(dry_run=False, sql_file=temp_file_path)
+            client_id_mapping = import_clients(dry_run=False, sql_file=temp_file_path)
             # Count clients after import
             from app.models.client import Client
             results["clients"]["count"] = db.query(Client).count()
             results["clients"]["success"] = True
             results["clients"]["message"] = f"Successfully imported {results['clients']['count']} clients"
-            logger.info(f"Clients import completed: {results['clients']['count']} clients")
+            logger.info(f"Clients import completed: {results['clients']['count']} clients, {len(client_id_mapping)} ID mappings")
         except Exception as e:
             logger.error(f"Clients import failed: {e}")
             results["clients"]["message"] = f"Clients import failed: {str(e)}"
@@ -964,7 +964,7 @@ async def import_complete_sql(
         logger.info("Step 3: Importing invoices...")
         try:
             from importdb.import_legacy_data import import_invoices
-            import_invoices(dry_run=False, sql_file=temp_file_path)
+            import_invoices(dry_run=False, sql_file=temp_file_path, client_id_mapping=client_id_mapping, product_id_mapping=product_id_mapping)
             # Count invoices after import
             from app.models.invoice import Invoice, InvoiceItem
             invoice_count = db.query(Invoice).count()

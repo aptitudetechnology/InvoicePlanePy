@@ -193,6 +193,7 @@ def import_clients(dry_run=False, sql_file=None):
     session = get_session()
     imported = 0
     skipped = 0
+    id_mapping = {}  # Map legacy client_id to new client.id
 
     try:
         logger.info("Starting client import...")
@@ -229,6 +230,10 @@ def import_clients(dry_run=False, sql_file=None):
                 client = Client(**mapped)
                 if not dry_run:
                     session.add(client)
+                    session.flush()  # Get the new ID immediately
+                    legacy_id = row.get("client_id")
+                    if legacy_id:
+                        id_mapping[legacy_id] = client.id
                 imported += 1
             except Exception as e:
                 logger.error(f"Error creating client from row {row}: {e}")
@@ -243,6 +248,8 @@ def import_clients(dry_run=False, sql_file=None):
 
         if skipped > 0:
             logger.warning(f"Skipped {skipped} records due to errors")
+
+        return id_mapping
 
     except SQLAlchemyError as e:
         logger.error(f"Database error during import: {e}")
@@ -262,6 +269,7 @@ def import_products(dry_run=False, sql_file=None):
     session = get_session()
     imported = 0
     skipped = 0
+    id_mapping = {}  # Map legacy product_id to new product.id
 
     try:
         logger.info("Starting product import...")
@@ -340,6 +348,10 @@ def import_products(dry_run=False, sql_file=None):
                 product = Product(**mapped)
                 if not dry_run:
                     session.add(product)
+                    session.flush()  # Get the new ID immediately
+                    legacy_id = row.get("product_id")
+                    if legacy_id:
+                        id_mapping[legacy_id] = product.id
                 imported += 1
             except Exception as e:
                 logger.error(f"Error creating product from row {row}: {e}")
@@ -355,6 +367,8 @@ def import_products(dry_run=False, sql_file=None):
         if skipped > 0:
             logger.warning(f"Skipped {skipped} records due to errors")
 
+        return id_mapping
+
     except SQLAlchemyError as e:
         logger.error(f"Database error during import: {e}")
         session.rollback()
@@ -366,7 +380,7 @@ def import_products(dry_run=False, sql_file=None):
     finally:
         session.close()
 
-def import_invoices(dry_run=False, sql_file=None):
+def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, product_id_mapping=None):
     """Import invoices from legacy ip_invoices and ip_invoice_items tables."""
     logger.info("import_invoices function called")
     if sql_file is None:
@@ -437,9 +451,19 @@ def import_invoices(dry_run=False, sql_file=None):
                 skipped += 1
                 continue
 
-            # Check if referenced client exists
+            # Map client_id using the ID mapping if provided
             client_id = mapped.get("client_id")
-            if client_id:
+            if client_id and client_id_mapping:
+                new_client_id = client_id_mapping.get(str(client_id))
+                if new_client_id:
+                    mapped["client_id"] = new_client_id
+                    logger.debug(f"Mapped legacy client_id {client_id} to new client_id {new_client_id}")
+                else:
+                    logger.warning(f"No mapping found for legacy client_id {client_id}, skipping invoice: {row}")
+                    skipped += 1
+                    continue
+            elif client_id:
+                # Fallback: check if the legacy ID exists directly (for backward compatibility)
                 existing_client = session.query(Client).filter_by(id=client_id).first()
                 if not existing_client:
                     logger.warning(f"Skipping invoice with non-existent client_id {client_id}: {row}")
@@ -539,9 +563,18 @@ def import_invoices(dry_run=False, sql_file=None):
                                     logger.warning(f"Skipping invoice item without price: {item_row}")
                                     continue
 
-                                # Check if referenced product exists (if product_id is provided)
+                                # Map product_id using the ID mapping if provided
                                 product_id = item_mapped.get("product_id")
-                                if product_id:
+                                if product_id and product_id_mapping:
+                                    new_product_id = product_id_mapping.get(str(product_id))
+                                    if new_product_id:
+                                        item_mapped["product_id"] = new_product_id
+                                        logger.debug(f"Mapped legacy product_id {product_id} to new product_id {new_product_id}")
+                                    else:
+                                        logger.warning(f"No mapping found for legacy product_id {product_id}, skipping invoice item: {item_row}")
+                                        continue
+                                elif product_id:
+                                    # Fallback: check if the legacy ID exists directly (for backward compatibility)
                                     existing_product = session.query(Product).filter_by(id=product_id).first()
                                     if not existing_product:
                                         logger.warning(f"Skipping invoice item with non-existent product_id {product_id}: {item_row}")
