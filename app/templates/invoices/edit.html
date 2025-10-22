@@ -552,24 +552,33 @@
             console.log('Add product button found, adding click listener');
             addProductBtn.addEventListener('click', () => {
                 console.log('Add product button clicked');
-                // Wait for ProductModal to be available
-                const getModalInstance = () => {
-                    if (window.productModalInstance) {
-                        return window.productModalInstance;
-                    }
-                    if (window.ProductModal && window.ProductModal.getInstance) {
-                        return window.ProductModal.getInstance();
-                    }
-                    return null;
-                };
+                console.log('window.ProductModal exists:', !!window.ProductModal);
+                console.log('window.productModalInstance exists:', !!window.productModalInstance);
 
-                const productModalInstance = getModalInstance();
-                console.log('Product modal instance:', productModalInstance);
+                let productModalInstance = null;
+
+                // Try to get instance in multiple ways
+                if (window.productModalInstance) {
+                    productModalInstance = window.productModalInstance;
+                    console.log('Using existing instance');
+                } else if (window.ProductModal && window.ProductModal.getInstance) {
+                    productModalInstance = window.ProductModal.getInstance();
+                    console.log('Created instance via getInstance');
+                } else if (window.ProductModal) {
+                    productModalInstance = new window.ProductModal();
+                    console.log('Created instance via new');
+                }
+
+                console.log('Final product modal instance:', productModalInstance);
                 if (productModalInstance && typeof productModalInstance.showModal === 'function') {
                     console.log('Calling showModal...');
                     productModalInstance.showModal();
                 } else {
-                    console.error('Product modal instance not found or showModal method missing');
+                    console.error('Product modal instance not available or showModal method missing');
+                    console.error('productModalInstance type:', typeof productModalInstance);
+                    if (productModalInstance) {
+                        console.error('Available methods:', Object.getOwnPropertyNames(productModalInstance));
+                    }
                 }
             });
         } else {

@@ -1,6 +1,17 @@
 // static/js/productModal.js
 // Product selection modal functionality
-console.log('productModal.js loaded successfully');
+
+// Simple test to see if script loads
+console.log('=== PRODUCT MODAL JS LOADING ===');
+console.log('productModal.js loaded successfully at:', new Date().toISOString());
+
+try {
+  console.log('Testing basic JavaScript execution...');
+  const test = 'test';
+  console.log('Basic JS works:', test);
+} catch (e) {
+  console.error('Basic JS error:', e);
+}
 
 class ProductModal {
   constructor() {
