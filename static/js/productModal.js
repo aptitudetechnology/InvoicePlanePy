@@ -220,11 +220,15 @@ class ProductModal {
 
   addSelectedProducts() {
     const selectedCheckboxes = document.querySelectorAll('.product-checkbox:checked');
-
+    
     if (selectedCheckboxes.length === 0) {
       console.warn('No products selected');
       return;
     }
+
+    // Determine context (invoice vs quote) based on URL or page content
+    const isInvoicePage = window.location.pathname.includes('/invoices/') || 
+                         document.querySelector('#items_table') !== null;
 
     // Process each selected product
     selectedCheckboxes.forEach(checkbox => {
@@ -237,23 +241,110 @@ class ProductModal {
         const price = parseFloat(priceText) || 0;
         const productId = checkbox.getAttribute('data-product-id');
 
-        // Call external function to add product (must be defined in quotes.js or invoices.js)
-        if (typeof window.addNewRowWithProduct === 'function') {
-          window.addNewRowWithProduct(productName, price, productId);
+        if (isInvoicePage) {
+          // Use invoice-specific function
+          this.addProductToInvoice(productName, price, productId);
         } else {
-          console.error('addNewRowWithProduct function not found. Make sure addNewRowWithProduct.js is loaded.');
+          // Use quote-specific function
+          if (typeof window.addNewRowWithProduct === 'function') {
+            window.addNewRowWithProduct(productName, price, productId);
+          } else {
+            console.error('addNewRowWithProduct function not found. Make sure addNewRowWithProduct.js is loaded.');
+          }
         }
       } catch (error) {
         console.error('Error processing product:', error);
       }
     });
-
+    
     // Clear selections and update UI
     this.clearSelections();
     this.hideModal();
   }
 
-  clearSelections() {
+  addProductToInvoice(productName, price, productId) {
+    // Get the invoice table body
+    const tbody = document.querySelector('#items_table tbody') || document.getElementById('quote-items');
+    if (!tbody) {
+      console.error('Invoice items table body not found!');
+      return;
+    }
+
+    // Get the current item counter from the global scope
+    let itemCounter = window.itemCounter || 0;
+
+    // Create new row using invoice format
+    const newRow = document.createElement('tr');
+
+    newRow.innerHTML = `
+        <td>
+            <input type="hidden" name="item_id_${itemCounter}" value="">
+            <input type="text" class="form-control item-name" name="item_name_${itemCounter}" value="${productName}" placeholder="Item name" onchange="calculateItemTotal(this)">
+            <textarea class="form-control mt-2 item-description" name="item_description_${itemCounter}" rows="2" placeholder="Description"></textarea>
+        </td>
+        <td>
+            <input type="number" class="form-control item-quantity" name="item_quantity_${itemCounter}" min="1" value="1" onchange="calculateItemTotal(this)">
+            <select class="form-select mt-2 item-unit" name="item_unit_${itemCounter}">
+                <option value="none">None</option>
+                <option value="piece">Piece</option>
+                <option value="hour">Hour</option>
+                <option value="day">Day</option>
+                <option value="month">Month</option>
+            </select>
+        </td>
+        <td>
+            <input type="number" class="form-control item-price" name="item_price_${itemCounter}" min="0" step="0.01" value="${price.toFixed(2)}" onchange="calculateItemTotal(this)">
+        </td>
+        <td>
+            <input type="number" class="form-control item-discount" name="item_discount_${itemCounter}" min="0" step="0.01" placeholder="0.00" value="0.00" onchange="calculateItemTotal(this)">
+        </td>
+        <td>
+            ${this.createTaxRateDropdownHTML(itemCounter)}
+            <input type="hidden" class="initial-tax-rate" value="0">
+        </td>
+        <td>
+            <input type="number" class="form-control item-total" name="item_total_${itemCounter}" value="${price.toFixed(2)}" readonly>
+        </td>
+        <td>
+            <button type="button" class="btn btn-sm btn-danger remove-row-btn" onclick="removeRow(this)">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>
+    `;
+
+    tbody.appendChild(newRow);
+
+    // Populate tax rate select for the new row
+    const newTaxSelect = newRow.querySelector('.item-tax-rate');
+    if (typeof populateTaxRateDropdown === 'function') {
+      populateTaxRateDropdown(newTaxSelect);
+    }
+
+    // Update counters
+    itemCounter++;
+    window.itemCounter = itemCounter;
+    const itemsCountInput = document.getElementById('items_count');
+    if (itemsCountInput) {
+      itemsCountInput.value = itemCounter;
+    }
+
+    // Recalculate totals
+    if (typeof calculateTotals === 'function') {
+      calculateTotals();
+    }
+  }
+
+  createTaxRateDropdownHTML(itemIndex) {
+    // Get tax rates from global scope (set by the template)
+    const taxRates = window.taxRates || [];
+    let optionsHTML = '<option value="0">None (0%)</option>';
+
+    taxRates.forEach(rate => {
+      optionsHTML += `<option value="${rate.rate}">${rate.name} (${rate.rate}%)</option>`;
+    });
+
+    return `<select class="form-select item-tax-rate tax-rate-select" name="item_tax_rate_${itemIndex}" onchange="calculateItemTotal(this)">${optionsHTML}</select>`;
+  }  clearSelections() {
     const selectedCheckboxes = document.querySelectorAll('.product-checkbox:checked');
     selectedCheckboxes.forEach(checkbox => {
       checkbox.checked = false;
