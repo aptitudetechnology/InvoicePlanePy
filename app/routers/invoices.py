@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, Request, HTTPException, Query, Form
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_, asc, desc
 import logging
+from datetime import datetime, date
+import secrets
 
 from app.database import get_db
 from app.models.user import User
@@ -222,10 +224,12 @@ async def invoices_list(
 @router.get("/create", response_class=HTMLResponse)
 async def create_invoice(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     clients = db.query(Client).all()
+    current_date = date.today().isoformat()
     return templates.TemplateResponse("invoices/create.html", {
         "request": request,
         "user": current_user,
-        "clients": clients
+        "clients": clients,
+        "current_date": current_date
     })
 
 @router.post("/create", response_class=HTMLResponse)
@@ -239,7 +243,6 @@ async def invoice_create_post_redirect(
     invoice_date: str = Form(None),
     due_date: str = Form(None),
     payment_method: str = Form(None),
-    pdf_password: str = Form(None),
     invoice_terms: str = Form(None)
     # Add other fields as needed
 ):
@@ -247,7 +250,7 @@ async def invoice_create_post_redirect(
     # Redirect to the main create post handler
     return await invoice_create_post(
         request, db, current_user, client_id, invoice_number, status, 
-        invoice_date, due_date, payment_method, pdf_password, invoice_terms
+        invoice_date, due_date, payment_method, invoice_terms
     )
 
 @router.get("/{invoice_id}", response_class=HTMLResponse)
@@ -371,18 +374,60 @@ async def invoice_create_post(
     invoice_date: str = Form(None),
     due_date: str = Form(None),
     payment_method: str = Form(None),
-    pdf_password: str = Form(None),
     invoice_terms: str = Form(None)
     # Add other fields as needed
 ):
-    client = db.query(Client).filter(Client.id == client_id).first()
-    # Here you would process and save the invoice, for now just show a confirmation
-    return templates.TemplateResponse("invoices/details.html", {
-        "request": request,
-        "user": current_user,
-        "client": client,
-        "message": "Invoice POST received"
-    })
+    """Handle invoice creation form submission"""
+    try:
+        # Parse dates
+        issue_date_parsed = None
+        if invoice_date:
+            issue_date_parsed = datetime.strptime(invoice_date, "%Y-%m-%d").date()
+        else:
+            issue_date_parsed = date.today()
+
+        due_date_parsed = None
+        if due_date:
+            due_date_parsed = datetime.strptime(due_date, "%Y-%m-%d").date()
+        else:
+            # Default due date to 30 days from issue date
+            from datetime import timedelta
+            due_date_parsed = issue_date_parsed + timedelta(days=30)
+
+        # Generate invoice number if not provided
+        if not invoice_number:
+            last_invoice = db.query(Invoice).order_by(Invoice.id.desc()).first()
+            next_number = (last_invoice.id + 1) if last_invoice else 1
+            invoice_number = f"INV-{next_number:04d}"
+
+        # Create new invoice
+        invoice = Invoice(
+            invoice_number=invoice_number,
+            client_id=client_id,
+            user_id=current_user.id,
+            issue_date=issue_date_parsed,
+            due_date=due_date_parsed,
+            status=1,  # Draft status (InvoiceStatus.DRAFT.value)
+            total=0,  # Ensure total is never None
+            balance=0,  # Ensure balance is never None - initially equals total
+            subtotal=0,  # Initialize subtotal to 0
+            tax_total=0,  # Initialize tax_total to 0
+            discount_amount=0,  # Initialize discount_amount to 0
+            terms=invoice_terms,
+        )
+
+        # Generate URL key
+        invoice.url_key = secrets.token_urlsafe(24)
+
+        db.add(invoice)
+        db.commit()
+        db.refresh(invoice)
+
+        return RedirectResponse(url=f"/invoices/{invoice.id}/edit", status_code=302)
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error creating invoice: {str(e)}")
 
 @router.get("/{invoice_id}/api", response_class=JSONResponse)
 async def get_invoice_api(

@@ -24,18 +24,19 @@
                         </div>
                         <div class="mb-3">
                             <label for="invoice_date" class="form-label">Invoice Date</label>
-                            <input type="text" class="form-control" id="invoice_date" name="invoice_date" value="{{ current_date or '' }}" readonly>
+                            <input type="date" class="form-control" id="invoice_date" name="invoice_date" value="{{ current_date or '' }}">
                         </div>
                         <div class="mb-3">
-                            <label for="pdf_password" class="form-label">PDF password (optional)</label>
-                            <input type="password" class="form-control" id="pdf_password" name="pdf_password">
+                            <label for="due_date" class="form-label">Due Date</label>
+                            <input type="date" class="form-control" id="due_date" name="due_date">
                         </div>
                         <div class="mb-3">
-                            <label for="invoice_group" class="form-label">Invoice Group</label>
-                            <select class="form-select" id="invoice_group" name="invoice_group">
-                                <option value="default">Invoice Default</option>
-                                <option value="other">Other Group</option>
-                            </select>
+                            <label for="invoice_number" class="form-label">Invoice Number (optional)</label>
+                            <input type="text" class="form-control" id="invoice_number" name="invoice_number" placeholder="Auto-generated if empty">
+                        </div>
+                        <div class="mb-3">
+                            <label for="invoice_terms" class="form-label">Terms</label>
+                            <textarea class="form-control" id="invoice_terms" name="invoice_terms" rows="3" placeholder="Payment terms..."></textarea>
                         </div>
                     </div>
                     <div class="card-footer d-flex justify-content-end gap-2">
