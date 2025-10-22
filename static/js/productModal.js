@@ -2,6 +2,13 @@
 // Product selection modal functionality
 console.log('productModal.js loading...');
 
+// Add a global test function
+window.testProductModal = function() {
+    console.log('testProductModal called - ProductModal available:', typeof ProductModal);
+    console.log('window.productModalInstance:', !!window.productModalInstance);
+    return 'Product modal test completed';
+};
+
 class ProductModal {
   constructor() {
     this.modal = null;

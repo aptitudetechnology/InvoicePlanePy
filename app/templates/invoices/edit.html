@@ -283,6 +283,7 @@
 </div>
 
 <script>
+    console.log('Invoice edit page JavaScript loading...');
     let taxRates = []; // Will be populated from database
 
     // Load tax rates from database
@@ -546,6 +547,7 @@
             calculateTotals();
         });
 
+        console.log('About to set up product modal button...');
         // Add product modal button logic
         const addProductBtn = document.getElementById('display-product-modal-btn');
         if (addProductBtn) {
