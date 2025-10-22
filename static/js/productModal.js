@@ -129,23 +129,32 @@ class ProductModal {
 
   // Load families from API and populate filter dropdown
   async loadFamilies() {
-    console.log('loadFamilies called');
+    console.log('loadFamilies called - checking if modal is visible');
+    const modalElement = document.getElementById('productModal');
+    console.log('Modal element:', modalElement);
+    console.log('Modal is visible:', modalElement && modalElement.classList.contains('show'));
+    
     try {
-      console.log('Fetching families from /products/api/families');
+      console.log('Fetching families from /products/api/families with credentials');
       const response = await fetch('/products/api/families', {
         credentials: 'same-origin'
       });
       console.log('Families response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      
       if (!response.ok) {
         if (response.status === 401) {
           console.error('Authentication required for families API');
           alert('You must be logged in to access product data.');
           return;
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('API error response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
       const data = await response.json();
       console.log('Families data received:', data);
+      console.log('Number of families:', data.families ? data.families.length : 'no families key');
 
       const familyFilter = document.getElementById('familyFilter');
       if (familyFilter) {
