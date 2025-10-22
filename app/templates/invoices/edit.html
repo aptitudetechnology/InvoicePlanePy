@@ -552,7 +552,18 @@
             console.log('Add product button found, adding click listener');
             addProductBtn.addEventListener('click', () => {
                 console.log('Add product button clicked');
-                const productModalInstance = window.productModalInstance || (window.ProductModal && window.ProductModal.getInstance && window.ProductModal.getInstance());
+                // Wait for ProductModal to be available
+                const getModalInstance = () => {
+                    if (window.productModalInstance) {
+                        return window.productModalInstance;
+                    }
+                    if (window.ProductModal && window.ProductModal.getInstance) {
+                        return window.ProductModal.getInstance();
+                    }
+                    return null;
+                };
+
+                const productModalInstance = getModalInstance();
                 console.log('Product modal instance:', productModalInstance);
                 if (productModalInstance && typeof productModalInstance.showModal === 'function') {
                     console.log('Calling showModal...');
