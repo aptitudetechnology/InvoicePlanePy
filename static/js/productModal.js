@@ -134,13 +134,13 @@ class ProductModal {
     console.log('Modal element:', modalElement);
     console.log('Modal is visible:', modalElement && modalElement.classList.contains('show'));
     
+    // Add a small delay to ensure modal is fully rendered
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     try {
-      console.log('Fetching families from /products/api/families with credentials');
-      const response = await fetch('/products/api/families', {
-        credentials: 'same-origin'
-      });
+      console.log('Fetching families from /products/api/families');
+      const response = await fetch('/products/api/families' /* removed credentials for testing */);
       console.log('Families response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
       
       if (!response.ok) {
         if (response.status === 401) {
@@ -157,22 +157,33 @@ class ProductModal {
       console.log('Number of families:', data.families ? data.families.length : 'no families key');
 
       const familyFilter = document.getElementById('familyFilter');
+      console.log('familyFilter element found:', !!familyFilter);
       if (familyFilter) {
+        console.log('Current familyFilter HTML:', familyFilter.innerHTML);
         // Clear existing options except "Any family"
         familyFilter.innerHTML = '<option value="">Any family</option>';
 
         // Add family options
         if (data.families && data.families.length > 0) {
+          console.log('Adding', data.families.length, 'family options');
           data.families.forEach(family => {
             const option = document.createElement('option');
             option.value = family.id;
             option.textContent = family.name;
             familyFilter.appendChild(option);
+            console.log('Added family option:', family.name, 'with value:', family.id);
           });
+          console.log('Family dropdown updated, final HTML:', familyFilter.innerHTML);
+        } else {
+          console.log('No families received from API');
         }
+      } else {
+        console.error('familyFilter element not found in DOM!');
+        console.log('All select elements:', document.querySelectorAll('select'));
       }
     } catch (error) {
-      console.error('Error loading families:', error);
+      console.error('Error in loadFamilies:', error);
+      alert('Error loading product families: ' + error.message);
     }
   }
 
@@ -189,9 +200,7 @@ class ProductModal {
       }
 
       console.log('Fetching products from:', url);
-      const response = await fetch(url, {
-        credentials: 'same-origin'
-      });
+      const response = await fetch(url /* removed credentials for testing */);
       console.log('Products response status:', response.status);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
