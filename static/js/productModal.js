@@ -1,5 +1,6 @@
 // static/js/productModal.js
 // Product selection modal functionality
+console.log('productModal.js loading...');
 
 class ProductModal {
   constructor() {
@@ -397,20 +398,32 @@ class ProductModal {
 
   // Public API methods
   static getInstance() {
+    console.log('ProductModal.getInstance() called');
+    console.log('window.productModalInstance exists:', !!window.productModalInstance);
     if (!window.productModalInstance) {
+      console.log('Creating new ProductModal instance...');
       window.productModalInstance = new ProductModal();
+      console.log('Created instance:', window.productModalInstance);
+    } else {
+      console.log('Using existing instance:', window.productModalInstance);
     }
     return window.productModalInstance;
   }
 }
 
+console.log('ProductModal class defined:', typeof ProductModal);
+console.log('ProductModal.getInstance method:', typeof ProductModal.getInstance);
+
 // Auto-initialize when DOM is ready
+console.log('Setting up ProductModal auto-initialization...');
 if (document.readyState === 'loading') {
+  console.log('DOM not ready, waiting...');
   document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded fired, calling ProductModal.getInstance()');
     ProductModal.getInstance();
   });
 } else {
-  // DOM already ready
+  console.log('DOM already ready, calling ProductModal.getInstance()');
   ProductModal.getInstance();
 }
 
