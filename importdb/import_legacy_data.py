@@ -234,6 +234,7 @@ def import_clients(dry_run=False, sql_file=None):
                     legacy_id = row.get("client_id")
                     if legacy_id:
                         id_mapping[legacy_id] = client.id
+                        logger.debug(f"Created client mapping: legacy {legacy_id} -> new {client.id}")
                 imported += 1
             except Exception as e:
                 logger.error(f"Error creating client from row {row}: {e}")
@@ -249,6 +250,7 @@ def import_clients(dry_run=False, sql_file=None):
         if skipped > 0:
             logger.warning(f"Skipped {skipped} records due to errors")
 
+        logger.info(f"Created {len(id_mapping)} ID mappings for clients")
         return id_mapping
 
     except SQLAlchemyError as e:
@@ -352,6 +354,7 @@ def import_products(dry_run=False, sql_file=None):
                     legacy_id = row.get("product_id")
                     if legacy_id:
                         id_mapping[legacy_id] = product.id
+                        logger.debug(f"Created product mapping: legacy {legacy_id} -> new {product.id}")
                 imported += 1
             except Exception as e:
                 logger.error(f"Error creating product from row {row}: {e}")
@@ -367,6 +370,7 @@ def import_products(dry_run=False, sql_file=None):
         if skipped > 0:
             logger.warning(f"Skipped {skipped} records due to errors")
 
+        logger.info(f"Created {len(id_mapping)} ID mappings for products")
         return id_mapping
 
     except SQLAlchemyError as e:
@@ -383,6 +387,8 @@ def import_products(dry_run=False, sql_file=None):
 def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, product_id_mapping=None):
     """Import invoices from legacy ip_invoices and ip_invoice_items tables."""
     logger.info("import_invoices function called")
+    logger.info(f"client_id_mapping: {client_id_mapping is not None} ({len(client_id_mapping) if client_id_mapping else 0} entries)")
+    logger.info(f"product_id_mapping: {product_id_mapping is not None} ({len(product_id_mapping) if product_id_mapping else 0} entries)")
     if sql_file is None:
         sql_file = SQL_FILE
     logger.info(f"Using SQL file: {sql_file}")
@@ -645,6 +651,8 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
 
         if skipped > 0:
             logger.warning(f"Skipped {skipped} records due to errors")
+
+        logger.info("Invoice import completed")
 
     except SQLAlchemyError as e:
         logger.error(f"Database error during import: {e}")

@@ -962,6 +962,8 @@ async def import_complete_sql(
 
         # 3. Import Invoices Last
         logger.info("Step 3: Importing invoices...")
+        logger.info(f"Client ID mapping has {len(client_id_mapping)} entries")
+        logger.info(f"Product ID mapping has {len(product_id_mapping)} entries")
         try:
             from importdb.import_legacy_data import import_invoices
             import_invoices(dry_run=False, sql_file=temp_file_path, client_id_mapping=client_id_mapping, product_id_mapping=product_id_mapping)
