@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request, HTTPException, Query
+from fastapi import APIRouter, Depends, Request, HTTPException, Query, Form
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session, joinedload
@@ -359,7 +359,6 @@ async def invoice_create_post_redirect(
     )
 
 # POST /invoices/ - handle invoice details form submission
-from fastapi import Form
 
 @router.post("/", response_class=HTMLResponse)
 async def invoice_create_post(
