@@ -219,6 +219,37 @@ async def invoices_list(
     )
 
 
+@router.get("/create", response_class=HTMLResponse)
+async def create_invoice(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    clients = db.query(Client).all()
+    return templates.TemplateResponse("invoices/create.html", {
+        "request": request,
+        "user": current_user,
+        "clients": clients
+    })
+
+@router.post("/create", response_class=HTMLResponse)
+async def invoice_create_post_redirect(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    client_id: int = Form(...),
+    invoice_number: str = Form(None),
+    status: str = Form(None),
+    invoice_date: str = Form(None),
+    due_date: str = Form(None),
+    payment_method: str = Form(None),
+    pdf_password: str = Form(None),
+    invoice_terms: str = Form(None)
+    # Add other fields as needed
+):
+    """Handle invoice creation form submission from /create URL"""
+    # Redirect to the main create post handler
+    return await invoice_create_post(
+        request, db, current_user, client_id, invoice_number, status, 
+        invoice_date, due_date, payment_method, pdf_password, invoice_terms
+    )
+
 @router.get("/{invoice_id}", response_class=HTMLResponse)
 async def view_invoice(
     invoice_id: int,
@@ -327,38 +358,7 @@ async def invoice_create(
     )
 """    
 
-@router.get("/create", response_class=HTMLResponse)
-async def create_invoice(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    clients = db.query(Client).all()
-    return templates.TemplateResponse("invoices/create.html", {
-        "request": request,
-        "user": current_user,
-        "clients": clients
-    })
-
-@router.post("/create", response_class=HTMLResponse)
-async def invoice_create_post_redirect(
-    request: Request,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    client_id: int = Form(...),
-    invoice_number: str = Form(None),
-    status: str = Form(None),
-    invoice_date: str = Form(None),
-    due_date: str = Form(None),
-    payment_method: str = Form(None),
-    pdf_password: str = Form(None),
-    invoice_terms: str = Form(None)
-    # Add other fields as needed
-):
-    """Handle invoice creation form submission from /create URL"""
-    # Redirect to the main create post handler
-    return await invoice_create_post(
-        request, db, current_user, client_id, invoice_number, status, 
-        invoice_date, due_date, payment_method, pdf_password, invoice_terms
-    )
-
-# POST /invoices/ - handle invoice details form submission
+# Moved to before /{invoice_id} route
 
 @router.post("/", response_class=HTMLResponse)
 async def invoice_create_post(
