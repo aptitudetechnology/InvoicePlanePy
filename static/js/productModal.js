@@ -132,7 +132,9 @@ class ProductModal {
   // Load families from API and populate filter dropdown
   async loadFamilies() {
     try {
-      const response = await fetch('/products/api/families');
+      const response = await fetch('/products/api/families', {
+        credentials: 'same-origin'
+      });
       if (!response.ok) {
         if (response.status === 401) {
           console.error('Authentication required for families API');
@@ -174,7 +176,9 @@ class ProductModal {
         url += `&family_id=${encodeURIComponent(familyId)}`;
       }
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        credentials: 'same-origin'
+      });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
