@@ -168,20 +168,31 @@ def parse_inserts(sql_file, table):
         # Split values tuples - handle escaped quotes properly
         tuples = re.findall(r"\((.*?)\)", values_blob, re.DOTALL)
         for tup in tuples:
-            # Split on commas but respect quoted strings
+            # Split on commas but respect quoted strings and escaped quotes
             vals = []
             current_val = ""
             in_quotes = False
-            for char in tup:
+            i = 0
+            while i < len(tup):
+                char = tup[i]
                 if char == "'" and not in_quotes:
                     in_quotes = True
+                    current_val += char
                 elif char == "'" and in_quotes:
-                    in_quotes = False
+                    # Check if this quote is escaped
+                    if i > 0 and tup[i-1] == '\\':
+                        # This is an escaped quote, don't end the string
+                        current_val += char
+                    else:
+                        # This ends the quoted string
+                        in_quotes = False
+                        current_val += char
                 elif char == "," and not in_quotes:
                     vals.append(current_val.strip())
                     current_val = ""
-                    continue
-                current_val += char
+                else:
+                    current_val += char
+                i += 1
             vals.append(current_val.strip())
 
             # Clean up quotes
