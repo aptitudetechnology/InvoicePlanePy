@@ -10,6 +10,7 @@ import re
 import sys
 import logging
 from datetime import datetime
+from decimal import Decimal
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
@@ -569,15 +570,15 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
                                     # Type conversions for items
                                     if 'item_quantity' in item_row and item_row['item_quantity'] not in ['NULL', '']:
                                         try:
-                                            item_mapped["quantity"] = float(item_row["item_quantity"])
+                                            item_mapped["quantity"] = Decimal(str(item_row["item_quantity"]))
                                         except ValueError:
-                                            item_mapped["quantity"] = 1.0
+                                            item_mapped["quantity"] = Decimal('1.0')
 
                                     if 'item_price' in item_row and item_row['item_price'] not in ['NULL', '']:
                                         try:
-                                            item_mapped["price"] = float(item_row["item_price"])
+                                            item_mapped["price"] = Decimal(str(item_row["item_price"]))
                                         except ValueError:
-                                            item_mapped["price"] = 0.00
+                                            item_mapped["price"] = Decimal('0.00')
 
                                     # Skip invoice items without required fields
                                     if not item_mapped.get("name") or item_mapped.get("name") == "":
@@ -610,17 +611,16 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
                                             continue
 
                                     # Calculate item totals
-                                    quantity = item_mapped.get("quantity", 0)
-                                    price = item_mapped.get("price", 0)
+                                    quantity = Decimal(str(item_mapped.get("quantity", 0)))
+                                    price = Decimal(str(item_mapped.get("price", 0)))
                                     # No discount_amount in legacy schema, so set to 0
-                                    discount_amount = 0.0
+                                    discount_amount = Decimal('0.0')
 
                                     item_mapped["subtotal"] = quantity * price
                                     item_mapped["discount_amount"] = discount_amount
 
                                     # Calculate tax amount - default to 10% GST
-                                    tax_amount = 0.0
-                                    tax_rate_percent = 10.0  # Default to 10% GST
+                                    tax_rate_percent = Decimal('10.0')  # Default to 10% GST
                                     
                                     # Try to get tax rate from legacy data
                                     tax_rate_id = item_row.get("item_tax_rate_id")
@@ -629,13 +629,13 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
                                             from app.models.tax_rate import TaxRate
                                             tax_rate = session.query(TaxRate).filter_by(id=tax_rate_id).first()
                                             if tax_rate:
-                                                tax_rate_percent = tax_rate.rate
+                                                tax_rate_percent = Decimal(str(tax_rate.rate))
                                         except Exception as e:
                                             logger.warning(f"Error looking up tax rate {tax_rate_id}: {e}")
                                     
                                     # Calculate tax on (subtotal - discount) using the determined rate
                                     taxable_amount = item_mapped["subtotal"] - discount_amount
-                                    tax_amount = taxable_amount * (tax_rate_percent / 100)
+                                    tax_amount = taxable_amount * (tax_rate_percent / Decimal('100'))
                                     
                                     logger.debug(f"Applied {tax_rate_percent}% tax to item: taxable={taxable_amount}, tax={tax_amount}")
 
@@ -662,18 +662,20 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
                     logger.info(f"Created {len(items)} invoice items for invoice {invoice.id}")
 
                     if items:
-                        invoice.subtotal = sum(item.subtotal for item in items)
-                        invoice.tax_total = sum(item.tax_amount for item in items)
-                        invoice.discount_amount = sum(item.discount_amount for item in items)
-                        invoice.total = sum(item.total for item in items)
-                        invoice.balance = invoice.total - invoice.paid_amount if invoice.paid_amount else invoice.total
+                        invoice.subtotal = sum((item.subtotal for item in items), Decimal('0'))
+                        invoice.tax_total = sum((item.tax_amount for item in items), Decimal('0'))
+                        invoice.discount_amount = sum((item.discount_amount for item in items), Decimal('0'))
+                        invoice.total = sum((item.total for item in items), Decimal('0'))
+                        # Ensure paid_amount is Decimal for calculation
+                        paid_amount = invoice.paid_amount or Decimal('0')
+                        invoice.balance = invoice.total - paid_amount
                     else:
                         # No items, set defaults
-                        invoice.subtotal = 0
-                        invoice.tax_total = 0
-                        invoice.discount_amount = 0
-                        invoice.total = 0
-                        invoice.balance = 0
+                        invoice.subtotal = Decimal('0')
+                        invoice.tax_total = Decimal('0')
+                        invoice.discount_amount = Decimal('0')
+                        invoice.total = Decimal('0')
+                        invoice.balance = Decimal('0')
 
                 imported += 1
             except Exception as e:
