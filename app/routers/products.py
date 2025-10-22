@@ -23,6 +23,7 @@ async def get_products_api(
     page: int = Query(1, ge=1, description="Page number"),
     limit: int = Query(100, ge=1, le=1000, description="Items per page"),
     search: str = Query(None, description="Search products by name or SKU"),
+    family_id: int = Query(None, description="Filter by product family ID"),
     sort_by: str = Query("name", description="Sort by: name, price, created_at, sku"),
     sort_order: str = Query("asc", description="Sort order: asc or desc")
 ):
@@ -50,6 +51,10 @@ async def get_products_api(
                     Product.description.ilike(search_term)
                 )
             )
+        
+        # Apply family filter if provided
+        if family_id:
+            products_query = products_query.filter(Product.family_id == family_id)
         
         # Apply sorting
         sort_column = None
@@ -84,6 +89,8 @@ async def get_products_api(
                     Product.description.ilike(search_term)
                 )
             )
+        if family_id:
+            total_query = total_query.filter(Product.family_id == family_id)
         total_products = total_query.count()
         
         # Format products data with related information

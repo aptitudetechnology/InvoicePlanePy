@@ -249,6 +249,9 @@ class ProductModal {
       if (search) {
         url += `&search=${encodeURIComponent(search)}`;
       }
+      if (familyId) {
+        url += `&family_id=${encodeURIComponent(familyId)}`;
+      }
       
       const response = await fetch(url);
       if (!response.ok) {
@@ -256,25 +259,20 @@ class ProductModal {
       }
       const data = await response.json();
       
-      this.renderProducts(data.products, familyId);
+      this.renderProducts(data.products);
     } catch (error) {
       console.error('Error loading products:', error);
     }
   }
 
   // Render products in the table
-  renderProducts(products, filterFamilyId = '') {
+  renderProducts(products) {
     const tbody = document.getElementById('productTableBody');
     if (!tbody) return;
     
     tbody.innerHTML = '';
     
     products.forEach(product => {
-      // Apply family filter if specified
-      if (filterFamilyId && product.family && product.family.id != filterFamilyId) {
-        return;
-      }
-      
       const row = document.createElement('tr');
       row.className = 'product-row';
       row.setAttribute('data-family', product.family ? product.family.name.toLowerCase().replace(/\s+/g, '-') : '');
