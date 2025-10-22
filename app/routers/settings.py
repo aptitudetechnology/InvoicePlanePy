@@ -42,8 +42,16 @@ async def test_products_api(db: Session = Depends(get_db)):
         # Import the products API function
         from app.routers.products import get_products_api
         
-        # Call the products API with default parameters
-        products_result = await get_products_api(db=db, page=1, limit=10)
+        # Call the products API with explicit parameters
+        products_result = await get_products_api(
+            db=db,
+            page=1,
+            limit=10,
+            search=None,
+            family_id=None,
+            sort_by="name",
+            sort_order="asc"
+        )
         return {"success": True, "products": products_result.get("products", [])}
     except Exception as e:
         return {"success": False, "error": str(e)}
