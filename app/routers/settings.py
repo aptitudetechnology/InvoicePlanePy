@@ -903,6 +903,112 @@ async def import_invoices_sql(
             "message": f"Import failed: {type(e).__name__}: {str(e) or 'No message'}"
         }, status_code=500)
 
+@router.post("/import/complete-sql")
+async def import_complete_sql(
+    request: Request,
+    sql_file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Import all data in correct order: Products → Clients → Invoices"""
+    import tempfile
+    import os
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.sql') as temp_file:
+        content = await sql_file.read()
+        temp_file.write(content)
+        temp_file_path = temp_file.name
+
+    logger.info(f"Starting complete SQL import from file: {temp_file_path}")
+
+    results = {
+        "products": {"success": False, "message": "", "count": 0},
+        "clients": {"success": False, "message": "", "count": 0},
+        "invoices": {"success": False, "message": "", "count": 0}
+    }
+
+    try:
+        # 1. Import Products First
+        logger.info("Step 1: Importing products...")
+        try:
+            from importdb.import_legacy_data import import_products
+            import_products(dry_run=False, sql_file=temp_file_path)
+            # Count products after import
+            from app.models.product import Product
+            results["products"]["count"] = db.query(Product).count()
+            results["products"]["success"] = True
+            results["products"]["message"] = f"Successfully imported {results['products']['count']} products"
+            logger.info(f"Products import completed: {results['products']['count']} products")
+        except Exception as e:
+            logger.error(f"Products import failed: {e}")
+            results["products"]["message"] = f"Products import failed: {str(e)}"
+            raise  # Stop the process if products fail
+
+        # 2. Import Clients Second
+        logger.info("Step 2: Importing clients...")
+        try:
+            from importdb.import_legacy_data import import_clients
+            import_clients(dry_run=False, sql_file=temp_file_path)
+            # Count clients after import
+            from app.models.client import Client
+            results["clients"]["count"] = db.query(Client).count()
+            results["clients"]["success"] = True
+            results["clients"]["message"] = f"Successfully imported {results['clients']['count']} clients"
+            logger.info(f"Clients import completed: {results['clients']['count']} clients")
+        except Exception as e:
+            logger.error(f"Clients import failed: {e}")
+            results["clients"]["message"] = f"Clients import failed: {str(e)}"
+            raise  # Stop the process if clients fail
+
+        # 3. Import Invoices Last
+        logger.info("Step 3: Importing invoices...")
+        try:
+            from importdb.import_legacy_data import import_invoices
+            import_invoices(dry_run=False, sql_file=temp_file_path)
+            # Count invoices after import
+            from app.models.invoice import Invoice, InvoiceItem
+            invoice_count = db.query(Invoice).count()
+            item_count = db.query(InvoiceItem).count()
+            results["invoices"]["count"] = invoice_count
+            results["invoices"]["success"] = True
+            results["invoices"]["message"] = f"Successfully imported {invoice_count} invoices with {item_count} items"
+            logger.info(f"Invoices import completed: {invoice_count} invoices, {item_count} items")
+        except Exception as e:
+            logger.error(f"Invoices import failed: {e}")
+            results["invoices"]["message"] = f"Invoices import failed: {str(e)}"
+            raise
+
+        # Clean up temp file
+        os.unlink(temp_file_path)
+
+        # All imports successful
+        success_message = f"Complete import successful! Imported {results['products']['count']} products, {results['clients']['count']} clients, and {results['invoices']['count']} invoices."
+
+        return JSONResponse({
+            "success": True,
+            "message": success_message,
+            "results": results
+        })
+
+    except Exception as e:
+        # Clean up temp file
+        try:
+            os.unlink(temp_file_path)
+        except:
+            pass
+
+        logger.error(f"Complete import failed: {e}")
+        import traceback
+        logger.error(f"Full traceback: {traceback.format_exc()}")
+
+        error_message = f"Complete import failed during {next((k for k, v in results.items() if not v['success']), 'unknown')} import: {str(e)}"
+
+        return JSONResponse({
+            "success": False,
+            "message": error_message,
+            "results": results
+        }, status_code=500)
+
 # API Key management endpoints
 @router.post("/api/generate-key")
 async def generate_api_key(

@@ -192,6 +192,36 @@
                             </div>
                         </div>
 
+                        <!-- Complete Import Row -->
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <div class="card h-100 border-danger">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-rocket fs-1 text-danger mb-3"></i>
+                                        <h5>Complete SQL Import (Recommended)</h5>
+                                        <p class="text-muted">Import all data in correct order: Products → Clients → Invoices</p>
+                                        <form id="completeImportForm" enctype="multipart/form-data">
+                                            <div class="mb-2">
+                                                <input type="file" name="sql_file" accept=".sql" class="form-control" id="completeSqlFile" required>
+                                            </div>
+                                            <button type="submit" class="btn btn-danger" id="completeImportBtn">
+                                                <i class="bi bi-play-circle"></i> Import All Data
+                                            </button>
+                                        </form>
+                                        <div id="completeImportProgress" class="mt-2" style="display: none;">
+                                            <div class="progress">
+                                                <div class="progress-bar progress-bar-striped progress-bar-animated bg-danger" style="width: 100%"></div>
+                                            </div>
+                                            <small class="text-muted">Importing all data in sequence...</small>
+                                        </div>
+                                        <div id="completeImportResult" class="mt-2" style="display: none;">
+                                            <div id="completeImportAlert" class="alert"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="mt-4">
                             <h6>SQL Import Requirements</h6>
                             <div class="row">
@@ -312,6 +342,81 @@ document.getElementById('invoiceImportForm').addEventListener('submit', async fu
         } else {
             alertDiv.className = 'alert alert-danger';
             alertDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Import failed: ' + (result.message || 'Unknown error');
+        }
+
+    } catch (error) {
+        progressDiv.style.display = 'none';
+        resultDiv.style.display = 'block';
+        alertDiv.className = 'alert alert-danger';
+        alertDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Error: ' + error.message;
+    }
+
+    // Show button again
+    importBtn.style.display = 'block';
+});
+
+// Handle complete import form submission
+document.getElementById('completeImportForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const formData = new FormData();
+    const fileInput = document.getElementById('completeSqlFile');
+    const importBtn = document.getElementById('completeImportBtn');
+    const progressDiv = document.getElementById('completeImportProgress');
+    const resultDiv = document.getElementById('completeImportResult');
+    const alertDiv = document.getElementById('completeImportAlert');
+
+    if (!fileInput.files[0]) {
+        alert('Please select a SQL file to import.');
+        return;
+    }
+
+    formData.append('sql_file', fileInput.files[0]);
+
+    // Show progress, hide button
+    importBtn.style.display = 'none';
+    progressDiv.style.display = 'block';
+    resultDiv.style.display = 'none';
+
+    try {
+        const response = await fetch('/settings/import/complete-sql', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        // Hide progress
+        progressDiv.style.display = 'none';
+        resultDiv.style.display = 'block';
+
+        if (response.ok && result.success) {
+            alertDiv.className = 'alert alert-success';
+            let message = '<i class="bi bi-check-circle"></i> ' + result.message;
+            if (result.results) {
+                message += '<br><br><small class="text-muted">';
+                message += '<strong>Import Summary:</strong><br>';
+                message += `• Products: ${result.results.products.count} imported<br>`;
+                message += `• Clients: ${result.results.clients.count} imported<br>`;
+                message += `• Invoices: ${result.results.invoices.count} imported`;
+                message += '</small>';
+            }
+            alertDiv.innerHTML = message;
+            // Auto-run verification after successful import
+            setTimeout(() => verifyImport(), 1000);
+        } else {
+            alertDiv.className = 'alert alert-danger';
+            let message = '<i class="bi bi-exclamation-triangle"></i> Import failed: ' + (result.message || 'Unknown error');
+            if (result.results) {
+                message += '<br><br><small class="text-muted">';
+                message += '<strong>Progress before failure:</strong><br>';
+                Object.entries(result.results).forEach(([key, data]) => {
+                    const status = data.success ? '✅' : '❌';
+                    message += `• ${key.charAt(0).toUpperCase() + key.slice(1)}: ${status} ${data.message}<br>`;
+                });
+                message += '</small>';
+            }
+            alertDiv.innerHTML = message;
         }
 
     } catch (error) {
