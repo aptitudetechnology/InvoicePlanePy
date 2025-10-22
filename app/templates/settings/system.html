@@ -1,3 +1,50 @@
+                <!-- Maintenance Section: Add Test Product Families API Button -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">Maintenance</h6>
+                    </div>
+                    <div class="card-body">
+                        <button id="testFamiliesApiBtn" class="btn btn-outline-primary mb-2" type="button">
+                            <i class="bi bi-bug"></i> Test Product Families API
+                        </button>
+                        <div id="familiesApiTestResult" class="mt-2"></div>
+                    </div>
+                </div>
+<script>
+// ...existing JS...
+
+// Test Product Families API button logic
+document.addEventListener('DOMContentLoaded', function() {
+    const btn = document.getElementById('testFamiliesApiBtn');
+    if (btn) {
+        btn.addEventListener('click', function() {
+            const resultDiv = document.getElementById('familiesApiTestResult');
+            resultDiv.innerHTML = '<span class="text-info">Testing families API...</span>';
+            fetch('/settings/test-families-api')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.families && data.families.length > 0) {
+                            let html = `<div class='alert alert-success'><strong>Families API returned ${data.families.length} families:</strong><ul>`;
+                            data.families.forEach(fam => {
+                                html += `<li>ID: <code>${fam.id}</code> &mdash; <strong>${fam.name}</strong></li>`;
+                            });
+                            html += '</ul></div>';
+                            resultDiv.innerHTML = html;
+                        } else {
+                            resultDiv.innerHTML = '<div class="alert alert-warning">Families API returned no families.</div>';
+                        }
+                    } else {
+                        resultDiv.innerHTML = `<div class='alert alert-danger'>Error: ${data.error || 'Unknown error'}</div>`;
+                    }
+                })
+                .catch(err => {
+                    resultDiv.innerHTML = `<div class='alert alert-danger'>Request failed: ${err}</div>`;
+                });
+        });
+    }
+});
+</script>
 {% extends "base.html" %}
 
 {% block content %}

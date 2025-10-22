@@ -1,3 +1,16 @@
+from app.routers.products import get_families_api
+
+# Place after router is defined
+@router.get("/test-families-api", response_class=JSONResponse)
+async def test_families_api(db: Session = Depends(get_db)):
+    """
+    Test the /products/api/families endpoint and return the result for diagnostics.
+    """
+    try:
+        families_result = await get_families_api(db)
+        return {"success": True, "families": families_result.get("families", [])}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 from fastapi import APIRouter, Request, Depends, HTTPException, Form, File, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
