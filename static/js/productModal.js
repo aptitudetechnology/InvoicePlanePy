@@ -1,6 +1,5 @@
 // static/js/productModal.js
 // Product selection modal functionality
-alert('productModal.js is loading...');
 console.log('productModal.js loading...');
 
 class ProductModal {
