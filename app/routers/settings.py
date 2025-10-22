@@ -774,11 +774,14 @@ async def import_products_sql(
             temp_file.write(content)
             temp_file_path = temp_file.name
 
-        # Import products using the legacy importer
-        from importdb.import_legacy_data import import_products
+        # Import families first, then products using the legacy importer
+        from importdb.import_legacy_data import import_families, import_products
 
-        # Run import (not dry run)
-        import_products(dry_run=False, sql_file=temp_file_path)
+        # Import families first
+        family_id_mapping = import_families(dry_run=False, sql_file=temp_file_path)
+
+        # Run product import with family mapping
+        import_products(dry_run=False, sql_file=temp_file_path, family_id_mapping=family_id_mapping)
 
         # Clean up temp file
         os.unlink(temp_file_path)
@@ -922,17 +925,35 @@ async def import_complete_sql(
     logger.info(f"Starting complete SQL import from file: {temp_file_path}")
 
     results = {
+        "families": {"success": False, "message": "", "count": 0},
         "products": {"success": False, "message": "", "count": 0},
         "clients": {"success": False, "message": "", "count": 0},
         "invoices": {"success": False, "message": "", "count": 0}
     }
 
     try:
-        # 1. Import Products First
-        logger.info("Step 1: Importing products...")
+        # 1. Import Product Families First
+        logger.info("Step 1: Importing product families...")
+        family_id_mapping = {}
+        try:
+            from importdb.import_legacy_data import import_families
+            family_id_mapping = import_families(dry_run=False, sql_file=temp_file_path)
+            # Count families after import
+            from app.models.product import ProductFamily
+            results["families"]["count"] = db.query(ProductFamily).count()
+            results["families"]["success"] = True
+            results["families"]["message"] = f"Successfully imported {results['families']['count']} product families"
+            logger.info(f"Families import completed: {results['families']['count']} families, {len(family_id_mapping)} ID mappings")
+        except Exception as e:
+            logger.error(f"Families import failed: {e}")
+            results["families"]["message"] = f"Families import failed: {str(e)}"
+            # Families are optional, continue with products
+
+        # 2. Import Products Second
+        logger.info("Step 2: Importing products...")
         try:
             from importdb.import_legacy_data import import_products
-            product_id_mapping = import_products(dry_run=False, sql_file=temp_file_path)
+            product_id_mapping = import_products(dry_run=False, sql_file=temp_file_path, family_id_mapping=family_id_mapping)
             # Count products after import
             from app.models.product import Product
             results["products"]["count"] = db.query(Product).count()
@@ -984,7 +1005,7 @@ async def import_complete_sql(
         os.unlink(temp_file_path)
 
         # All imports successful
-        success_message = f"Complete import successful! Imported {results['products']['count']} products, {results['clients']['count']} clients, and {results['invoices']['count']} invoices."
+        success_message = f"Complete import successful! Imported {results['families']['count']} product families, {results['products']['count']} products, {results['clients']['count']} clients, and {results['invoices']['count']} invoices."
 
         return JSONResponse({
             "success": True,

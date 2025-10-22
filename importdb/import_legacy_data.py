@@ -16,7 +16,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from app.config import settings
 from app.models.client import Client
-from app.models.product import Product
+from app.models.product import Product, ProductFamily
 from app.models.invoice import Invoice, InvoiceItem
 from app.models.user import User
 # TODO: Import other models as needed
@@ -65,6 +65,13 @@ FIELD_MAP_PRODUCTS = {
     "product_purchase_price": "purchase_price",
     "product_sumex": "sumex",
     "product_tariff": "tariff",
+    "family_id": "family_id",
+    # Add more as needed
+}
+
+FIELD_MAP_FAMILIES = {
+    # Legacy field : New model field
+    "family_name": "name",
     # Add more as needed
 }
 
@@ -277,7 +284,81 @@ def import_clients(dry_run=False, sql_file=None):
     finally:
         session.close()
 
-def import_products(dry_run=False, sql_file=None):
+def import_families(dry_run=False, sql_file=None):
+    """Import product families from legacy ip_families table."""
+    if sql_file is None:
+        sql_file = SQL_FILE
+    session = get_session()
+    imported = 0
+    skipped = 0
+    id_mapping = {}  # Map legacy family_id to new family.id
+
+    try:
+        logger.info("Starting family import...")
+        rows = list(parse_inserts(sql_file, "ip_families"))
+        total = len(rows)
+        logger.info(f"Found {total} family records to import")
+
+        for i, row in enumerate(rows):
+            if (i + 1) % 10 == 0:
+                logger.info(f"Processing record {i+1}/{total}")
+
+            # Map fields
+            mapped = {}
+            for legacy_field, new_field in FIELD_MAP_FAMILIES.items():
+                if legacy_field in row:
+                    value = row[legacy_field]
+                    if value == 'NULL' or value == '':
+                        mapped[new_field] = None
+                    else:
+                        mapped[new_field] = value
+
+            # Skip families without names (required field)
+            if not mapped.get("name"):
+                logger.warning(f"Skipping family without name: {row}")
+                skipped += 1
+                continue
+
+            # Create family object
+            try:
+                family = ProductFamily(**mapped)
+                if not dry_run:
+                    session.add(family)
+                    session.flush()  # Get the new ID immediately
+                    legacy_id = row.get("family_id")
+                    if legacy_id:
+                        id_mapping[legacy_id] = family.id
+                        logger.debug(f"Created family mapping: legacy {legacy_id} -> new {family.id}")
+                imported += 1
+            except Exception as e:
+                logger.error(f"Error creating family from row {row}: {e}")
+                skipped += 1
+                continue
+
+        if not dry_run:
+            session.commit()
+            logger.info(f"Successfully imported {imported} families")
+        else:
+            logger.info(f"Dry run: Would import {imported} families")
+
+        if skipped > 0:
+            logger.warning(f"Skipped {skipped} records due to errors")
+
+        logger.info(f"Created {len(id_mapping)} ID mappings for families")
+        return id_mapping
+
+    except SQLAlchemyError as e:
+        logger.error(f"Database error during import: {e}")
+        session.rollback()
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error during import: {e}")
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+def import_products(dry_run=False, sql_file=None, family_id_mapping=None):
     """Import products from legacy ip_products table."""
     if sql_file is None:
         sql_file = SQL_FILE
@@ -334,6 +415,23 @@ def import_products(dry_run=False, sql_file=None):
                     mapped["tariff"] = float(row["product_tariff"])
                 except ValueError:
                     mapped["tariff"] = None
+
+            # Map family_id to new family ID if mapping provided
+            if family_id_mapping and 'family_id' in row and row['family_id'] not in ['NULL', '', None]:
+                try:
+                    legacy_family_id = int(row['family_id'])
+                    if legacy_family_id in family_id_mapping:
+                        mapped["family_id"] = family_id_mapping[legacy_family_id]
+                        logger.debug(f"Mapped legacy family_id {legacy_family_id} to new family_id {mapped['family_id']}")
+                    else:
+                        logger.warning(f"Legacy family_id {legacy_family_id} not found in mapping, setting to None")
+                        mapped["family_id"] = None
+                except (ValueError, TypeError):
+                    logger.warning(f"Invalid family_id value: {row['family_id']}, setting to None")
+                    mapped["family_id"] = None
+            elif 'family_id' in mapped:
+                # If no mapping provided or family_id is NULL, set to None
+                mapped["family_id"] = None
 
             # Generate unique SKU if missing
             if not mapped.get("sku"):
