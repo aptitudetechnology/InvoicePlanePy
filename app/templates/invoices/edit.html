@@ -102,7 +102,7 @@
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="quote-items">
                                     {# Loop through existing items if available, otherwise display one empty row #}
     {% if invoice.items %}
         {% for item in invoice.items %}
@@ -192,7 +192,7 @@
                             <button type="button" class="btn btn-outline-primary me-2" onclick="addNewRow()">
                                 <i class="bi bi-plus"></i> Add new row
                             </button>
-                            <button type="button" class="btn btn-outline-secondary me-2">
+                            <button type="button" class="btn btn-outline-secondary me-2" id="display-product-modal-btn">
                                 <i class="bi bi-plus"></i> Add product
                             </button>
                             <button type="button" class="btn btn-outline-info">
@@ -274,6 +274,9 @@
                         </button>
                     </div>
                 </form>
+
+                {% include 'modals/add_product_modal.html' %}
+
             </div>
         </div>
     </div>
@@ -542,7 +545,22 @@
         loadTaxRates().then(() => {
             calculateTotals();
         });
+
+        // Add product modal button logic
+        const addProductBtn = document.getElementById('display-product-modal-btn');
+        if (addProductBtn) {
+            addProductBtn.addEventListener('click', () => {
+                const productModalInstance = window.productModalInstance || (window.ProductModal && window.ProductModal.getInstance && window.ProductModal.getInstance());
+                if (productModalInstance && typeof productModalInstance.showModal === 'function') {
+                    productModalInstance.showModal();
+                }
+            });
+        }
     });
 
 </script>
+
+<!-- Include the external JavaScript modules for product modal -->
+<script src="/static/js/productModal.js"></script>
+<script src="/static/js/addNewRowWithProduct.js"></script>
 {% endblock %}
