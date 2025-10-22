@@ -1,6 +1,26 @@
+from fastapi import APIRouter, Request, Depends, HTTPException, Form, File, UploadFile
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.dependencies import get_current_user
+from app.models.user import User
+from app.models.api_key import ApiKey
+from app.models.invoicesettings import InvoiceSettings
+from app.models.company_settings import CompanySettings
+from app.models.tax_rate import TaxRate
+import logging
+
+# Add this at the top of your file
+logger = logging.getLogger(__name__)
+
 from app.routers.products import get_families_api
 
-# Place after router is defined
+router = APIRouter()
+templates = Jinja2Templates(directory="app/templates")
+
+# Test Product Families API diagnostic endpoint
 @router.get("/test-families-api", response_class=JSONResponse)
 async def test_families_api(db: Session = Depends(get_db)):
     """
