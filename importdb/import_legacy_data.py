@@ -87,6 +87,7 @@ FIELD_MAP_INVOICE_ITEMS = {
     "item_price": "price",
     "item_order": "order",
     "item_tax_rate_id": "tax_rate_id",
+    "item_product_id": "product_id",
     # Note: item_discount_amount doesn't exist in legacy schema
     # Add more as needed
 }
@@ -517,6 +518,9 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
                         invoice_items = [item for item in item_rows if item.get("invoice_id") == invoice_id]
                         logger.info(f"Found {len(invoice_items)} items for invoice {invoice_id}")
                         
+                        if invoice_items:
+                            logger.info(f"Sample item for invoice {invoice_id}: {invoice_items[0]}")
+                        
                         for item_row in invoice_items:
                                 logger.debug(f"Processing invoice item: {item_row}")
                                 item_mapped = {}
@@ -615,6 +619,7 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
                                 try:
                                     invoice_item = InvoiceItem(**item_mapped)
                                     session.add(invoice_item)
+                                    logger.debug(f"Successfully created invoice item: {item_mapped}")
                                 except Exception as e:
                                     logger.error(f"Error creating invoice item: {e}")
                                     continue
@@ -622,6 +627,7 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
                     # Calculate invoice totals from items
                     session.flush()  # Ensure all items are saved
                     items = session.query(InvoiceItem).filter_by(invoice_id=invoice.id).all()
+                    logger.info(f"Created {len(items)} invoice items for invoice {invoice.id}")
 
                     if items:
                         invoice.subtotal = sum(item.subtotal for item in items)
