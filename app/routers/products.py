@@ -229,17 +229,27 @@ async def create_product_post(
     sku: str = Form(""),
     family_id: int = Form(None),
     unit_id: int = Form(None),
+    tax_rate_id: int = Form(None),
+    purchase_price: float = Form(None),
+    provider_name: str = Form(""),
+    sumex: bool = Form(False),
+    tariff: float = Form(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Handle product creation"""
     product = Product(
         name=name,
-        description=description,
+        description=description if description else None,
         price=price,
         sku=sku if sku else None,
         family_id=family_id if family_id else None,
         unit_id=unit_id if unit_id else None,
+        tax_rate_id=tax_rate_id if tax_rate_id else None,
+        purchase_price=purchase_price if purchase_price else None,
+        provider_name=provider_name if provider_name else None,
+        sumex=sumex,
+        tariff=tariff if tariff else None,
         user_id=current_user.id
     )
     

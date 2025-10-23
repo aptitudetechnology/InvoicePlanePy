@@ -60,12 +60,14 @@ FIELD_MAP_PRODUCTS = {
     "product_description": "description",
     "product_price": "price",
     "product_sku": "sku",
-    "product_tax_rate": "tax_rate",
+    "product_tax_rate": "tax_rate",  # Keep for backward compatibility
+    "tax_rate_id": "tax_rate_id",    # Foreign key to tax_rates table
     "product_provider_name": "provider_name",
     "product_purchase_price": "purchase_price",
     "product_sumex": "sumex",
     "product_tariff": "tariff",
     "family_id": "family_id",
+    "unit_id": "unit_id",
     # Add more as needed
 }
 
@@ -358,8 +360,15 @@ def import_families(dry_run=False, sql_file=None):
     finally:
         session.close()
 
-def import_products(dry_run=False, sql_file=None, family_id_mapping=None):
-    """Import products from legacy ip_products table."""
+def import_products(dry_run=False, sql_file=None, family_id_mapping=None, unit_id_mapping=None):
+    """Import products from legacy ip_products table.
+    
+    Args:
+        dry_run: If True, don't actually import, just validate
+        sql_file: Path to SQL file to parse
+        family_id_mapping: Dict mapping legacy family_id to new family_id
+        unit_id_mapping: Dict mapping legacy unit_id to new unit_id (optional)
+    """
     if sql_file is None:
         sql_file = SQL_FILE
     session = get_session()
@@ -400,6 +409,15 @@ def import_products(dry_run=False, sql_file=None, family_id_mapping=None):
                 except ValueError:
                     mapped["tax_rate"] = 0.00
 
+            # Handle tax_rate_id (foreign key)
+            if 'tax_rate_id' in row and row['tax_rate_id'] not in ['NULL', '', None]:
+                try:
+                    mapped["tax_rate_id"] = int(row['tax_rate_id'])
+                except (ValueError, TypeError):
+                    mapped["tax_rate_id"] = None
+            else:
+                mapped["tax_rate_id"] = None
+
             # Type conversions for additional fields
             if 'product_purchase_price' in row and row['product_purchase_price'] not in ['NULL', '']:
                 try:
@@ -432,6 +450,28 @@ def import_products(dry_run=False, sql_file=None, family_id_mapping=None):
             elif 'family_id' in mapped:
                 # If no mapping provided or family_id is NULL, set to None
                 mapped["family_id"] = None
+
+            # Map unit_id to new unit ID if mapping provided
+            if unit_id_mapping and 'unit_id' in row and row['unit_id'] not in ['NULL', '', None]:
+                try:
+                    legacy_unit_id = int(row['unit_id'])
+                    if legacy_unit_id in unit_id_mapping:
+                        mapped["unit_id"] = unit_id_mapping[legacy_unit_id]
+                        logger.debug(f"Mapped legacy unit_id {legacy_unit_id} to new unit_id {mapped['unit_id']}")
+                    else:
+                        logger.warning(f"Legacy unit_id {legacy_unit_id} not found in mapping, keeping original")
+                        mapped["unit_id"] = legacy_unit_id  # Keep original if no mapping
+                except (ValueError, TypeError):
+                    logger.warning(f"Invalid unit_id value: {row['unit_id']}, setting to None")
+                    mapped["unit_id"] = None
+            elif 'unit_id' in row and row['unit_id'] not in ['NULL', '', None]:
+                # If no mapping provided, try to use the original unit_id directly
+                try:
+                    mapped["unit_id"] = int(row['unit_id'])
+                except (ValueError, TypeError):
+                    mapped["unit_id"] = None
+            else:
+                mapped["unit_id"] = None
 
             # Generate unique SKU if missing
             if not mapped.get("sku"):
