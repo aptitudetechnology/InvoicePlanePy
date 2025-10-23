@@ -17,6 +17,11 @@
                         <h5 class="mb-0">Application Settings</h5>
                     </div>
                     <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>User Preferences:</strong> For date format, language, items per page, and other user interface preferences, please visit 
+                            <a href="/settings/company" class="alert-link">Company Settings</a>.
+                        </div>
                         <form>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
@@ -37,42 +42,12 @@
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="date_format" class="form-label">Date Format</label>
-                                    <select class="form-select" id="date_format">
-                                        <option value="Y-m-d">2024-12-31</option>
-                                        <option value="m/d/Y" selected>12/31/2024</option>
-                                        <option value="d/m/Y">31/12/2024</option>
-                                        <option value="d.m.Y">31.12.2024</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6 mb-3">
                                     <label for="currency" class="form-label">Default Currency</label>
                                     <select class="form-select" id="currency">
                                         <option value="USD" selected>USD - US Dollar</option>
                                         <option value="EUR">EUR - Euro</option>
                                         <option value="GBP">GBP - British Pound</option>
                                         <option value="CAD">CAD - Canadian Dollar</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="items_per_page" class="form-label">Items Per Page</label>
-                                    <select class="form-select" id="items_per_page">
-                                        <option value="10">10</option>
-                                        <option value="25" selected>25</option>
-                                        <option value="50">50</option>
-                                        <option value="100">100</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="language" class="form-label">Default Language</label>
-                                    <select class="form-select" id="language">
-                                        <option value="en" selected>English</option>
-                                        <option value="es">Spanish</option>
-                                        <option value="fr">French</option>
-                                        <option value="de">German</option>
                                     </select>
                                 </div>
                             </div>
