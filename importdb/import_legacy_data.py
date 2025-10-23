@@ -77,6 +77,13 @@ FIELD_MAP_FAMILIES = {
     # Add more as needed
 }
 
+FIELD_MAP_TAX_RATES = {
+    # Legacy field : New model field
+    "tax_rate_name": "name",
+    "tax_rate_percent": "rate",
+    # Add more as needed
+}
+
 FIELD_MAP_INVOICES = {
     # Legacy field : New model field
     "invoice_number": "invoice_number",
@@ -360,7 +367,82 @@ def import_families(dry_run=False, sql_file=None):
     finally:
         session.close()
 
-def import_products(dry_run=False, sql_file=None, family_id_mapping=None, unit_id_mapping=None):
+def import_tax_rates(dry_run=False, sql_file=None):
+    """Import tax rates from legacy ip_tax_rates table."""
+    if sql_file is None:
+        sql_file = SQL_FILE
+    session = get_session()
+    imported = 0
+    skipped = 0
+    id_mapping = {}  # Map legacy tax_rate_id to new tax_rate.id
+
+    try:
+        logger.info("Starting tax rate import...")
+        rows = list(parse_inserts(sql_file, "ip_tax_rates"))
+        total = len(rows)
+        logger.info(f"Found {total} tax rate records to import")
+
+        for i, row in enumerate(rows):
+            if (i + 1) % 10 == 0:
+                logger.info(f"Processing record {i+1}/{total}")
+
+            # Map fields
+            mapped = {}
+            for legacy_field, new_field in FIELD_MAP_TAX_RATES.items():
+                if legacy_field in row:
+                    value = row[legacy_field]
+                    if value == 'NULL' or value == '':
+                        mapped[new_field] = None
+                    else:
+                        mapped[new_field] = value
+
+            # Skip tax rates without names (required field)
+            if not mapped.get("name"):
+                logger.warning(f"Skipping tax rate without name: {row}")
+                skipped += 1
+                continue
+
+            # Create tax rate object
+            try:
+                from app.models.tax_rate import TaxRate
+                tax_rate = TaxRate(**mapped)
+                if not dry_run:
+                    session.add(tax_rate)
+                    session.flush()  # Get the new ID immediately
+                    legacy_id = row.get("tax_rate_id")
+                    if legacy_id:
+                        id_mapping[legacy_id] = tax_rate.id
+                        logger.debug(f"Created tax rate mapping: legacy {legacy_id} -> new {tax_rate.id}")
+                imported += 1
+            except Exception as e:
+                logger.error(f"Error creating tax rate from row {row}: {e}")
+                skipped += 1
+                continue
+
+        if not dry_run:
+            session.commit()
+            logger.info(f"Successfully imported {imported} tax rates")
+        else:
+            logger.info(f"Dry run: Would import {imported} tax rates")
+
+        if skipped > 0:
+            logger.warning(f"Skipped {skipped} records due to errors")
+
+        logger.info(f"Created {len(id_mapping)} ID mappings for tax rates")
+        return id_mapping
+
+    except SQLAlchemyError as e:
+        logger.error(f"Database error during import: {e}")
+        session.rollback()
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error during import: {e}")
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+def import_products(dry_run=False, sql_file=None, family_id_mapping=None, unit_id_mapping=None, tax_rate_id_mapping=None):
     """Import products from legacy ip_products table.
     
     Args:
@@ -412,7 +494,14 @@ def import_products(dry_run=False, sql_file=None, family_id_mapping=None, unit_i
             # Handle tax_rate_id (foreign key)
             if 'tax_rate_id' in row and row['tax_rate_id'] not in ['NULL', '', None]:
                 try:
-                    mapped["tax_rate_id"] = int(row['tax_rate_id'])
+                    legacy_tax_rate_id = int(row['tax_rate_id'])
+                    # Map legacy tax_rate_id to new tax_rate_id if mapping provided
+                    if tax_rate_id_mapping and legacy_tax_rate_id in tax_rate_id_mapping:
+                        mapped["tax_rate_id"] = tax_rate_id_mapping[legacy_tax_rate_id]
+                        logger.debug(f"Mapped legacy tax_rate_id {legacy_tax_rate_id} to new {mapped['tax_rate_id']}")
+                    else:
+                        mapped["tax_rate_id"] = legacy_tax_rate_id
+                        logger.warning(f"No mapping found for legacy tax_rate_id {legacy_tax_rate_id}, using as-is")
                 except (ValueError, TypeError):
                     mapped["tax_rate_id"] = None
             else:

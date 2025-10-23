@@ -964,6 +964,7 @@ async def import_complete_sql(
 
     results = {
         "families": {"success": False, "message": "", "count": 0},
+        "tax_rates": {"success": False, "message": "", "count": 0},
         "products": {"success": False, "message": "", "count": 0},
         "clients": {"success": False, "message": "", "count": 0},
         "invoices": {"success": False, "message": "", "count": 0}
@@ -985,13 +986,31 @@ async def import_complete_sql(
         except Exception as e:
             logger.error(f"Families import failed: {e}")
             results["families"]["message"] = f"Families import failed: {str(e)}"
-            # Families are optional, continue with products
+            # Families are optional, continue with tax rates
 
-        # 2. Import Products Second
-        logger.info("Step 2: Importing products...")
+        # 2. Import Tax Rates Second
+        logger.info("Step 2: Importing tax rates...")
+        tax_rate_id_mapping = {}
+        try:
+            from importdb.import_legacy_data import import_tax_rates
+            tax_rate_id_mapping = import_tax_rates(dry_run=False, sql_file=temp_file_path)
+            # Count tax rates after import
+            from app.models.tax_rate import TaxRate
+            results["tax_rates"]["count"] = db.query(TaxRate).count()
+            results["tax_rates"]["success"] = True
+            results["tax_rates"]["message"] = f"Successfully imported {results['tax_rates']['count']} tax rates"
+            logger.info(f"Tax rates import completed: {results['tax_rates']['count']} tax rates, {len(tax_rate_id_mapping)} ID mappings")
+        except Exception as e:
+            logger.error(f"Tax rates import failed: {e}")
+            results["tax_rates"]["message"] = f"Tax rates import failed: {str(e)}"
+            # Tax rates are required for products, stop if they fail
+            raise
+
+        # 3. Import Products Third
+        logger.info("Step 3: Importing products...")
         try:
             from importdb.import_legacy_data import import_products
-            product_id_mapping = import_products(dry_run=False, sql_file=temp_file_path, family_id_mapping=family_id_mapping)
+            product_id_mapping = import_products(dry_run=False, sql_file=temp_file_path, family_id_mapping=family_id_mapping, tax_rate_id_mapping=tax_rate_id_mapping)
             # Count products after import
             from app.models.product import Product
             results["products"]["count"] = db.query(Product).count()
@@ -1003,8 +1022,8 @@ async def import_complete_sql(
             results["products"]["message"] = f"Products import failed: {str(e)}"
             raise  # Stop the process if products fail
 
-        # 2. Import Clients Second
-        logger.info("Step 2: Importing clients...")
+        # 4. Import Clients Fourth
+        logger.info("Step 4: Importing clients...")
         try:
             from importdb.import_legacy_data import import_clients
             client_id_mapping = import_clients(dry_run=False, sql_file=temp_file_path)
@@ -1019,8 +1038,8 @@ async def import_complete_sql(
             results["clients"]["message"] = f"Clients import failed: {str(e)}"
             raise  # Stop the process if clients fail
 
-        # 3. Import Invoices Last
-        logger.info("Step 3: Importing invoices...")
+        # 5. Import Invoices Last
+        logger.info("Step 5: Importing invoices...")
         logger.info(f"Client ID mapping has {len(client_id_mapping)} entries")
         logger.info(f"Product ID mapping has {len(product_id_mapping)} entries")
         try:
@@ -1043,7 +1062,7 @@ async def import_complete_sql(
         os.unlink(temp_file_path)
 
         # All imports successful
-        success_message = f"Complete import successful! Imported {results['families']['count']} product families, {results['products']['count']} products, {results['clients']['count']} clients, and {results['invoices']['count']} invoices."
+        success_message = f"Complete import successful! Imported {results['families']['count']} product families, {results['tax_rates']['count']} tax rates, {results['products']['count']} products, {results['clients']['count']} clients, and {results['invoices']['count']} invoices."
 
         return JSONResponse({
             "success": True,
