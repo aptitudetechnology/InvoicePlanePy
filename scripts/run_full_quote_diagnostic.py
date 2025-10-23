@@ -975,7 +975,7 @@ class QuoteItem(Base):
     __tablename__ = 'quote_items'
     id = Column(Integer, primary_key=True)
     quote_id = Column(Integer, ForeignKey('quotes.id'), nullable=False)
-    product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
+    product_id = Column(Integer, ForeignKey('ip_products.product_id'), nullable=False)
     item_name = Column(String(255))
     description = Column(Text)
     cost = Column(Numeric(10, 2), nullable=False)

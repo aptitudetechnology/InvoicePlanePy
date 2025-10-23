@@ -97,7 +97,7 @@ class InvoiceItem(BaseModel):
 
     # Foreign keys
     invoice_id = Column(ForeignKey("invoices.id"), nullable=False)
-    product_id = Column(ForeignKey("products.id"))
+    product_id = Column(ForeignKey("ip_products.product_id"))
 
     # Item details
     name = Column(String(100), nullable=False)

@@ -95,7 +95,7 @@ class QuoteItem(BaseModel):
 
     # Foreign keys
     quote_id = Column(Integer, ForeignKey("quotes.id"), nullable=False)
-    product_id = Column(Integer, ForeignKey("products.id"))
+    product_id = Column(Integer, ForeignKey("ip_products.product_id"))
 
     # Item details - exactly matching your database schema.
     product_name = Column(String(255))
