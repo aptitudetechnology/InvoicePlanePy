@@ -233,7 +233,7 @@ async def create_product_post(
     tax_rate_id: int = Form(None),
     purchase_price: float = Form(None),
     provider_name: str = Form(""),
-    sumex: bool = Form(False),
+    sumex: str = Form(None),
     tariff: float = Form(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -249,7 +249,7 @@ async def create_product_post(
         tax_rate_id=tax_rate_id if tax_rate_id else None,
         purchase_price=purchase_price if purchase_price else None,
         provider_name=provider_name if provider_name else None,
-        sumex=sumex,
+        sumex=sumex == "true",
         tariff=tariff if tariff else None,
         user_id=current_user.id
     )
@@ -413,7 +413,7 @@ async def update_product(
     tax_rate_id: str = Form(""),
     provider_name: str = Form(""),
     purchase_price: str = Form(""),
-    sumex: str = Form(""),
+    sumex: str = Form(None),
     tariff: str = Form(""),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -424,7 +424,7 @@ async def update_product(
         raise HTTPException(status_code=404, detail="Product not found")
 
     product.name = name
-    product.description = description
+    product.description = description if description else None
     product.price = price
     product.sku = sku if sku else None
     product.family_id = int(family_id) if family_id else None
@@ -432,7 +432,8 @@ async def update_product(
     product.tax_rate_id = int(tax_rate_id) if tax_rate_id else None
     product.provider_name = provider_name if provider_name else None
     product.purchase_price = float(purchase_price) if purchase_price else None
-    product.sumex = sumex if sumex else None
+    # Convert sumex checkbox to boolean
+    product.sumex = sumex == "true"
     product.tariff = float(tariff) if tariff else None
 
     db.commit()
