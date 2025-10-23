@@ -1010,7 +1010,7 @@ async def import_complete_sql(
         logger.info("Step 3: Importing products...")
         try:
             from importdb.import_legacy_data import import_products
-            product_id_mapping = import_products(dry_run=False, sql_file=temp_file_path, family_id_mapping=family_id_mapping, tax_rate_id_mapping=tax_rate_id_mapping)
+            product_id_mapping = import_products(dry_run=False, sql_file=temp_file_path, family_id_mapping=family_id_mapping)
             # Count products after import
             from app.models.product import Product
             results["products"]["count"] = db.query(Product).count()

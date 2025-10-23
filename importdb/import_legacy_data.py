@@ -405,11 +405,15 @@ def import_tax_rates(dry_run=False, sql_file=None):
             # Create tax rate object
             try:
                 from app.models.tax_rate import TaxRate
+                # Preserve the legacy tax_rate_id as the primary key
+                legacy_id = row.get("tax_rate_id")
+                if legacy_id:
+                    mapped["id"] = int(legacy_id)
+                
                 tax_rate = TaxRate(**mapped)
                 if not dry_run:
                     session.add(tax_rate)
                     session.flush()  # Get the new ID immediately
-                    legacy_id = row.get("tax_rate_id")
                     if legacy_id:
                         id_mapping[legacy_id] = tax_rate.id
                         logger.debug(f"Created tax rate mapping: legacy {legacy_id} -> new {tax_rate.id}")
@@ -442,7 +446,7 @@ def import_tax_rates(dry_run=False, sql_file=None):
     finally:
         session.close()
 
-def import_products(dry_run=False, sql_file=None, family_id_mapping=None, unit_id_mapping=None, tax_rate_id_mapping=None):
+def import_products(dry_run=False, sql_file=None, family_id_mapping=None, unit_id_mapping=None):
     """Import products from legacy ip_products table.
     
     Args:
@@ -495,13 +499,9 @@ def import_products(dry_run=False, sql_file=None, family_id_mapping=None, unit_i
             if 'tax_rate_id' in row and row['tax_rate_id'] not in ['NULL', '', None]:
                 try:
                     legacy_tax_rate_id = int(row['tax_rate_id'])
-                    # Map legacy tax_rate_id to new tax_rate_id if mapping provided
-                    if tax_rate_id_mapping and legacy_tax_rate_id in tax_rate_id_mapping:
-                        mapped["tax_rate_id"] = tax_rate_id_mapping[legacy_tax_rate_id]
-                        logger.debug(f"Mapped legacy tax_rate_id {legacy_tax_rate_id} to new {mapped['tax_rate_id']}")
-                    else:
-                        mapped["tax_rate_id"] = legacy_tax_rate_id
-                        logger.warning(f"No mapping found for legacy tax_rate_id {legacy_tax_rate_id}, using as-is")
+                    # Since we preserve legacy IDs in tax rates, use the legacy ID directly
+                    mapped["tax_rate_id"] = legacy_tax_rate_id
+                    logger.debug(f"Using legacy tax_rate_id {legacy_tax_rate_id} directly")
                 except (ValueError, TypeError):
                     mapped["tax_rate_id"] = None
             else:
