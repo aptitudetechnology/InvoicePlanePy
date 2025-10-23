@@ -99,8 +99,8 @@
                                     <div class="form-group">
                                         <label class="font-weight-bold">Tax Rate</label>
                                         <p class="form-control-plaintext">
-                                            {% if product.tax_rate %}
-                                                {{ product.tax_rate.name }} ({{ product.tax_rate.rate }}%)
+                                            {% if product.tax_rate_rel %}
+                                                {{ product.tax_rate_rel.name }} ({{ product.tax_rate_rel.rate }}%)
                                             {% else %}
                                                 No tax rate
                                             {% endif %}

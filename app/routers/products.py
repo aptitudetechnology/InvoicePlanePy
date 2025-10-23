@@ -40,6 +40,8 @@ async def get_products_api(
             ProductFamily, Product.family_id == ProductFamily.id, isouter=True
         ).join(
             ProductUnit, Product.unit_id == ProductUnit.id, isouter=True
+        ).join(
+            TaxRate, Product.tax_rate_id == TaxRate.id, isouter=True
         )
         
         # Apply search filter if provided
@@ -122,7 +124,11 @@ async def get_products_api(
                 "family": family_data,
                 "unit": unit_data,
                 # Additional fields from your model
-                "tax_rate": product.tax_rate,
+                "tax_rate": {
+                    "id": product.tax_rate_rel.id if product.tax_rate_rel else None,
+                    "name": product.tax_rate_rel.name if product.tax_rate_rel else None,
+                    "rate": float(product.tax_rate_rel.rate) if product.tax_rate_rel else None
+                } if product.tax_rate_rel else None,
                 "provider_name": product.provider_name,
                 "purchase_price": float(product.purchase_price) if product.purchase_price is not None else None,
                 "sumex": product.sumex,
@@ -366,7 +372,7 @@ async def view_product(
     product = db.query(Product).options(
         joinedload(Product.family),
         joinedload(Product.unit),
-        joinedload(Product.tax_rate)
+        joinedload(Product.tax_rate_rel)
     ).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")

@@ -70,3 +70,4 @@ class Product(BaseModel):
     user = relationship("User", back_populates="products")
     family = relationship("ProductFamily", back_populates="products")
     unit = relationship("ProductUnit", back_populates="products")
+    tax_rate_rel = relationship("TaxRate", back_populates="products")

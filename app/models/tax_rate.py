@@ -1,6 +1,4 @@
-# app/models/tax_rate.py
-from sqlalchemy import Column, String, Float, Boolean, Integer
-from app.models.base import BaseModel
+from sqlalchemy.orm import relationship
 
 class TaxRate(BaseModel):
     __tablename__ = "ip_tax_rates"
@@ -11,6 +9,9 @@ class TaxRate(BaseModel):
     name = Column("tax_rate_name", String(100), nullable=False, unique=True)
     rate = Column("tax_rate_percent", Float, nullable=False)
     is_default = Column(Boolean, default=False)
+
+    # Relationships
+    products = relationship("Product", back_populates="tax_rate_rel")
 
     def __repr__(self):
         return f"<TaxRate(id={self.id}, name='{self.name}', rate={self.rate}%)>"
