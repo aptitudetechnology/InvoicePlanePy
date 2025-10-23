@@ -1,4 +1,7 @@
+from sqlalchemy import Column, String, Float, Boolean, Integer
 from sqlalchemy.orm import relationship
+from app.models.base import BaseModel
+
 
 class TaxRate(BaseModel):
     __tablename__ = "ip_tax_rates"
