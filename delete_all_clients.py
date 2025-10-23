@@ -13,6 +13,7 @@ from sqlalchemy.exc import SQLAlchemyError
 sys.path.append('.')
 try:
     from app.config import settings
+    from app.models.quotes import Quote, QuoteItem
     from app.models.client import Client
     from app.database import Base
 except ImportError as e:
@@ -42,24 +43,35 @@ def delete_all_clients(dry_run=False):
     try:
         # Count what we're about to delete
         client_count = session.query(Client).count()
+        quote_count = session.query(Quote).count()
+        quote_item_count = session.query(QuoteItem).count()
 
-        print(f"📊 Found {client_count} clients")
+        print(f"📊 Found {client_count} clients, {quote_count} quotes, {quote_item_count} quote items")
 
-        if client_count == 0:
-            print("✅ No clients to delete")
+        if client_count == 0 and quote_count == 0:
+            print("✅ No clients or quotes to delete")
             return True
 
         # Confirm deletion
         if not dry_run:
-            confirm = input(f"⚠️  This will permanently delete {client_count} clients. Continue? (yes/no): ")
+            confirm = input(f"⚠️  This will permanently delete {quote_count} quotes, {quote_item_count} quote items, and {client_count} clients. Continue? (yes/no): ")
             if confirm.lower() not in ['yes', 'y']:
                 print("❌ Deletion cancelled")
                 return False
 
         if dry_run:
             print("🔍 DRY RUN: Would delete the following:")
+            print(f"   - {quote_count} quotes")
+            print(f"   - {quote_item_count} quote items")
             print(f"   - {client_count} clients")
             return True
+
+        # Delete quotes and quote items first (due to foreign key constraints)
+        print("🗑️  Deleting quotes and quote items...")
+        deleted_quote_items = session.execute(delete(QuoteItem)).rowcount
+        deleted_quotes = session.execute(delete(Quote)).rowcount
+        print(f"   ✅ Deleted {deleted_quote_items} quote items")
+        print(f"   ✅ Deleted {deleted_quotes} quotes")
 
         # Delete clients
         print("🗑️  Deleting clients...")
