@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, Depends, HTTPException, Form, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import or_, asc, desc
 import logging
@@ -363,7 +363,11 @@ async def view_product(
     current_user: User = Depends(get_current_user)
 ):
     """View a specific product"""
-    product = db.query(Product).filter(Product.id == product_id).first()
+    product = db.query(Product).options(
+        joinedload(Product.family),
+        joinedload(Product.unit),
+        joinedload(Product.tax_rate)
+    ).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     
