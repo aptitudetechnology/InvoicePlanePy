@@ -402,24 +402,57 @@ def import_tax_rates(dry_run=False, sql_file=None):
                 skipped += 1
                 continue
 
-            # Create tax rate object
+            # Create or update tax rate object
             try:
                 from app.models.tax_rate import TaxRate
-                # Preserve the legacy tax_rate_id as the primary key
-                legacy_id = row.get("tax_rate_id")
-                if legacy_id:
-                    mapped["id"] = int(legacy_id)
-                
-                tax_rate = TaxRate(**mapped)
+
+                # Attempt to parse legacy id
+                legacy_id = None
+                try:
+                    legacy_id = int(row.get("tax_rate_id")) if row.get("tax_rate_id") not in [None, 'NULL', ''] else None
+                except (ValueError, TypeError):
+                    legacy_id = None
+
                 if not dry_run:
+                    if legacy_id is not None:
+                        # Check if a tax rate with this primary key already exists
+                        existing = session.get(TaxRate, legacy_id)
+                        if existing:
+                            # Update existing record (do not overwrite with empty values)
+                            existing.name = mapped.get('name') or existing.name
+                            try:
+                                existing.rate = float(mapped.get('rate')) if mapped.get('rate') not in [None, 'NULL', ''] else existing.rate
+                            except (TypeError, ValueError):
+                                pass
+                            existing.is_default = mapped.get('is_default', existing.is_default)
+                            session.flush()
+                            id_mapping[legacy_id] = existing.id
+                            logger.debug(f"Updated existing tax rate with legacy id {legacy_id}")
+                            imported += 1
+                            continue
+
+                    # Not existing or no legacy id: create new record
+                    if legacy_id is not None:
+                        mapped['id'] = legacy_id
+
+                    tax_rate = TaxRate(**mapped)
                     session.add(tax_rate)
                     session.flush()  # Get the new ID immediately
                     if legacy_id:
                         id_mapping[legacy_id] = tax_rate.id
                         logger.debug(f"Created tax rate mapping: legacy {legacy_id} -> new {tax_rate.id}")
-                imported += 1
+                    imported += 1
+                else:
+                    # Dry run: just count
+                    imported += 1
+
             except Exception as e:
-                logger.error(f"Error creating tax rate from row {row}: {e}")
+                # on failure, rollback this transaction so session can continue
+                logger.error(f"Error creating/updating tax rate from row {row}: {e}")
+                try:
+                    session.rollback()
+                except Exception:
+                    pass
                 skipped += 1
                 continue
 
