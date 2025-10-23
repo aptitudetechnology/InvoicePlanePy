@@ -176,6 +176,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Listen for productsSelected event from product modal
+  document.addEventListener('productsSelected', function(event) {
+    console.log('productsSelected event received in quotes.js:', event.detail);
+    const products = event.detail.products;
+    
+    if (products && products.length > 0) {
+      products.forEach(product => {
+        console.log('Adding product to quote:', product);
+        // Use the global addNewRowWithProduct function
+        if (window.addNewRowWithProduct) {
+          window.addNewRowWithProduct(
+            product.name,
+            product.price,
+            product.id,
+            'quote-items' // table body ID for quotes
+          );
+        } else {
+          console.error('addNewRowWithProduct function not available');
+        }
+      });
+    }
+  });
+
   // Initial setup
   setupEventListeners();
   calculateTotals();

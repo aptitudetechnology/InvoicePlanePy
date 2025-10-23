@@ -224,7 +224,7 @@ class ProductModal {
   }
 
   renderProductsTable(products) {
-    const tbody = document.getElementById('productsTableBody');
+    const tbody = document.getElementById('productTableBody');
     if (!tbody) {
       console.error('Products table body not found');
       return;
@@ -244,10 +244,11 @@ class ProductModal {
                  data-price="${product.price || 0}"
                  data-sku="${product.sku}">
         </td>
-        <td>${product.name}</td>
         <td>${product.sku}</td>
-        <td>${product.price ? '$' + parseFloat(product.price).toFixed(2) : 'N/A'}</td>
         <td>${product.family ? product.family.name : 'No family'}</td>
+        <td>${product.name}</td>
+        <td>${product.description || ''}</td>
+        <td>${product.price ? '$' + parseFloat(product.price).toFixed(2) : 'N/A'}</td>
       </tr>
     `).join('');
   }
