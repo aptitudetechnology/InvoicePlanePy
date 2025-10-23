@@ -78,12 +78,12 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="tax_rate">Tax Rate</label>
-                                    <select class="form-control" id="tax_rate" name="tax_rate">
+                                    <label for="tax_rate_id">Tax Rate</label>
+                                    <select class="form-control" id="tax_rate_id" name="tax_rate_id">
                                         <option value="">None</option>
                                         {% for tax_rate in tax_rates %}
-                                        <option value="{{ tax_rate }}" {{ 'selected' if product and product.tax_rate == tax_rate else '' }}>
-                                            {{ tax_rate.name }} ({{ tax_rate.percentage }}%)
+                                        <option value="{{ tax_rate.id }}" {{ 'selected' if product and product.tax_rate_id == tax_rate.id else '' }}>
+                                            {{ tax_rate.name }} ({{ tax_rate.rate }}%)
                                         </option>
                                         {% endfor %}
                                     </select>
