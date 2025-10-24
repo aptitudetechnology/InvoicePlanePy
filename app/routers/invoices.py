@@ -6,6 +6,7 @@ from sqlalchemy import or_, asc, desc
 import logging
 from datetime import datetime, date
 import secrets
+import traceback
 
 from app.database import get_db
 from app.models.user import User
@@ -331,10 +332,10 @@ async def edit_invoice_post(
     request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    client_id: int = Form(...),
+    client_id: int = Form(None),
     invoice_number: str = Form(None),
     status: str = Form(None),
-    invoice_date: str = Form(...),
+    invoice_date: str = Form(None),
     due_date: str = Form(None),
     payment_method: str = Form(None),
     discount_percentage: float = Form(0),
@@ -345,6 +346,8 @@ async def edit_invoice_post(
 ):
     """Handle invoice edit form submission"""
     try:
+        logging.info(f"Starting invoice update for invoice_id: {invoice_id}")
+        
         invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
 
         if not invoice:
@@ -356,9 +359,11 @@ async def edit_invoice_post(
 
         # Parse form data
         form_data = await request.form()
+        logging.info(f"Form data keys: {list(form_data.keys())}")
 
         # Update basic invoice fields
-        invoice.client_id = client_id
+        if client_id:
+            invoice.client_id = client_id
         if invoice_number:
             invoice.invoice_number = invoice_number
 
@@ -392,18 +397,27 @@ async def edit_invoice_post(
         # Process invoice items
         subtotal = 0
         tax_total = 0
+        item_count = 0
 
         for i in range(items_count):
             item_name = form_data.get(f"item_name_{i}")
-            if not item_name:  # Skip empty rows
+            if not item_name or not item_name.strip():  # Skip empty rows
                 continue
 
             item_description = form_data.get(f"item_description_{i}", "")
-            item_quantity = float(form_data.get(f"item_quantity_{i}", 1))
-            item_price = float(form_data.get(f"item_price_{i}", 0))
-            item_discount = float(form_data.get(f"item_discount_{i}", 0))
-            item_tax_rate = float(form_data.get(f"item_tax_rate_{i}", 0))
-            item_unit = form_data.get(f"item_unit_{i}", "none")
+            item_quantity_str = form_data.get(f"item_quantity_{i}", "1")
+            item_price_str = form_data.get(f"item_price_{i}", "0")
+            item_discount_str = form_data.get(f"item_discount_{i}", "0")
+            item_tax_rate_str = form_data.get(f"item_tax_rate_{i}", "0")
+
+            try:
+                item_quantity = float(item_quantity_str) if item_quantity_str else 1
+                item_price = float(item_price_str) if item_price_str else 0
+                item_discount = float(item_discount_str) if item_discount_str else 0
+                item_tax_rate = float(item_tax_rate_str) if item_tax_rate_str else 0
+            except ValueError as e:
+                logging.error(f"Error parsing item {i} values: quantity={item_quantity_str}, price={item_price_str}, discount={item_discount_str}, tax_rate={item_tax_rate_str}")
+                continue
 
             # Calculate item totals
             item_subtotal = item_quantity * item_price
@@ -413,8 +427,8 @@ async def edit_invoice_post(
             # Create new invoice item
             invoice_item = InvoiceItem(
                 invoice_id=invoice_id,
-                name=item_name,
-                description=item_description,
+                name=item_name.strip(),
+                description=item_description.strip() if item_description else None,
                 quantity=item_quantity,
                 price=item_price,
                 discount_amount=item_discount,
@@ -426,14 +440,17 @@ async def edit_invoice_post(
 
             # Try to link to product if item_id is provided
             item_id = form_data.get(f"item_id_{i}")
-            if item_id and item_id.isdigit():
+            if item_id and item_id.isdigit() and int(item_id) > 0:
                 invoice_item.product_id = int(item_id)
 
             db.add(invoice_item)
+            item_count += 1
 
             # Accumulate totals
             subtotal += item_subtotal
             tax_total += item_tax_amount
+
+        logging.info(f"Processed {item_count} invoice items, subtotal: {subtotal}, tax_total: {tax_total}")
 
         # Calculate final totals
         discount_total = 0
@@ -451,8 +468,11 @@ async def edit_invoice_post(
         invoice.total = total
         invoice.balance = total - (invoice.paid_amount or 0)
 
+        logging.info(f"Final totals - subtotal: {subtotal}, tax_total: {tax_total}, discount: {discount_total}, total: {total}, balance: {invoice.balance}")
+
         # Commit changes
         db.commit()
+        logging.info(f"Successfully updated invoice {invoice_id}")
 
         # Redirect back to invoice view
         from fastapi.responses import RedirectResponse
@@ -461,6 +481,7 @@ async def edit_invoice_post(
     except Exception as e:
         db.rollback()
         logging.error(f"Error updating invoice {invoice_id}: {str(e)}")
+        logging.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Error updating invoice: {str(e)}")
 
 
