@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}InvoicePlane Python{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/static/css/custom.css" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #f8f9fa; 
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Top Navigation Bar */
+        .top-nav {
+            background-color: #495057;
+            padding: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .top-nav .nav-link {
+            color: #ffffff !important;
+            padding: 15px 20px;
+            border-right: 1px solid rgba(255,255,255,0.1);
+            transition: background-color 0.2s;
+        }
+        
+        .top-nav .nav-link:hover {
+            background-color: #6c757d;
+            color: #ffffff !important;
+        }
+        
+        .top-nav .nav-link.active {
+            background-color: #007bff;
+            color: #ffffff !important;
+        }
+        
+        .top-nav .navbar-brand {
+            color: #ffffff !important;
+            font-weight: bold;
+            padding: 15px 20px;
+        }
+        
+        /* Right side icons */
+        .top-nav-icons {
+            display: flex;
+            align-items: center;
+        }
+        
+        .top-nav-icons .nav-link {
+            border-right: none;
+            padding: 15px 15px;
+            border-left: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        /* Quick Actions Bar */
+        .quick-actions {
+            background-color: #e9ecef;
+            padding: 15px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .quick-actions h6 {
+            margin: 0 0 15px 0;
+            color: #495057;
+            font-weight: 600;
+        }
+        
+        .quick-action-btn {
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+            color: #495057;
+            padding: 12px 20px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        
+        .quick-action-btn:hover {
+            background-color: #007bff;
+            color: #ffffff;
+            border-color: #007bff;
+            text-decoration: none;
+        }
+        
+        .quick-action-btn i {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+        
+        /* Main content area */
+        .main-content {
+            padding: 20px;
+        }
+        
+        /* Stats cards */
+        .stats-card { 
+            border-left: 4px solid #007bff;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stats-card.success { border-left-color: #28a745; }
+        .stats-card.warning { border-left-color: #ffc107; }
+        .stats-card.danger { border-left-color: #dc3545; }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar navbar-expand-lg top-nav">
+        <div class="container-fluid px-0">
+            <!-- Left side navigation -->
+            <div class="d-flex align-items-center">
+                <a class="navbar-brand" href="/dashboard">InvoicePlane</a>
+                
+                <ul class="navbar-nav d-none d-lg-flex flex-row">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.url.path == '/' or request.url.path.startswith('/dashboard') %}active{% endif %}" href="/dashboard">
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.url.path.startswith('/clients') %}active{% endif %}" href="/clients">
+                            Clients
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.url.path.startswith('/quotes') %}active{% endif %}" href="/quotes">
+                            Quotes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.url.path.startswith('/invoices') %}active{% endif %}" href="/invoices">
+                            Invoices
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.url.path.startswith('/payments') %}active{% endif %}" href="/payments">
+                            Payments
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.url.path.startswith('/products') %}active{% endif %}" href="/products">
+                            Products
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.url.path.startswith('/tasks') %}active{% endif %}" href="/tasks">
+                            Tasks
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.url.path.startswith('/reports') %}active{% endif %}" href="/reports">
+                            Reports
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Right side icons -->
+            <div class="top-nav-icons">
+                <a class="nav-link" href="/help" title="Help">
+                    <i class="bi bi-question-circle"></i>
+                </a>
+                <a class="nav-link" href="/settings" title="Settings">
+                    <i class="bi bi-gear"></i>
+                </a>
+                <a class="nav-link" href="/notifications" title="Notifications">
+                    <i class="bi bi-bell"></i>
+                </a>
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" title="User Profile">
+                        <i class="bi bi-person-circle"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/profile">Profile</a></li>
+                        <li><a class="dropdown-item" href="/settings">Settings</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form id="logout-form" action="/auth/logout" method="post" style="display:inline;">
+                                <button type="submit" class="dropdown-item">Logout</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Quick Actions Bar -->
+    <div class="quick-actions">
+        <div class="container-fluid">
+            <h6>Quick Actions</h6>
+            <div class="d-flex flex-wrap">
+                <a href="/clients/create" class="quick-action-btn">
+                    <i class="bi bi-person-plus"></i>
+                    Add Client
+                </a>
+                <a href="/quotes/create" class="quick-action-btn">
+                    <i class="bi bi-file-text"></i>
+                    Create Quote
+                </a>
+                <a href="/invoices/create" class="quick-action-btn">
+                    <i class="bi bi-receipt"></i>
+                    Create Invoice
+                </a>
+                <a href="/payments/create" class="quick-action-btn">
+                    <i class="bi bi-credit-card"></i>
+                    Enter Payment
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <div class="container-fluid">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/app.js"></script>
+    <!-- Keep-alive script -->
+    <script>
+    setInterval(function() {
+    fetch('/keepalive', {credentials: 'include'});
+    }, 5 * 60 * 1000); // every 5 minutes.
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

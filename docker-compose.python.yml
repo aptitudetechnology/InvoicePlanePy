@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  web:
+    build: .
+    ports:
+      - "8080:8000"
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=postgresql://invoiceplane:password@db:5432/invoiceplane
+      - DEBUG=true
+      - PYTHONPATH=/app
+    depends_on:
+      - db
+  
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: invoiceplane
+      POSTGRES_USER: invoiceplane
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:

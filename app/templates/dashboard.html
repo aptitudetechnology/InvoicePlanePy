@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - InvoicePlane Python{% endblock %}
+
+{% block content %}
+<style>
+/* Gradient top nav bar */
+.navbar,
+.navbar.navbar-dark,
+.navbar.navbar-expand-lg {
+    background: linear-gradient(90deg, #323844 0%, #5B6375 100%) !important;
+}
+</style>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Dashboard</h1>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title text-muted">Total Invoices</h5>
+                        <h3 class="mb-0">{{ stats.invoices.total }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-receipt fs-1 text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title text-muted">Paid Invoices</h5>
+                        <h3 class="mb-0">{{ stats.invoices.paid }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-check-circle fs-1 text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title text-muted">Draft Invoices</h5>
+                        <h3 class="mb-0">{{ stats.invoices.draft }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-file-earmark fs-1 text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card danger">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title text-muted">Overdue Invoices</h5>
+                        <h3 class="mb-0">{{ stats.invoices.overdue }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-exclamation-triangle fs-1 text-danger"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Financial Overview -->
+<div class="row mb-4">
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Financial Overview</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <h6 class="text-muted">Total Revenue</h6>
+                        <h4 class="text-success">${{ "%.2f"|format(stats.financial.total_revenue) }}</h4>
+                    </div>
+                    <div class="col-6">
+                        <h6 class="text-muted">Outstanding</h6>
+                        <h4 class="text-warning">${{ "%.2f"|format(stats.financial.outstanding) }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Client Overview</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <h6 class="text-muted">Total Clients</h6>
+                        <h4>{{ stats.clients.total }}</h4>
+                    </div>
+                    <div class="col-6">
+                        <h6 class="text-muted">Active Clients</h6>
+                        <h4 class="text-success">{{ stats.clients.active }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Invoices -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Invoices</h5>
+                <a href="/invoices" class="btn btn-sm btn-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if stats.recent_invoices %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Client</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for invoice in stats.recent_invoices %}
+                            <tr>
+                                <td>{{ invoice.invoice_number }}</td>
+                                <td>{{ invoice.client.display_name }}</td>
+                                <td>{{ invoice.issue_date.strftime('%Y-%m-%d') }}</td>
+                                <td>${{ "%.2f"|format(invoice.total) }}</td>
+                                <td>
+                                    {% if invoice.status.name == 'DRAFT' %}
+                                        <span class="badge bg-secondary">Draft</span>
+                                    {% elif invoice.status.name == 'SENT' %}
+                                        <span class="badge bg-primary">Sent</span>
+                                    {% elif invoice.status.name == 'PAID' %}
+                                        <span class="badge bg-success">Paid</span>
+                                    {% elif invoice.status.name == 'OVERDUE' %}
+                                        <span class="badge bg-danger">Overdue</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-receipt fs-1 text-muted"></i>
+                    <p class="text-muted mt-2">No invoices yet. <a href="/invoices/create">Create your first invoice</a>.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

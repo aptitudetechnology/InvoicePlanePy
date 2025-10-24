@@ -1,0 +1,502 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>System Settings</h2>
+            <a href="/settings" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Settings
+            </a>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Application Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>User Preferences:</strong> For date format, language, items per page, and other user interface preferences, please visit 
+                            <a href="/settings/company" class="alert-link">Company Settings</a>.
+                        </div>
+                        <form>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="app_name" class="form-label">Application Name</label>
+                                    <input type="text" class="form-control" id="app_name" value="InvoicePlane Python">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="timezone" class="form-label">Timezone</label>
+                                    <select class="form-select" id="timezone">
+                                        <option value="UTC">UTC</option>
+                                        <option value="America/New_York">Eastern Time</option>
+                                        <option value="America/Chicago">Central Time</option>
+                                        <option value="America/Denver">Mountain Time</option>
+                                        <option value="America/Los_Angeles" selected>Pacific Time</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="currency" class="form-label">Default Currency</label>
+                                    <select class="form-select" id="currency">
+                                        <option value="USD" selected>USD - US Dollar</option>
+                                        <option value="EUR">EUR - Euro</option>
+                                        <option value="GBP">GBP - British Pound</option>
+                                        <option value="CAD">CAD - Canadian Dollar</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <h6>Email Settings</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="smtp_host" class="form-label">SMTP Host</label>
+                                    <input type="text" class="form-control" id="smtp_host" placeholder="smtp.example.com">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="smtp_port" class="form-label">SMTP Port</label>
+                                    <input type="number" class="form-control" id="smtp_port" value="587">
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="smtp_username" class="form-label">SMTP Username</label>
+                                    <input type="text" class="form-control" id="smtp_username">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="smtp_encryption" class="form-label">SMTP Encryption</label>
+                                    <select class="form-select" id="smtp_encryption">
+                                        <option value="none">None</option>
+                                        <option value="tls" selected>TLS</option>
+                                        <option value="ssl">SSL</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle"></i> Save Settings
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">System Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <strong>Version:</strong><br>
+                            <span class="text-muted">v1.0.0-beta</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Database:</strong><br>
+                            <span class="text-muted">PostgreSQL</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Framework:</strong><br>
+                            <span class="text-muted">FastAPI</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Python Version:</strong><br>
+                            <span class="text-muted">3.11+</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">API Settings</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Current API Keys</label>
+                            <div id="apiKeysList">
+                                {% if api_keys %}
+                                    {% for key in api_keys %}
+                                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                                        <div>
+                                            <strong>{{ key.key_prefix }}...</strong>
+                                            {% if key.name %}<small class="text-muted"> - {{ key.name }}</small>{% endif %}
+                                            <br>
+                                            <small class="text-muted">
+                                                Created: {{ key.created_at.strftime('%Y-%m-%d') if key.created_at else 'Unknown' }}
+                                                {% if key.last_used_at %} | Last used: {{ key.last_used_at.strftime('%Y-%m-%d %H:%M') }}{% endif %}
+                                            </small>
+                                            <br>
+                                            <small class="text-warning">
+                                                <i class="bi bi-exclamation-triangle"></i>
+                                                Full key shown only once at creation. Generate new key if lost.
+                                            </small>
+                                        </div>
+                                        <div>
+                                            <span class="badge bg-{{ 'success' if key.is_active else 'secondary' }}">
+                                                {{ 'Active' if key.is_active else 'Inactive' }}
+                                            </span>
+                                            <button class="btn btn-sm btn-outline-warning ms-2" onclick="regenerateApiKey({{ key.id }})" title="Regenerate Key">
+                                                <i class="bi bi-arrow-repeat"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger ms-2" onclick="deleteApiKey({{ key.id }})">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-muted">No API keys generated yet.</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button class="btn btn-primary btn-sm" onclick="generateApiKey()">
+                                <i class="bi bi-key"></i> Generate New Key
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="copyApiKey()">
+                                <i class="bi bi-clipboard"></i> Copy Key
+                            </button>
+                            <button class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#apiDocsModal">
+                                <i class="bi bi-book"></i> API Docs
+                            </button>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="apiEnabled" checked>
+                                <label class="form-check-label" for="apiEnabled">
+                                    Enable API Access
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">Maintenance</h6>
+                    </div>
+                    <div class="card-body">
+                        <button id="testFamiliesApiBtn" class="btn btn-outline-primary btn-sm w-100 mb-2" type="button">
+                            <i class="bi bi-bug"></i> Test Product Families API
+                        </button>
+                        <div id="familiesApiTestResult" class="mt-2 mb-3"></div>
+                        <button id="testProductsApiBtn" class="btn btn-outline-primary btn-sm w-100 mb-2" type="button">
+                            <i class="bi bi-bug"></i> Test Products API
+                        </button>
+                        <div id="productsApiTestResult" class="mt-2 mb-3"></div>
+                        <button class="btn btn-outline-warning btn-sm w-100 mb-2">
+                            <i class="bi bi-arrow-clockwise"></i> Clear Cache
+                        </button>
+                        <button class="btn btn-outline-info btn-sm w-100 mb-2">
+                            <i class="bi bi-download"></i> Backup Database
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm w-100">
+                            <i class="bi bi-journal-text"></i> View Logs
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- API Documentation Modal -->
+<div class="modal fade" id="apiDocsModal" tabindex="-1" aria-labelledby="apiDocsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="apiDocsModalLabel">API Documentation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Authentication</h6>
+                <p>Include your API key in the Authorization header:</p>
+                <pre class="bg-light p-3 rounded"><code>Authorization: Bearer YOUR_API_KEY</code></pre>
+                
+                <h6 class="mt-4">Base URL</h6>
+                <pre class="bg-light p-3 rounded"><code>{{ request.url.scheme }}://{{ request.url.netloc }}/api/v1</code></pre>
+                
+                <h6 class="mt-4">Available Endpoints</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Method</th>
+                                <th>Endpoint</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge bg-success">GET</span></td>
+                                <td>/clients</td>
+                                <td>List all clients</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-primary">POST</span></td>
+                                <td>/clients</td>
+                                <td>Create new client</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-success">GET</span></td>
+                                <td>/invoices</td>
+                                <td>List all invoices</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-primary">POST</span></td>
+                                <td>/invoices</td>
+                                <td>Create new invoice</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-success">GET</span></td>
+                                <td>/payments</td>
+                                <td>List all payments</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-primary">POST</span></td>
+                                <td>/payments</td>
+                                <td>Record new payment</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h6 class="mt-4">Example Request</h6>
+                <pre class="bg-light p-3 rounded"><code>curl -X GET \
+  {{ request.url.scheme }}://{{ request.url.netloc }}/api/v1/clients \
+  -H 'Authorization: Bearer YOUR_API_KEY' \
+  -H 'Content-Type: application/json'</code></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function generateApiKey() {
+    if (confirm('Are you sure you want to generate a new API key?')) {
+        fetch('/settings/api/generate-key', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showApiKey(data.key);
+                showAlert('New API key generated successfully!', 'success');
+                // Refresh the page to show the new key in the list
+                setTimeout(() => window.location.reload(), 2000);
+            } else {
+                showAlert('Failed to generate API key', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Failed to generate API key', 'danger');
+        });
+    }
+}
+
+function deleteApiKey(keyId) {
+    if (confirm('Are you sure you want to delete this API key? This action cannot be undone.')) {
+        fetch(`/settings/api/keys/${keyId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('API key deleted successfully!', 'success');
+                // Refresh the page to update the list
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                showAlert('Failed to delete API key', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Failed to delete API key', 'danger');
+        });
+    }
+}
+
+function showApiKey(key) {
+    // Show the new API key in a modal or alert
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.id = 'newApiKeyModal';
+    modal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">New API Key Generated</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <strong>Important:</strong> This is the only time you'll see this key. Please copy it now.
+                    </div>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" value="${key}" id="newApiKeyValue" readonly>
+                        <button class="btn btn-outline-secondary" type="button" onclick="copyNewApiKey()">
+                            <i class="bi bi-clipboard"></i> Copy
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+    
+    // Remove modal when hidden
+    modal.addEventListener('hidden.bs.modal', () => {
+        modal.remove();
+    });
+}
+
+function copyNewApiKey() {
+    const input = document.getElementById('newApiKeyValue');
+    input.select();
+    document.execCommand('copy');
+    showAlert('API key copied to clipboard!', 'success');
+}
+
+function regenerateApiKey(keyId) {
+    if (confirm('This will deactivate the current key and create a new one. The old key will stop working. Continue?')) {
+        fetch(`/settings/api/keys/${keyId}/regenerate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showApiKey(data.key);
+                showAlert('API key regenerated successfully!', 'success');
+                // Refresh the page to show the updated key
+                setTimeout(() => window.location.reload(), 2000);
+            } else {
+                showAlert('Failed to regenerate API key', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Failed to regenerate API key', 'danger');
+        });
+    }
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.top = '20px';
+    alertDiv.style.right = '20px';
+    alertDiv.style.zIndex = '9999';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+        }
+    }, 3000);
+}
+
+// Test Product Families API button logic
+document.addEventListener('DOMContentLoaded', function() {
+    const btn = document.getElementById('testFamiliesApiBtn');
+    if (btn) {
+        btn.addEventListener('click', function() {
+            const resultDiv = document.getElementById('familiesApiTestResult');
+            resultDiv.innerHTML = '<span class="text-info">Testing families API...</span>';
+            fetch('/settings/test-families-api')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.families && data.families.length > 0) {
+                            let html = `<div class='alert alert-success'><strong>Families API returned ${data.families.length} families:</strong><ul>`;
+                            data.families.forEach(fam => {
+                                html += `<li>ID: <code>${fam.id}</code> &mdash; <strong>${fam.name}</strong></li>`;
+                            });
+                            html += '</ul></div>';
+                            resultDiv.innerHTML = html;
+                        } else {
+                            resultDiv.innerHTML = '<div class="alert alert-warning">Families API returned no families.</div>';
+                        }
+                    } else {
+                        resultDiv.innerHTML = `<div class='alert alert-danger'>Error: ${data.error || 'Unknown error'}</div>`;
+                    }
+                })
+                .catch(err => {
+                    resultDiv.innerHTML = `<div class='alert alert-danger'>Request failed: ${err}</div>`;
+                });
+        });
+    }
+});
+
+// Test Products API button logic
+document.addEventListener('DOMContentLoaded', function() {
+    const btn = document.getElementById('testProductsApiBtn');
+    if (btn) {
+        btn.addEventListener('click', function() {
+            const resultDiv = document.getElementById('productsApiTestResult');
+            resultDiv.innerHTML = '<span class="text-info">Testing products API...</span>';
+            fetch('/settings/test-products-api')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.products && data.products.length >= 0) {
+                        let html = `<div class='alert alert-success'><strong>Products API returned ${data.products.length} products:</strong>`;
+                        if (data.products.length > 0) {
+                            html += '<ul>';
+                            data.products.slice(0, 5).forEach(prod => {
+                                html += `<li>ID: <code>${prod.id}</code> &mdash; <strong>${prod.name}</strong> (${prod.sku || 'No SKU'}) - $${prod.price || 'N/A'}</li>`;
+                            });
+                            if (data.products.length > 5) {
+                                html += `<li>... and ${data.products.length - 5} more products</li>`;
+                            }
+                            html += '</ul>';
+                        } else {
+                            html += '<p>No products found.</p>';
+                        }
+                        html += '</div>';
+                        resultDiv.innerHTML = html;
+                    } else {
+                        resultDiv.innerHTML = `<div class='alert alert-danger'>Error: Invalid response format</div>`;
+                    }
+                })
+                .catch(err => {
+                    resultDiv.innerHTML = `<div class='alert alert-danger'>Request failed: ${err}</div>`;
+                });
+        });
+    }
+});
+</script>
+{% endblock %}

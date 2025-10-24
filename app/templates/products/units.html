@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Product Units - InvoicePlane{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Product Units</h1>
+                <a href="/products/units/create" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Product Unit
+                </a>
+            </div>
+
+            {% if units %}
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Abbreviation</th>
+                                    <th>Description</th>
+                                    <th>Products Count</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for unit in units %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ unit.name }}</strong>
+                                    </td>
+                                    <td>
+                                        <code>{{ unit.abbreviation }}</code>
+                                    </td>
+                                    <td>{{ unit.description or '-' }}</td>
+                                    <td>
+                                        <span class="badge badge-info">{{ unit.products|length }}</span>
+                                    </td>
+                                    <td>
+                                        {% if unit.is_active %}
+                                            <span class="badge badge-success">Active</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="/products/units/{{ unit.id }}" class="btn btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="/products/units/{{ unit.id }}/edit" class="btn btn-outline-secondary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-ruler fa-3x text-muted mb-3"></i>
+                    <h3 class="text-muted">No Product Units</h3>
+                    <p class="text-muted">You haven't created any product units yet.</p>
+                    <a href="/products/units/create" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create Your First Product Unit
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

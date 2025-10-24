@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Create Product - InvoicePlane{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Product Form</h1>
+                <div>
+                    <button type="submit" form="productForm" class="btn btn-success me-2">
+                        <i class="fas fa-save"></i> Save
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="window.location.href='/products'">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <form id="productForm" method="post" action="/products/create">
+                        <div class="row">
+                            <!-- Left Column -- New product -->
+                            <div class="col-md-6">
+                                <h5 class="mb-3">New product</h5>
+                                
+                                <div class="form-group mb-3">
+                                    <label for="family_id" class="form-label">Family</label>
+                                    <select class="form-control" id="family_id" name="family_id">
+                                        <option value="">Select family</option>
+                                        {% for family in families %}
+                                        <option value="{{ family.id }}">{{ family.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <small class="form-text text-muted">
+                                        <a href="/products/families/create">Create new family</a>
+                                    </small>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label for="sku" class="form-label">SKU</label>
+                                    <input type="text" class="form-control" id="sku" name="sku" required>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label for="name" class="form-label">Product name</label>
+                                    <input type="text" class="form-control" id="name" name="name" required>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label for="description" class="form-label">Product description</label>
+                                    <textarea class="form-control" id="description" name="description" rows="4"></textarea>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label for="price" class="form-label">Price</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="price" name="price" step="0.01" min="0" required>
+                                    </div>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label for="unit_id" class="form-label">Product Unit</label>
+                                    <select class="form-control" id="unit_id" name="unit_id">
+                                        <option value="">Select unit</option>
+                                        {% for unit in units %}
+                                        <option value="{{ unit.id }}">{{ unit.name }} ({{ unit.abbreviation }})</option>
+                                        {% endfor %}
+                                    </select>
+                                    <small class="form-text text-muted">
+                                        <a href="/products/units/create">Create new unit</a>
+                                    </small>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label for="tax_rate_id" class="form-label">Tax Rate</label>
+                                    <select class="form-control" id="tax_rate_id" name="tax_rate_id">
+                                        <option value="">None</option>
+                                        <!-- Tax rates will be populated via JavaScript -->
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Right Column - Extra information -->
+                            <div class="col-md-6">
+                                <h5 class="mb-3">Extra information</h5>
+                                
+                                <div class="form-group mb-3">
+                                    <label for="provider_name" class="form-label">Provider Name</label>
+                                    <input type="text" class="form-control" id="provider_name" name="provider_name">
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label for="purchase_price" class="form-label">Purchase price</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="purchase_price" name="purchase_price" step="0.01" min="0">
+                                    </div>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="sumex" name="sumex" value="true">
+                                        <label class="form-check-label" for="sumex">Sumex</label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label for="tariff" class="form-label">Tariff</label>
+                                    <input type="text" class="form-control" id="tariff" name="tariff">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Load tax rates when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        loadTaxRates();
+    });
+
+    /**
+     * Load tax rates from API and populate the dropdown
+     */
+    async function loadTaxRates() {
+        try {
+            const response = await fetch('/tax_rates/api');
+            if (!response.ok) throw new Error('Failed to load tax rates');
+            
+            const data = await response.json();
+            const taxRates = data.tax_rates || data;
+            
+            const taxRateSelect = document.getElementById('tax_rate_id');
+            
+            // Clear existing options except "None"
+            taxRateSelect.innerHTML = '<option value="">None</option>';
+            
+            // Add tax rates to dropdown
+            taxRates.forEach(taxRate => {
+                const option = document.createElement('option');
+                option.value = taxRate.id;
+                option.textContent = `${taxRate.name} (${taxRate.rate.toFixed(2)}%)`;
+                taxRateSelect.appendChild(option);
+            });
+            
+        } catch (error) {
+            console.error('Error loading tax rates:', error);
+            // Keep only the "None" option if loading fails
+        }
+    }
+</script>
+{% endblock %}

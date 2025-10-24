@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>{{ product.name }}</h1>
+                <div>
+                    <a href="/products/{{ product.id }}/edit" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Edit Product
+                    </a>
+                    <a href="/products" class="btn btn-secondary ml-2">
+                        <i class="fas fa-arrow-left"></i> Back to Products
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Main Product Information -->
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Product Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">Product Name</label>
+                                        <p class="form-control-plaintext">{{ product.name }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">SKU</label>
+                                        <p class="form-control-plaintext">{{ product.sku or 'N/A' }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="font-weight-bold">Description</label>
+                                <p class="form-control-plaintext">{{ product.description or 'No description' }}</p>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">Price</label>
+                                        <p class="form-control-plaintext">${{ "%.2f"|format(product.price) }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">Purchase Price</label>
+                                        <p class="form-control-plaintext">
+                                            {% if product.purchase_price %}
+                                                ${{ "%.2f"|format(product.purchase_price) }}
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">Product Family</label>
+                                        <p class="form-control-plaintext">
+                                            {% if product.family %}
+                                                {{ product.family.name }}
+                                            {% else %}
+                                                No family assigned
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">Product Unit</label>
+                                        <p class="form-control-plaintext">
+                                            {% if product.unit %}
+                                                {{ product.unit.name }} ({{ product.unit.abbreviation }})
+                                            {% else %}
+                                                No unit assigned
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">Tax Rate</label>
+                                        <p class="form-control-plaintext">
+                                            {% if product.tax_rate_rel %}
+                                                {{ product.tax_rate_rel.name }} ({{ product.tax_rate_rel.rate }}%)
+                                            {% else %}
+                                                No tax rate
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">Tariff</label>
+                                        <p class="form-control-plaintext">
+                                            {% if product.tariff %}
+                                                ${{ "%.2f"|format(product.tariff) }}
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">Provider Name</label>
+                                        <p class="form-control-plaintext">{{ product.provider_name or 'N/A' }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">Sumex</label>
+                                        <p class="form-control-plaintext">
+                                            {% if product.sumex %}
+                                                <i class="fas fa-check text-success"></i> Yes
+                                            {% else %}
+                                                <i class="fas fa-times text-muted"></i> No
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">Active</label>
+                                        <p class="form-control-plaintext">
+                                            {% if product.is_active %}
+                                                <i class="fas fa-check text-success"></i> Active
+                                            {% else %}
+                                                <i class="fas fa-times text-muted"></i> Inactive
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">Created</label>
+                                        <p class="form-control-plaintext">{{ product.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="font-weight-bold">Last Updated</label>
+                                <p class="form-control-plaintext">{{ product.updated_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar with Actions -->
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Actions</h5>
+                        </div>
+                        <div class="card-body">
+                            <a href="/products/{{ product.id }}/edit" class="btn btn-primary btn-block mb-2">
+                                <i class="fas fa-edit"></i> Edit Product
+                            </a>
+                            <a href="/products" class="btn btn-secondary btn-block">
+                                <i class="fas fa-list"></i> View All Products
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Product Statistics -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="mb-0">Product Statistics</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-1"><strong>Product ID:</strong> {{ product.id }}</p>
+                            <p class="mb-1"><strong>User ID:</strong> {{ product.user_id }}</p>
+                            <p class="mb-0"><strong>Family ID:</strong> {{ product.family_id or 'None' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

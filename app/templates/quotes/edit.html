@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Edit Quote #{{ quote.id }}</h2>
+                <a href="/quotes" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Quotes
+                </a>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body py-2">
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-action="add-quote-tax">
+                            <i class="bi bi-plus-circle"></i> Add Quote Tax
+                        </button>
+                        <button type="button" class="btn btn-outline-success btn-sm" data-action="download-pdf">
+                            <i class="bi bi-file-earmark-pdf"></i> Download PDF
+                        </button>
+                        <button type="button" class="btn btn-outline-info btn-sm" data-action="send-email">
+                            <i class="bi bi-envelope"></i> Send Email
+                        </button>
+                        <button type="button" class="btn btn-outline-warning btn-sm" data-action="quote-to-invoice">
+                            <i class="bi bi-file-earmark-text"></i> Quote to Invoice
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-action="copy-quote">
+                            <i class="bi bi-files"></i> Copy Quote
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" data-action="delete-quote">
+                            <i class="bi bi-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <form method="post" action="/quotes/{{ quote.id }}/edit">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ quote.client.name if quote.client else 'Client Information' }}</h5>
+                                <div class="mb-3">
+                                    <label class="form-label">Client</label>
+                                    <div class="form-control-plaintext">
+                                        <strong>{{ quote.client.name }}</strong><br>
+                                        {{ quote.client.address1 }}<br>
+                                        {{ quote.client.address2 }}<br>
+                                        {{ quote.client.email }}
+                                    </div>
+                                    <input type="hidden" name="client_id" value="{{ quote.client_id }}">
+                                </div>
+                                {% if quote.client %}
+                                <div class="client-info bg-light p-3 rounded">
+                                    <div><strong>{{ quote.client.name }}</strong></div>
+                                    <div>{{ quote.client.address1 }}</div>
+                                    <div>{{ quote.client.address2 }}</div>
+                                    <div>{{ quote.client.city }}, {{ quote.client.state }} {{ quote.client.zip_code }}</div>
+                                    <div>{{ quote.client.country }}</div>
+                                    <div class="mt-2">
+                                        <strong>Email:</strong> {{ quote.client.email }}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="quote_number" class="form-label">Quote #</label>
+                                            <input type="text" class="form-control" id="quote_number" name="quote_number"
+                                                value="{{ quote.quote_number }}" placeholder="Not set yet">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="status" class="form-label">Status</label>
+                                            <select class="form-select" id="status" name="status">
+                                                {% for status in quote_statuses %}
+                                                <option value="{{ status.value }}" {% if status.value == quote.status_object.name %}selected{% endif %}>
+                                                    {{ status.value|capitalize }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="issue_date" class="form-label">Date</label>
+                                            <input type="date" class="form-control" id="issue_date" name="issue_date"
+                                                value="{{ quote.issue_date }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="quote_pdf_password" class="form-label">Quote PDF password (optional)</label>
+                                            <input type="text" class="form-control" id="quote_pdf_password" name="quote_pdf_password"
+                                                value="{{ quote.quote_pdf_password }}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="valid_until" class="form-label">Expires</label>
+                                            <input type="date" class="form-control" id="valid_until" name="valid_until"
+                                                value="{{ quote.valid_until }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5>Quote Items</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th width="5%"></th>
+                                                <th width="25%">Item</th>
+                                                <th width="10%">Quantity</th>
+                                                <th width="10%">Price</th>
+                                                <th width="10%">Item Discount</th>
+                                                <th width="10%">Tax Rate</th>
+                                                <th width="10%">Subtotal</th>
+                                                <th width="10%">Discount</th>
+                                                <th width="10%">Tax</th>
+                                                <th width="10%">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="quote-items">
+                                            {% for item in quote.items %}
+                                            <tr data-item-id="{{ item.id }}">
+                                                <td>
+                                                    <input type="hidden" name="items[{{ loop.index0 }}][id]" value="{{ item.id }}">
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" data-action="remove-item">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </td>
+                                                <td>
+                                                    <input type="text" class="form-control form-control-sm"
+                                                        name="items[{{ loop.index0 }}][name]" value="{{ item.product_name }}"
+                                                        placeholder="Item">
+                                                    <textarea class="form-control form-control-sm mt-1"
+                                                        name="items[{{ loop.index0 }}][description]" rows="2"
+                                                        placeholder="Description">{{ item.description }}</textarea>
+                                                </td>
+                                                <td>
+                                                    <input type="number" class="form-control form-control-sm item-quantity"
+                                                        name="items[{{ loop.index0 }}][quantity]" value="{{ item.quantity }}"
+                                                        step="0.01" data-calculate="item-total">
+                                                </td>
+                                                <td>
+                                                    <input type="number" class="form-control form-control-sm item-price"
+                                                        name="items[{{ loop.index0 }}][price]" value="{{ item.unit_price}}"
+                                                        step="0.01" data-calculate="item-total">
+                                                </td>
+                                                <td>
+                                                    <input type="number" class="form-control form-control-sm item-discount"
+                                                        name="items[{{ loop.index0 }}][discount]" value="{{ item.discount_percentage}}"
+                                                        step="0.01" data-calculate="item-total">
+                                                </td>
+                                                <td>
+                                                    <select class="form-select form-select-sm tax-rate-select"
+                                                        name="items[{{ loop.index0 }}][tax_rate]" data-calculate="item-total">
+                                                        <option value="0" {% if item.tax_rate == 0 %}selected{% endif %}>None (0%)</option>
+                                                        {% for tax_rate in tax_rates %}
+                                                        <option value="{{ tax_rate.rate }}" {% if item.tax_rate == tax_rate.rate %}selected{% endif %}>
+                                                            {{ tax_rate.name }} ({{ tax_rate.rate }}%)
+                                                        </option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </td>
+                                                <td class="item-subtotal">${{ "{:.2f}".format(item.subtotal) }}</td>
+                                                <td class="item-discount-amount">${{ "{:.2f}".format(item.discount_amount) }}</td>
+                                                <td class="item-tax-amount">${{ "{:.2f}".format(item.tax_amount) }}</td>
+                                                <td class="item-total">${{ "{:.2f}".format(item.total) }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="mt-3">
+                                    <button id="add-item-btn" type="button" class="btn btn-primary"><i class="bi bi-plus"></i> Add new row</button>
+                                    <button id="display-product-modal-btn" type="button" class="btn btn-secondary"><i class="bi bi-box"></i> Add product</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="notes" class="form-label"><strong>Notes</strong></label>
+                                    <textarea class="form-control" id="notes" name="notes" rows="4">{{ quote.notes or '' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row mb-2">
+                                    <div class="col-6"><strong>Subtotal:</strong></div>
+                                    <div class="col-6 text-end" id="quote-subtotal">${{ '%.2f'|format(quote.subtotal) if quote.subtotal is not none else '0.00' }}</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-6"><strong>Item Tax:</strong></div>
+                                    <div class="col-6 text-end" id="quote-item-tax">${{ '%.2f'|format(quote.item_tax_total) if quote.item_tax_total is not none else '0.00' }}</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-6"><strong>Quote Tax:</strong></div>
+                                    <div class="col-6 text-end" id="quote-tax">${{ '%.2f'|format(quote.tax_amount) if quote.tax_amount is not none else '0.00' }}</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-6">
+                                        <strong>Discount:</strong>
+                                    </div>
+                                    <div class="col-6 text-end">
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" class="form-control" name="discount_percentage"
+                                                value="{{ quote.discount_percentage }}" step="0.01" data-calculate="totals">
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="row">
+                                    <div class="col-6"><strong>Total:</strong></div>
+                                    <div class="col-6 text-end" id="quote-total"><strong>${{ '%.2f'|format(quote.total) if quote.total is not none else '0.00' }}</strong></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-lg"></i> Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            {% include 'modals/add_product_modal.html' %}
+
+        </div>
+    </div>
+</div>
+
+<script>
+  window.itemCounter = {{ itemCounter or 0 }};
+</script>
+
+<script>
+    // Initialize item counter for the external quotes.js
+    let itemCounter = {{ (quote.items|length) if quote.items else 0 }};
+</script>
+
+<script>
+    // Pass tax rates to JavaScript
+    window.taxRates = {{ tax_rates | tojson }};
+    // Debug: Log what was passed to JavaScript
+    console.log('DEBUG: window.taxRates set to:', window.taxRates);
+    console.log('DEBUG: tax_rates from template:', {{ tax_rates | tojson }});
+</script>
+
+<!-- Include the external JavaScript module -->
+<script src="/static/js/quotes.js"></script>
+<script src="/static/js/addNewRowWithProduct.js"></script>
+<script src="/static/js/productModal.js"></script>
+
+{% endblock %}

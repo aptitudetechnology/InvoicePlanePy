@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Create Invoice{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Create Invoice</h5>
+                    <a href="/invoices" class="btn-close" aria-label="Close"></a>
+                </div>
+                <form method="post" action="/invoices" id="createInvoiceForm">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="client_id" class="form-label">Client</label>
+                            <select class="form-select" id="client_id" name="client_id" required>
+                                <option value="">Select Client</option>
+                                {% for client in clients %}
+                                <option value="{{ client.id }}">{{ client.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="invoice_date" class="form-label">Invoice Date</label>
+                            <input type="date" class="form-control" id="invoice_date" name="invoice_date" value="{{ current_date or '' }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="due_date" class="form-label">Due Date</label>
+                            <input type="date" class="form-control" id="due_date" name="due_date">
+                        </div>
+                        <div class="mb-3">
+                            <label for="invoice_number" class="form-label">Invoice Number (optional)</label>
+                            <input type="text" class="form-control" id="invoice_number" name="invoice_number" placeholder="Auto-generated if empty">
+                        </div>
+                        <div class="mb-3">
+                            <label for="invoice_terms" class="form-label">Terms</label>
+                            <textarea class="form-control" id="invoice_terms" name="invoice_terms" rows="3" placeholder="Payment terms..."></textarea>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex justify-content-end gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-lg"></i> Submit
+                        </button>
+                        <a href="/invoices" class="btn btn-secondary">
+                            <i class="bi bi-x-lg"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const invoiceDateInput = document.getElementById('invoice_date');
+        // Set the current date in the specified format (DD/MM/YYYY)
+        const today = new Date();
+        const day = String(today.getDate()).padStart(2, '0');
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const year = today.getFullYear();
+        invoiceDateInput.value = `${day}/${month}/${year}`;
+        invoiceDateInput.setAttribute('readonly', true);
+    });
+</script>
+{% endblock %}

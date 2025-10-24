@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>User Profile</h2>
+            <a href="/profile/edit" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Edit Profile
+            </a>
+        </div>
+
+        {% if request.query_params.get('updated') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>Profile updated successfully!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <!-- Account Information -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-person me-2"></i>Account Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Name:</strong></div>
+                            <div class="col-sm-8">{{ user.first_name }} {{ user.last_name }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Company:</strong></div>
+                            <div class="col-sm-8">{{ user.company or '-' }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Email:</strong></div>
+                            <div class="col-sm-8">{{ user.email }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Language:</strong></div>
+                            <div class="col-sm-8">English</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>User Type:</strong></div>
+                            <div class="col-sm-8">
+                                <span class="badge bg-primary">{{ user.role or 'User' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address Information -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-geo-alt me-2"></i>Address
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Street Address:</strong></div>
+                            <div class="col-sm-8">{{ user.street_address or '-' }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Street Address 2:</strong></div>
+                            <div class="col-sm-8">{{ user.street_address_2 or '-' }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>City:</strong></div>
+                            <div class="col-sm-8">{{ user.city or '-' }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>State:</strong></div>
+                            <div class="col-sm-8">{{ user.state or '-' }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Zip Code:</strong></div>
+                            <div class="col-sm-8">{{ user.zip_code or '-' }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Country:</strong></div>
+                            <div class="col-sm-8">{{ user.country or '-' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tax Information -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-calculator me-2"></i>Tax Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>VAT ID:</strong></div>
+                            <div class="col-sm-8">{{ user.vat_id or '-' }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Tax Code:</strong></div>
+                            <div class="col-sm-8">{{ user.tax_code or '-' }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>IBAN:</strong></div>
+                            <div class="col-sm-8">{{ user.iban or '-' }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>ACN:</strong></div>
+                            <div class="col-sm-8">{{ user.acn or '-' }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>ABN:</strong></div>
+                            <div class="col-sm-8">{{ user.abn or '-' }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Subscriber Number:</strong></div>
+                            <div class="col-sm-8">{{ user.subscriber_number or '-' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-telephone me-2"></i>Contact Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Phone Number:</strong></div>
+                            <div class="col-sm-8">{{ user.phone_number or '-' }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Fax Number:</strong></div>
+                            <div class="col-sm-8">{{ user.fax_number or '-' }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Mobile Number:</strong></div>
+                            <div class="col-sm-8">{{ user.mobile_number or '-' }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Web Address:</strong></div>
+                            <div class="col-sm-8">
+                                {% if user.web_address %}
+                                <a href="{{ user.web_address }}" target="_blank">{{ user.web_address }}</a>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Quick Actions</h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="/profile/edit" class="btn btn-primary">
+                                <i class="bi bi-pencil me-2"></i>Edit Profile
+                            </a>
+                            <a href="/profile/security" class="btn btn-outline-warning">
+                                <i class="bi bi-shield-lock me-2"></i>Security Settings
+                            </a>
+                            <a href="/profile/account" class="btn btn-outline-info">
+                                <i class="bi bi-gear me-2"></i>Account Settings
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

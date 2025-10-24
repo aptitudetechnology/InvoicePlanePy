@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+<div class="col-12">
+<div class="d-flex justify-content-between align-items-center mb-4">
+<h2>Create Invoice</h2>
+<a href="/invoices" class="btn btn-secondary">
+<i class="bi bi-arrow-left"></i> Back to Invoices
+</a>
+</div>
+<div class="card">
+<div class="card-body">
+<form method="post" action="/invoices/">
+<!-- Client Information Section -->
+<div class="row mb-4">
+<div class="col-md-6">
+<h5>Client Information</h5>
+<div class="mb-3">
+    <label class="form-label">Client</label>
+    <div class="border p-3 bg-light">
+        <strong>{{ client.name }}</strong><br>
+        {% if client.address_1 %}{{ client.address_1 }}<br>{% endif %}
+        {% if client.address_2 %}{{ client.address_2 }}<br>{% endif %}
+        {% if client.city or client.state or client.zip_code %}
+            {{ client.city }}{% if client.city and (client.state or client.zip_code) %}, {% endif %}{{ client.state }} {{ client.zip_code }}<br>
+        {% endif %}
+        {% if client.country %}{{ client.country }}<br>{% endif %}
+        {% if client.email %}{{ client.email }}{% endif %}
+    </div>
+    <input type="hidden" name="client_id" value="{{ client.id }}">
+</div>
+</div>
+<div class="col-md-6">
+<h5>Invoice Details</h5>
+<div class="row">
+<div class="col-md-6 mb-3">
+<label for="invoice_number" class="form-label">Invoice #</label>
+<input type="text" class="form-control" id="invoice_number" name="invoice_number" placeholder="Not set yet">
+</div>
+<div class="col-md-6 mb-3">
+<label for="status" class="form-label">Status <small class="text-muted">(Can be changed)</small></label>
+<select class="form-select" id="status" name="status">
+<option value="draft">Draft</option>
+<option value="sent">Sent</option>
+<option value="viewed">Viewed</option>
+<option value="paid">Paid</option>
+</select>
+</div>
+</div>
+<div class="row">
+<div class="col-md-6 mb-3">
+<label for="invoice_date" class="form-label">Date</label>
+<input type="date" class="form-control" id="invoice_date" name="invoice_date" required>
+</div>
+<div class="col-md-6 mb-3">
+<label for="due_date" class="form-label">Due Date</label>
+<input type="date" class="form-control" id="due_date" name="due_date">
+</div>
+</div>
+<div class="row">
+<div class="col-md-6 mb-3">
+<label for="payment_method" class="form-label">Payment Method</label>
+<select class="form-select" id="payment_method" name="payment_method">
+<option value="">Select the Payment Method</option>
+<option value="cash">Cash</option>
+<option value="check">Check</option>
+<option value="credit_card">Credit Card</option>
+<option value="bank_transfer">Bank Transfer</option>
+<option value="paypal">PayPal</option>
+<option value="other">Other</option>
+</select>
+</div>
+<div class="col-md-6 mb-3">
+<label for="pdf_password" class="form-label">PDF password (optional)</label>
+<input type="password" class="form-control" id="pdf_password" name="pdf_password">
+<small class="form-text text-muted">not-implemented yet</small>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Line Items Section -->
+<div class="mb-4">
+<h5>Items</h5>
+<div class="table-responsive">
+<table class="table table-bordered" id="items_table">
+<thead>
+<tr>
+<th>Item</th>
+<th>Quantity</th>
+<th>Price</th>
+<th>Item Discount</th>
+<th>Tax Rate</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<input type="text" class="form-control" name="item_name[]" placeholder="Item name">
+<textarea class="form-control mt-2" name="item_description[]" rows="2" placeholder="Description"></textarea>
+</td>
+<td>
+<input type="number" class="form-control" name="item_quantity[]" min="1" value="1">
+<select class="form-select mt-2" name="item_unit[]">
+<option value="none">None</option>
+<option value="piece">Piece</option>
+<option value="hour">Hour</option>
+<option value="day">Day</option>
+<option value="month">Month</option>
+</select>
+</td>
+<td>
+<input type="number" class="form-control" name="item_price[]" min="0" step="0.01" placeholder="0.00">
+</td>
+<td>
+<input type="number" class="form-control" name="item_discount[]" min="0" step="0.01" placeholder="0.00">
+</td>
+<td>
+<select class="form-select" name="item_tax_rate[]">
+<option value="none">None</option>
+<option value="10">10% GST</option>
+<option value="15">15%</option>
+<option value="20">20%</option>
+</select>
+</td>
+<td>
+<button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)">
+<i class="bi bi-trash"></i>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="mb-3">
+<button type="button" class="btn btn-outline-primary me-2" onclick="addNewRow()">
+<i class="bi bi-plus"></i> Add new row
+</button>
+<button type="button" class="btn btn-outline-secondary me-2">
+<i class="bi bi-plus"></i> Add product
+</button>
+<button type="button" class="btn btn-outline-info">
+<i class="bi bi-plus"></i> Add task
+</button>
+</div>
+</div>
+
+<!-- Totals Section -->
+<div class="row mb-4">
+<div class="col-md-6">
+<!-- Left side - could be used for additional info -->
+</div>
+<div class="col-md-6">
+<div class="card">
+<div class="card-body">
+<div class="row mb-2">
+<div class="col-6"><strong>Subtotal:</strong></div>
+<div class="col-6 text-end" id="subtotal">$0.00</div>
+</div>
+<div class="row mb-2">
+<div class="col-6"><strong>Item Tax:</strong></div>
+<div class="col-6 text-end" id="item_tax">$0.00</div>
+</div>
+<div class="row mb-2">
+<div class="col-6"><strong>Invoice Tax:</strong></div>
+<div class="col-6 text-end" id="invoice_tax">$0.00</div>
+</div>
+<div class="row mb-2">
+<div class="col-6">
+<strong>Discount:</strong>
+<div class="input-group input-group-sm mt-1">
+<input type="number" class="form-control" id="discount_percentage" min="0" max="100" step="0.01" placeholder="0">
+<span class="input-group-text">%</span>
+<input type="number" class="form-control" id="discount_amount_input" min="0" step="0.01" placeholder="$">
+</div>
+</div>
+<div class="col-6 text-end" id="discount_amount">$0.00</div>
+</div>
+<hr>
+<div class="row mb-2">
+<div class="col-6"><strong>Total:</strong></div>
+<div class="col-6 text-end"><strong id="total">$0.00</strong></div>
+</div>
+<div class="row mb-2">
+<div class="col-6"><strong>Paid:</strong></div>
+<div class="col-6 text-end" id="paid">$0.00</div>
+</div>
+<div class="row">
+<div class="col-6"><strong>Balance:</strong></div>
+<div class="col-6 text-end"><strong id="balance">$0.00</strong></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Invoice Terms and Attachments Section -->
+<div class="row mb-4">
+<div class="col-md-6">
+
+</div>
+<div class="col-md-6">
+<div class="mb-3">
+<label class="form-label"><strong>Attachments</strong></label>
+<div class="border p-3 bg-light">
+<button type="button" class="btn btn-outline-primary">
+<i class="bi bi-plus"></i> Add Files...
+</button>
+<small class="form-text text-muted d-block mt-2">File attachments not-implemented yet</small>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Form Actions -->
+<div class="d-flex justify-content-end">
+<button type="submit" class="btn btn-success">
+<i class="bi bi-check-circle"></i> Save
+</button>
+</div>
+</form>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+function addNewRow() {
+    const tbody = document.querySelector('#items_table tbody');
+    const newRow = tbody.rows[0].cloneNode(true);
+    // Clear the input values
+    newRow.querySelectorAll('input, textarea, select').forEach(input => {
+        if (input.type === 'number') {
+            input.value = input.name.includes('quantity') ? '1' : '';
+        } else if (input.tagName === 'SELECT') {
+            input.selectedIndex = 0;
+        } else {
+            input.value = '';
+        }
+    });
+    tbody.appendChild(newRow);
+}
+
+function removeRow(button) {
+    const tbody = document.querySelector('#items_table tbody');
+    if (tbody.rows.length > 1) {
+        button.closest('tr').remove();
+    } else {
+        alert('Cannot remove the last row');
+    }
+}
+
+// Set default date to today
+document.getElementById('invoice_date').valueAsDate = new Date();
+
+// Set default due date to 30 days from today
+const dueDate = new Date();
+dueDate.setDate(dueDate.getDate() + 30);
+document.getElementById('due_date').valueAsDate = dueDate;
+</script>
+{% endblock %}

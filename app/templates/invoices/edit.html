@@ -1,0 +1,997 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Edit Invoice</h2>
+            <a href="/invoices" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Invoices
+            </a>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                {# Form action points to an update endpoint, typically including the invoice ID #}
+                <form method="post" action="/invoices/{{ invoice.id }}/edit"> {# Invoice edit form #}
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Client Information:</h5>
+                            <div class="mb-3">
+                                <label for="client_id" class="form-label">Client</label>
+                                <select class="form-select" id="client_id" name="client_id" required>
+                                    <option value="">Select a client</option>
+                                    {# Assuming 'clients' is passed from the backend context #}
+                                    {% for client in clients %}
+                                        <option value="{{ client.id }}"
+                                                data-name="{{ client.name }}"
+                                                data-address="{{ client.address }}"
+                                                data-email="{{ client.email }}"
+                                                {% if invoice.client_id == client.id %}selected{% endif %}>
+                                            {{ client.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {# Client details will be populated via JavaScript when client is selected #}
+                            <div id="client_details" class="border p-3 bg-light" style="{% if invoice.client_id %}display: block;{% else %}display: none;{% endif %}">
+                                <div id="client_name">{{ invoice.client.name if invoice.client else '' }}</div>
+                                <div id="client_address">{{ invoice.client.address if invoice.client else '' }}</div>
+                                <div id="client_email">{{ invoice.client.email if invoice.client else '' }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Invoice Details</h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="invoice_number" class="form-label">Invoice #</label>
+                                    <input type="text" class="form-control" id="invoice_number" name="invoice_number" value="{{ invoice.invoice_number if invoice.invoice_number else '' }}" placeholder="Not set yet">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="status" class="form-label">Status <small class="text-muted">(Can be changed)</small></label>
+                                    <select class="form-select" id="status" name="status">
+                                        <option value="draft" {% if invoice.status_string == 'draft' %}selected{% endif %}>Draft</option>
+                                        <option value="sent" {% if invoice.status_string == 'sent' %}selected{% endif %}>Sent</option>
+                                        <option value="viewed" {% if invoice.status_string == 'viewed' %}selected{% endif %}>Viewed</option>
+                                        <option value="paid" {% if invoice.status_string == 'paid' %}selected{% endif %}>Paid</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="invoice_date" class="form-label">Date</label>
+                                    <input type="date" class="form-control" id="invoice_date" name="invoice_date" value="{{ invoice.issue_date.strftime('%Y-%m-%d') if invoice.issue_date else '' }}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="due_date" class="form-label">Due Date</label>
+                                    <input type="date" class="form-control" id="due_date" name="due_date" value="{{ invoice.due_date.strftime('%Y-%m-%d') if invoice.due_date else '' }}">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="payment_method" class="form-label">Payment Method</label>
+                                    <select class="form-select" id="payment_method" name="payment_method">
+                                        <option value="">Select the Payment Method</option>
+                                        <option value="cash" {% if invoice.payment_method == 'cash' %}selected{% endif %}>Cash</option>
+                                        <option value="check" {% if invoice.payment_method == 'check' %}selected{% endif %}>Check</option>
+                                        <option value="credit_card" {% if invoice.payment_method == 'credit_card' %}selected{% endif %}>Credit Card</option>
+                                        <option value="bank_transfer" {% if invoice.payment_method == 'bank_transfer' %}selected{% endif %}>Bank Transfer</option>
+                                        <option value="paypal" {% if invoice.payment_method == 'paypal' %}selected{% endif %}>PayPal</option>
+                                        <option value="other" {% if invoice.payment_method == 'other' %}selected{% endif %}>Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="pdf_password" class="form-label">PDF password (optional)</label>
+                                    <input type="password" class="form-control" id="pdf_password" name="pdf_password" value="{{ invoice.pdf_password if invoice.pdf_password else '' }}">
+                                    <small class="form-text text-muted">not-implemented yet</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5>Items</h5>
+                        <div id="items_container" class="table-responsive">
+                            <table class="table table-bordered" id="items_table">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Quantity</th>
+                                        <th>Price</th>
+                                        <th>Item Discount</th>
+                                        <th>Tax Rate</th>
+                                        <th>Total</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="quote-items">
+                                    {# Loop through existing items if available, otherwise display one empty row #}
+    {% if invoice.items %}
+        {% for item in invoice.items %}
+        <tr>
+            <td>
+                <input type="hidden" name="item_id_{{ loop.index0 }}" value="{{ item.id }}">
+                <input type="text" class="form-control item-name" name="item_name_{{ loop.index0 }}" value="{{ item.name }}" placeholder="Item name" required onchange="calculateItemTotal(this)">
+                <textarea class="form-control mt-2 item-description" name="item_description_{{ loop.index0 }}" rows="2" placeholder="Description">{{ item.description }}</textarea>
+            </td>
+            <td>
+                <input type="number" class="form-control item-quantity" name="item_quantity_{{ loop.index0 }}" min="1" step="0.01" value="{{ item.quantity }}" required onchange="calculateItemTotal(this)">
+                <select class="form-select mt-2 item-unit" name="item_unit_{{ loop.index0 }}">
+                    <option value="none" {% if item.unit == 'none' %}selected{% endif %}>None</option>
+                    <option value="piece" {% if item.unit == 'piece' %}selected{% endif %}>Piece</option>
+                    <option value="hour" {% if item.unit == 'hour' %}selected{% endif %}>Hour</option>
+                    <option value="day" {% if item.unit == 'day' %}selected{% endif %}>Day</option>
+                    <option value="month" {% if item.unit == 'month' %}selected{% endif %}>Month</option>
+                </select>
+            </td>
+            <td>
+                <input type="number" class="form-control item-price" name="item_price_{{ loop.index0 }}" min="0" step="0.01" value="{{ item.price }}" required onchange="calculateItemTotal(this)">
+            </td>
+            <td>
+                <input type="number" class="form-control item-discount" name="item_discount_{{ loop.index0 }}" min="0" step="0.01" value="{{ item.discount if item.discount else 0 }}" onchange="calculateItemTotal(this)">
+            </td>
+            <td>
+                <select class="form-select item-tax-rate tax-rate-select" name="item_tax_rate_{{ loop.index0 }}" onchange="calculateItemTotal(this)">
+                    <option value="0">None (0%)</option>
+                    </select>
+                <input type="hidden" class="initial-tax-rate" value="{{ item.tax_rate if item.tax_rate is not none else 0 }}">
+            </td>
+            <td>
+                <input type="number" class="form-control item-total" name="item_total_{{ loop.index0 }}" value="{{ item.total if item.total else 0 }}" readonly>
+            </td>
+            <td>
+                <button type="button" class="btn btn-sm btn-danger remove-row-btn" onclick="removeRow(this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
+        {% endfor %}
+    {% else %}
+        <tr>
+            <td>
+                <input type="hidden" name="item_id_0" value="">
+                <input type="text" class="form-control item-name" name="item_name_0" placeholder="Item name" onchange="calculateItemTotal(this)">
+                <textarea class="form-control mt-2 item-description" name="item_description_0" rows="2" placeholder="Description"></textarea>
+            </td>
+            <td>
+                <input type="number" class="form-control item-quantity" name="item_quantity_0" min="1" value="1" onchange="calculateItemTotal(this)">
+                <select class="form-select mt-2 item-unit" name="item_unit_0">
+                    <option value="none">None</option>
+                    <option value="piece">Piece</option>
+                    <option value="hour">Hour</option>
+                    <option value="day">Day</option>
+                    <option value="month">Month</option>
+                </select>
+            </td>
+            <td>
+                <input type="number" class="form-control item-price" name="item_price_0" min="0" step="0.01" placeholder="0.00" onchange="calculateItemTotal(this)">
+            </td>
+            <td>
+                <input type="number" class="form-control item-discount" name="item_discount_0" min="0" step="0.01" placeholder="0.00" value="0" onchange="calculateItemTotal(this)">
+            </td>
+            <td>
+                <select class="form-select item-tax-rate tax-rate-select" name="item_tax_rate_0" onchange="calculateItemTotal(this)">
+                    <option value="0">None (0%)</option>
+                    </select>
+                <input type="hidden" class="initial-tax-rate" value="0">
+            </td>
+            <td>
+                <input type="number" class="form-control item-total" name="item_total_0" value="0.00" readonly>
+            </td>
+            <td>
+                <button type="button" class="btn btn-sm btn-danger remove-row-btn" onclick="removeRow(this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
+    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {# This hidden input tracks the total number of item rows for backend processing #}
+                        <input type="hidden" name="items_count" id="items_count" value="{{ invoice.items|length if invoice.items else 1 }}">
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-outline-primary me-2" onclick="addNewRow()">
+                                <i class="bi bi-plus"></i> Add new row
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary me-2" id="display-product-modal-btn">
+                                <i class="bi bi-plus"></i> Add product
+                            </button>
+                            <button type="button" class="btn btn-outline-info">
+                                <i class="bi bi-plus"></i> Add task
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="row mb-2">
+                                        <div class="col-6"><strong>Subtotal:</strong></div>
+                                        <div class="col-6 text-end" id="subtotal">${{ '%.2f'|format(invoice.subtotal) if invoice.subtotal is not none else '0.00' }}</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-6"><strong>Item Tax:</strong></div>
+                                        <div class="col-6 text-end" id="item_tax">${{ '%.2f'|format(invoice.tax_total) if invoice.tax_total is not none else '0.00' }}</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-6"><strong>Invoice Tax:</strong></div>
+                                        <div class="col-6 text-end" id="invoice_tax">${{ '%.2f'|format(invoice.tax_total) if invoice.tax_total is not none else '0.00' }}</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-6">
+                                            <strong>Discount:</strong>
+                                            <div class="input-group input-group-sm mt-1">
+                                                <input type="number" class="form-control" id="discount_percentage" name="discount_percentage" min="0" max="100" step="0.01" placeholder="0" value="{{ invoice.discount_percentage if invoice.discount_percentage is not none else 0 }}" onchange="calculateTotals()">
+                                                <span class="input-group-text">%</span>
+                                                <input type="number" class="form-control" id="discount_amount_input" name="discount_amount" min="0" step="0.01" placeholder="0.00" value="{{ invoice.discount_amount if invoice.discount_amount is not none else 0 }}" onchange="calculateTotals()">
+                                            </div>
+                                        </div>
+                                        <div class="col-6 text-end" id="discount_amount">${{ '%.2f'|format(invoice.discount_amount) if invoice.discount_amount is not none else '0.00' }}</div>
+                                    </div>
+                                    <hr>
+                                    <div class="row mb-2">
+                                        <div class="col-6"><strong>Total:</strong></div>
+                                        <div class="col-6 text-end"><strong id="total">${{ '%.2f'|format(invoice.total) if invoice.total is not none else '0.00' }}</strong></div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-6"><strong>Paid:</strong></div>
+                                        <div class="col-6 text-end" id="paid">${{ '%.2f'|format(invoice.paid_amount) if invoice.paid_amount is not none else '0.00' }}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-6"><strong>Balance:</strong></div>
+                                        <div class="col-6 text-end"><strong id="balance">${{ '%.2f'|format(invoice.balance) if invoice.balance is not none else '0.00' }}</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                            <label class="form-label"><strong>Invoice Terms</strong></label>
+                            <div class="form-control-plaintext">{{ invoice_settings.default_invoice_terms }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>Attachments</strong></label>
+                                <div class="border p-3 bg-light">
+                                    <button type="button" class="btn btn-outline-primary">
+                                        <i class="bi bi-plus"></i> Add Files...
+                                    </button>
+                                    <small class="form-text text-muted d-block mt-2">File attachments not-implemented yet</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+
+                {% include 'modals/add_product_modal.html' %}
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    console.log('Invoice edit page JavaScript loading...');
+    let taxRates = []; // Will be populated from database
+
+    // Load tax rates from database
+    async function loadTaxRates() {
+        try {
+            const response = await fetch('/tax_rates/api');
+            if (!response.ok) throw new Error('Failed to load tax rates');
+            const data = await response.json();
+            taxRates = data.tax_rates || data;
+            
+            // Populate all existing tax rate dropdowns
+            populateAllTaxRateDropdowns();
+        } catch (error) {
+            console.error('Error loading tax rates:', error);
+            // Fallback to empty array if server fails
+            taxRates = [];
+            // Still populate dropdowns with just the "None" option
+            populateAllTaxRateDropdowns();
+        }
+    }
+
+    // Populate all tax rate dropdowns with current tax rates
+    function populateAllTaxRateDropdowns() {
+        const taxRateSelects = document.querySelectorAll('.tax-rate-select');
+        taxRateSelects.forEach(select => {
+            populateTaxRateDropdown(select);
+        });
+    }
+
+    // Populate a single tax rate dropdown
+    function populateTaxRateDropdown(selectElement) {
+        // Get initial value from hidden input if it exists
+        const initialValueInput = selectElement.closest('td').querySelector('.initial-tax-rate');
+        const initialValue = initialValueInput ? parseFloat(initialValueInput.value) : 0;
+        
+        // Clear existing options
+        selectElement.innerHTML = '<option value="0">None (0%)</option>';
+        
+        // Add tax rates from database
+        taxRates.forEach(taxRate => {
+            const option = document.createElement('option');
+            option.value = taxRate.rate;
+            option.textContent = `${taxRate.name} (${taxRate.rate.toFixed(2)}%)`;
+            option.setAttribute('data-tax-id', taxRate.id);
+            selectElement.appendChild(option);
+        });
+        
+        // Set the initial value
+        const matchingOption = Array.from(selectElement.options).find(opt => 
+            parseFloat(opt.value) === initialValue
+        );
+        if (matchingOption) {
+            matchingOption.selected = true;
+        } else {
+            selectElement.value = '0';
+        }
+    }
+
+    // Make function globally available for the add product functionality
+    window.populateTaxRateDropdown = populateTaxRateDropdown;
+
+    // Inline function to add product rows to invoice table
+    window.addNewRowWithProductForInvoice = function(productName, price, productId, tableBodyId = 'quote-items') {
+        const tableBody = document.getElementById(tableBodyId);
+        if (!tableBody) {
+            console.error('Invoice items table body not found!');
+            return;
+        }
+
+        // Get the current index based on existing rows
+        const index = tableBody.children.length;
+
+        // Create new row with invoice-specific structure
+        const row = document.createElement('tr');
+        row.setAttribute('data-product-id', productId || '');
+        row.setAttribute('data-item-id', `new-${index}`);
+
+        row.innerHTML = `
+          <td>
+            <input type="hidden" name="item_id_${index}" value="">
+            <input type="text" class="form-control item-name" name="item_name_${index}" value="${productName}" placeholder="Item name" onchange="calculateItemTotal(this)">
+            <textarea class="form-control mt-2 item-description" name="item_description_${index}" rows="2" placeholder="Description"></textarea>
+          </td>
+          <td>
+            <input type="number" class="form-control item-quantity" name="item_quantity_${index}" min="1" value="1" onchange="calculateItemTotal(this)">
+            <select class="form-select mt-2 item-unit" name="item_unit_${index}">
+              <option value="none">None</option>
+              <option value="piece">Piece</option>
+              <option value="hour">Hour</option>
+              <option value="day">Day</option>
+              <option value="month">Month</option>
+            </select>
+          </td>
+          <td>
+            <input type="number" class="form-control item-price" name="item_price_${index}" min="0" step="0.01" value="${parseFloat(price).toFixed(2)}" onchange="calculateItemTotal(this)">
+          </td>
+          <td>
+            <input type="number" class="form-control item-discount" name="item_discount_${index}" min="0" step="0.01" value="0" onchange="calculateItemTotal(this)">
+          </td>
+          <td>
+            <select class="form-select item-tax-rate tax-rate-select" name="item_tax_rate_${index}" onchange="calculateItemTotal(this)">
+              <option value="0">None (0%)</option>
+            </select>
+            <input type="hidden" class="initial-tax-rate" value="0">
+          </td>
+          <td>
+            <input type="number" class="form-control item-total" name="item_total_${index}" value="${parseFloat(price).toFixed(2)}" readonly>
+          </td>
+          <td>
+            <button type="button" class="btn btn-sm btn-danger remove-row-btn" onclick="removeRow(this)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        `;
+
+        tableBody.appendChild(row);
+
+        // Populate tax rate dropdown for the new row
+        const taxRateSelect = row.querySelector('.tax-rate-select');
+        if (taxRateSelect && typeof populateTaxRateDropdown === 'function') {
+            populateTaxRateDropdown(taxRateSelect);
+        }
+
+        // Trigger calculation for the new row
+        const firstInput = row.querySelector('.item-name');
+        if (firstInput && typeof calculateItemTotal === 'function') {
+            calculateItemTotal(firstInput);
+        }
+    };
+
+    // Create tax rate dropdown HTML for new rows
+    function createTaxRateDropdownHTML(itemIndex, selectedRate = 0) {
+        let optionsHTML = '<option value="0">None (0%)</option>';
+        
+        taxRates.forEach(taxRate => {
+            const selected = parseFloat(taxRate.rate) === parseFloat(selectedRate) ? 'selected' : '';
+            optionsHTML += `<option value="${taxRate.rate}" data-tax-id="${taxRate.id}" ${selected}>${taxRate.name} (${taxRate.rate.toFixed(2)}%)</option>`;
+        });
+        
+        return `<select class="form-select item-tax-rate tax-rate-select" name="item_tax_rate_${itemIndex}" onchange="calculateItemTotal(this)">${optionsHTML}</select>`;
+    }
+
+    // Initialize itemCounter based on the number of existing items or 1 if none
+    let itemCounter = parseInt('{{ invoice.items|length if invoice.items else 1 }}', 10) || 1;
+
+    /**
+     * Adds a new row to the items table, cloning the structure of the first row
+     * and resetting its input values for a new item.
+     */
+    function addNewRow() {
+        const tbody = document.querySelector('#items_table tbody');
+        const newRow = document.createElement('tr'); // Create new row from scratch for consistency
+
+        newRow.innerHTML = `
+            <td>
+                <input type="hidden" name="item_id_${itemCounter}" value="">
+                <input type="text" class="form-control item-name" name="item_name_${itemCounter}" placeholder="Item name" onchange="calculateItemTotal(this)">
+                <textarea class="form-control mt-2 item-description" name="item_description_${itemCounter}" rows="2" placeholder="Description"></textarea>
+            </td>
+            <td>
+                <input type="number" class="form-control item-quantity" name="item_quantity_${itemCounter}" min="1" value="1" onchange="calculateItemTotal(this)">
+                <select class="form-select mt-2 item-unit" name="item_unit_${itemCounter}">
+                    <option value="none">None</option>
+                    <option value="piece">Piece</option>
+                    <option value="hour">Hour</option>
+                    <option value="day">Day</option>
+                    <option value="month">Month</option>
+                </select>
+            </td>
+            <td>
+                <input type="number" class="form-control item-price" name="item_price_${itemCounter}" min="0" step="0.01" placeholder="0.00" value="0.00" onchange="calculateItemTotal(this)">
+            </td>
+            <td>
+                <input type="number" class="form-control item-discount" name="item_discount_${itemCounter}" min="0" step="0.01" placeholder="0.00" value="0.00" onchange="calculateItemTotal(this)">
+            </td>
+            <td>
+                ${createTaxRateDropdownHTML(itemCounter)}
+                <input type="hidden" class="initial-tax-rate" value="0">
+            </td>
+            <td>
+                <input type="number" class="form-control item-total" name="item_total_${itemCounter}" value="0.00" readonly>
+            </td>
+            <td>
+                <button type="button" class="btn btn-sm btn-danger remove-row-btn" onclick="removeRow(this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(newRow);
+        // Populate tax rate select for the new row (redundant if using createTaxRateDropdownHTML but good for clarity)
+        const newTaxSelect = newRow.querySelector('.item-tax-rate');
+        populateTaxRateDropdown(newTaxSelect); // Use populateTaxRateDropdown for consistency
+        itemCounter++; // Increment the counter
+        document.getElementById('items_count').value = itemCounter; // Update hidden input
+        calculateTotals(); // Recalculate totals after adding a new row
+    }
+
+    function removeRow(button) {
+        const row = button.closest('tr');
+        row.remove();
+        calculateTotals(); // Recalculate totals after removing a row
+        // Reindex rows to maintain correct naming if necessary, or handle it server-side
+        updateRowIndexes();
+    }
+
+    function updateRowIndexes() {
+        const rows = document.querySelectorAll('#items_table tbody tr');
+        itemCounter = rows.length; // Update itemCounter to the current number of rows
+        document.getElementById('items_count').value = itemCounter;
+
+        rows.forEach((row, index) => {
+            // Update name attributes for inputs
+            row.querySelectorAll('[name^="item_"]').forEach(input => {
+                const nameParts = input.name.split('_');
+                nameParts[nameParts.length - 1] = index; // Replace the old index with the new one
+                input.name = nameParts.join('_');
+            });
+
+            // Update initial-tax-rate hidden input name
+            const initialTaxRateInput = row.querySelector('.initial-tax-rate');
+            if (initialTaxRateInput) {
+                initialTaxRateInput.name = `initial_tax_rate_${index}`;
+            }
+
+            // Update onclick functions for buttons if they reference the index
+            const removeBtn = row.querySelector('.remove-row-btn');
+            if (removeBtn) {
+                removeBtn.setAttribute('onclick', 'removeRow(this)'); // Simple removal, no index needed here
+            }
+        });
+    }
+
+    function calculateItemTotal(element) {
+        const row = element.closest('tr');
+        const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
+        const price = parseFloat(row.querySelector('.item-price').value) || 0;
+        const discount = parseFloat(row.querySelector('.item-discount').value) || 0;
+        const taxRate = parseFloat(row.querySelector('.item-tax-rate').value) || 0;
+
+        let itemSubtotal = (quantity * price) - discount;
+        let itemTaxAmount = itemSubtotal * (taxRate / 100);
+        let itemTotal = itemSubtotal + itemTaxAmount;
+
+        row.querySelector('.item-total').value = itemTotal.toFixed(2);
+        calculateTotals();
+    }
+
+    function calculateTotals() {
+        let subtotal = 0;
+        let itemTax = 0;
+        let invoiceTax = 0; // Not currently used based on the template logic
+        let discountAmount = 0;
+        let total = 0;
+
+        document.querySelectorAll('#items_table tbody tr').forEach(row => {
+            const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
+            const price = parseFloat(row.querySelector('.item-price').value) || 0;
+            const itemDiscount = parseFloat(row.querySelector('.item-discount').value) || 0;
+            const taxRate = parseFloat(row.querySelector('.item-tax-rate').value) || 0;
+
+            let itemSubtotal = (quantity * price) - itemDiscount;
+            subtotal += itemSubtotal;
+            itemTax += itemSubtotal * (taxRate / 100);
+        });
+
+        const discountPercentage = parseFloat(document.getElementById('discount_percentage').value) || 0;
+        const manualDiscountAmount = parseFloat(document.getElementById('discount_amount_input').value) || 0;
+
+        if (discountPercentage > 0) {
+            discountAmount = subtotal * (discountPercentage / 100);
+            document.getElementById('discount_amount_input').value = discountAmount.toFixed(2); // Update manual input with calculated
+        } else {
+            discountAmount = manualDiscountAmount;
+        }
+        
+        total = subtotal + itemTax - discountAmount + invoiceTax; // invoiceTax is 0 based on current logic
+
+        document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+        document.getElementById('item_tax').textContent = `$${itemTax.toFixed(2)}`;
+        document.getElementById('invoice_tax').textContent = `$${invoiceTax.toFixed(2)}`;
+        document.getElementById('discount_amount').textContent = `$${discountAmount.toFixed(2)}`;
+        document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+
+        // Calculate balance (assuming 'paid' is a value from the backend, not dynamically input here)
+        const paidAmount = parseFloat('{{ invoice.paid_amount if invoice.paid_amount is not none else 0 }}') || 0;
+        const balance = total - paidAmount;
+        document.getElementById('paid').textContent = `$${paidAmount.toFixed(2)}`;
+        document.getElementById('balance').textContent = `$${balance.toFixed(2)}`;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const clientIdSelect = document.getElementById('client_id');
+        const clientDetailsDiv = document.getElementById('client_details');
+        const clientNameDiv = document.getElementById('client_name');
+        const clientAddressDiv = document.getElementById('client_address');
+        const clientEmailDiv = document.getElementById('client_email');
+
+        // Function to update client details in the UI
+        function updateClientDetails() {
+            const selectedOption = clientIdSelect.options[clientIdSelect.selectedIndex];
+            if (selectedOption && selectedOption.value) {
+                clientNameDiv.textContent = selectedOption.dataset.name;
+                clientAddressDiv.textContent = selectedOption.dataset.address;
+                clientEmailDiv.textContent = selectedOption.dataset.email;
+                clientDetailsDiv.style.display = 'block';
+            } else {
+                clientNameDiv.textContent = '';
+                clientAddressDiv.textContent = '';
+                clientEmailDiv.textContent = '';
+                clientDetailsDiv.style.display = 'none';
+            }
+        }
+
+        // Call on load to set initial client details if a client is pre-selected
+        updateClientDetails();
+        // Listen for changes in the client dropdown
+        clientIdSelect.addEventListener('change', updateClientDetails);
+
+        // Set default invoice date if not already set (e.g., for a brand new invoice)
+        if (!document.getElementById('invoice_date').value) {
+            document.getElementById('invoice_date').valueAsDate = new Date();
+        }
+
+        // Set default due date if not already set
+        if (!document.getElementById('due_date').value) {
+            const dueDate = new Date();
+            dueDate.setDate(dueDate.getDate() + 30); // Default to 30 days from today
+            document.getElementById('due_date').valueAsDate = dueDate;
+        }
+
+        // Load tax rates first, then populate all selects and perform initial calculation
+        loadTaxRates().then(() => {
+            calculateTotals();
+        });
+
+        console.log('About to set up product modal button...');
+        // Add product modal button logic
+        const addProductBtn = document.getElementById('display-product-modal-btn');
+        if (addProductBtn) {
+            console.log('Add product button found, adding click listener');
+            addProductBtn.addEventListener('click', () => {
+                console.log('Add product button clicked');
+                console.log('window.ProductModal exists:', !!window.ProductModal);
+                console.log('window.productModalInstance exists:', !!window.productModalInstance);
+
+                let productModalInstance = null;
+
+                // Try to get instance in multiple ways
+                if (window.productModalInstance) {
+                    productModalInstance = window.productModalInstance;
+                    console.log('Using existing instance');
+                } else if (window.ProductModal && window.ProductModal.getInstance) {
+                    productModalInstance = window.ProductModal.getInstance();
+                    console.log('Created instance via getInstance');
+                } else if (window.ProductModal) {
+                    productModalInstance = new window.ProductModal();
+                    console.log('Created instance via new');
+                }
+
+                console.log('Final product modal instance:', productModalInstance);
+                if (productModalInstance && typeof productModalInstance.showModal === 'function') {
+                    console.log('Calling showModal...');
+                    productModalInstance.showModal();
+                } else {
+                    console.error('Product modal instance not available or showModal method missing');
+                    console.error('productModalInstance type:', typeof productModalInstance);
+                    if (productModalInstance) {
+                        console.error('Available methods:', Object.getOwnPropertyNames(productModalInstance));
+                    }
+                }
+            });
+        } else {
+            console.error('Add product button not found');
+        }
+
+        // Listen for productsSelected event from product modal
+        document.addEventListener('productsSelected', function(event) {
+            console.log('productsSelected event received:', event.detail);
+            const products = event.detail.products;
+
+            if (products && products.length > 0) {
+                products.forEach(product => {
+                    console.log('Adding product to invoice:', product);
+                    // Use the inline addNewRowWithProductForInvoice function
+                    if (window.addNewRowWithProductForInvoice) {
+                        window.addNewRowWithProductForInvoice(
+                            product.name,
+                            product.price,
+                            product.id,
+                            'quote-items' // table body ID for invoices
+                        );
+                    } else {
+                        console.error('addNewRowWithProductForInvoice function not available');
+                    }
+                });
+            }
+        });
+    });
+
+</script>
+
+<!-- Include the external JavaScript modules for product modal -->
+<script>
+    // Temporary inline test of productModal.js
+    console.log('Inline productModal.js test loading...');
+    
+    class ProductModal {
+        constructor() {
+            this.modal = null;
+            this.modalElement = null;
+            this.selectedProducts = new Set();
+            this.init();
+        }
+
+        init() {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => this.setupModal());
+            } else {
+                this.setupModal();
+            }
+        }
+
+        setupModal() {
+            console.log('ProductModal.setupModal() called');
+            this.modalElement = document.getElementById('productModal');
+            console.log('Modal element found:', !!this.modalElement);
+            if (!this.modalElement) {
+                console.warn('Product modal not found');
+                return;
+            }
+
+            this.modal = new bootstrap.Modal(this.modalElement);
+            console.log('Bootstrap modal initialized:', !!this.modal);
+
+            this.attachEventListeners();
+            this.updateSelectionSummary();
+        }
+
+        attachEventListeners() {
+            const familyFilter = document.getElementById('familyFilter');
+            if (familyFilter) {
+                familyFilter.addEventListener('change', () => this.filterProductsByFamily());
+            }
+
+            const productNameSearch = document.getElementById('productNameSearch');
+            if (productNameSearch) {
+                productNameSearch.addEventListener('keyup', () => this.filterProductsByName());
+                productNameSearch.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        this.searchProducts();
+                    }
+                });
+            }
+
+            const searchBtn = document.getElementById('searchProductsBtn');
+            if (searchBtn) {
+                searchBtn.addEventListener('click', () => this.searchProducts());
+            }
+
+            const resetBtn = document.getElementById('resetProductSearchBtn');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => this.resetProductSearch());
+            }
+
+            const addProductsBtn = document.getElementById('addProductsBtn');
+            if (addProductsBtn) {
+                addProductsBtn.removeAttribute('onclick');
+                addProductsBtn.addEventListener('click', () => this.addSelectedProducts());
+            }
+
+            this.modalElement.addEventListener('change', (e) => {
+                if (e.target.classList.contains('product-checkbox')) {
+                    this.updateSelectionSummary();
+                }
+            });
+        }
+
+        async loadFamilies() {
+            console.log('=== loadFamilies() START ===');
+            const modalElement = document.getElementById('productModal');
+            console.log('Modal element:', modalElement);
+            
+            await new Promise(resolve => setTimeout(resolve, 100));
+            console.log('Delay completed, proceeding with API call');
+            
+            try {
+                console.log('Fetching families from /products/api/families');
+                const response = await fetch('/products/api/families');
+                console.log('Families response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                console.log('Families data received:', data);
+                console.log('Number of families:', data.families ? data.families.length : 'no families key');
+
+                const familyFilter = document.getElementById('familyFilter');
+                console.log('familyFilter element found:', !!familyFilter);
+                if (familyFilter) {
+                    familyFilter.innerHTML = '<option value="">Any family</option>';
+
+                    if (data.families && data.families.length > 0) {
+                        console.log('Adding', data.families.length, 'family options');
+                        data.families.forEach(family => {
+                            const option = document.createElement('option');
+                            option.value = family.id;
+                            option.textContent = family.name;
+                            familyFilter.appendChild(option);
+                        });
+                        console.log('Family dropdown updated');
+                    }
+                }
+            } catch (error) {
+                console.error('Error in loadFamilies:', error);
+            }
+            console.log('=== loadFamilies() END ===');
+        }
+
+        async loadProducts(search = '', familyId = '') {
+            console.log('=== loadProducts START ===');
+            console.log('Parameters:', { search, familyId });
+            
+            try {
+                let url = '/products/api?limit=1000';
+                if (search) url += `&search=${encodeURIComponent(search)}`;
+                if (familyId) url += `&family_id=${encodeURIComponent(familyId)}`;
+
+                console.log('Fetching from URL:', url);
+                const response = await fetch(url);
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Response error text:', errorText);
+                    throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+                }
+                
+                const data = await response.json();
+                console.log('Raw response data:', data);
+                console.log('Products in response:', data.products ? data.products.length : 'no products key');
+                
+                if (data.products) {
+                    console.log('First product sample:', data.products[0]);
+                }
+                
+                this.renderProductsTable(data.products || []);
+                console.log('=== loadProducts END ===');
+            } catch (error) {
+                console.error('Error in loadProducts:', error);
+                this.renderProductsTable([]);
+                console.log('=== loadProducts ERROR ===');
+            }
+        }
+
+        renderProductsTable(products) {
+            console.log('=== renderProductsTable START ===');
+            console.log('Products to render:', products.length);
+            
+            const tbody = document.getElementById('productTableBody');
+            console.log('tbody element found:', !!tbody);
+            console.log('tbody element:', tbody);
+            
+            if (!tbody) {
+                console.error('productTableBody not found! Available elements:', document.querySelectorAll('[id*="product"]'));
+                return;
+            }
+
+            if (products.length === 0) {
+                console.log('No products to display');
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No products found</td></tr>';
+                return;
+            }
+
+            console.log('Rendering', products.length, 'products');
+            let html = '';
+            products.forEach((product, index) => {
+                if (index < 3) { // Log first 3 products
+                    console.log(`Product ${index}:`, product);
+                }
+                html += `
+                    <tr>
+                        <td><input type="checkbox" class="product-checkbox" value="${product.id}" data-name="${product.name}" data-price="${product.price || 0}" data-sku="${product.sku}" data-description="${product.description || ''}"></td>
+                        <td>${product.sku || ''}</td>
+                        <td>${product.family ? product.family.name : 'No family'}</td>
+                        <td>${product.name}</td>
+                        <td>${product.description || ''}</td>
+                        <td>${product.price ? '$' + parseFloat(product.price).toFixed(2) : 'N/A'}</td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+            console.log('Table HTML set, rows added:', tbody.children.length);
+            console.log('=== renderProductsTable END ===');
+        }
+
+        filterProductsByFamily() {
+            const familyId = document.getElementById('familyFilter').value;
+            const search = document.getElementById('productNameSearch').value;
+            console.log('Filtering by family:', familyId, 'search:', search);
+            this.loadProducts(search, familyId);
+        }
+
+        filterProductsByName() {
+            const search = document.getElementById('productNameSearch').value;
+            const familyId = document.getElementById('familyFilter').value;
+            this.loadProducts(search, familyId);
+        }
+
+        searchProducts() {
+            this.filterProductsByFamily();
+        }
+
+        resetProductSearch() {
+            document.getElementById('productNameSearch').value = '';
+            document.getElementById('familyFilter').value = '';
+            this.loadProducts();
+        }
+
+        updateSelectionSummary() {
+            const selectedCheckboxes = document.querySelectorAll('.product-checkbox:checked');
+            const selectedCount = selectedCheckboxes.length;
+            const summaryElement = document.getElementById('selectionSummary');
+            if (summaryElement) {
+                summaryElement.textContent = `${selectedCount} product${selectedCount !== 1 ? 's' : ''} selected`;
+            }
+
+            const addBtn = document.getElementById('addProductsBtn');
+            if (addBtn) {
+                addBtn.disabled = selectedCount === 0;
+            }
+        }
+
+        addSelectedProducts() {
+            const selectedCheckboxes = document.querySelectorAll('.product-checkbox:checked');
+            const selectedProducts = Array.from(selectedCheckboxes).map(cb => ({
+                id: cb.value,
+                name: cb.getAttribute('data-name'),
+                price: parseFloat(cb.getAttribute('data-price')) || 0,
+                sku: cb.getAttribute('data-sku')
+            }));
+
+            console.log('Adding selected products:', selectedProducts);
+
+            const event = new CustomEvent('productsSelected', {
+                detail: { products: selectedProducts }
+            });
+            document.dispatchEvent(event);
+
+            this.hideModal();
+        }
+
+        hideModal() {
+            if (this.modal) {
+                this.modal.hide();
+            }
+        }
+
+        showModal() {
+            console.log('ProductModal.showModal() called');
+            if (this.modal) {
+                console.log('Showing modal');
+                this.modal.show();
+                
+                // Wait for modal to be fully shown before loading data
+                this.modalElement.addEventListener('shown.bs.modal', () => {
+                    console.log('Modal fully shown, loading data');
+                    this.loadFamilies();
+                    this.loadProducts();
+                }, { once: true });
+            } else {
+                console.error('Modal not initialized');
+            }
+        }
+
+        static getInstance() {
+            console.log('ProductModal.getInstance() called');
+            if (!window.productModalInstance) {
+                console.log('Creating new ProductModal instance...');
+                window.productModalInstance = new ProductModal();
+                console.log('Created instance');
+            } else {
+                console.log('Using existing instance');
+            }
+            return window.productModalInstance;
+        }
+    }
+
+    console.log('ProductModal class defined inline');
+    window.ProductModal = ProductModal;
+
+    // Auto-initialize
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOMContentLoaded - initializing ProductModal');
+            ProductModal.getInstance();
+        });
+    } else {
+        console.log('DOM ready - initializing ProductModal');
+        ProductModal.getInstance();
+    }
+
+    console.log('Inline productModal.js loaded successfully');
+</script>
+<script src="/static/js/productModal.js"></script>
+<script src="/static/js/addNewRowWithProduct.js"></script>
+
+{% endblock %}

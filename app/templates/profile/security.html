@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Security Settings</h2>
+            <a href="/profile" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Profile
+            </a>
+        </div>
+
+        <div class="row">
+            <!-- Change Password -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-key me-2"></i>Change Password
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="/profile/change-password">
+                            <div class="mb-3">
+                                <label for="current_password" class="form-label">Current Password</label>
+                                <input type="password" class="form-control" id="current_password" name="current_password" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="new_password" class="form-label">New Password</label>
+                                <input type="password" class="form-control" id="new_password" name="new_password" required>
+                                <div class="form-text">Password should be at least 8 characters long.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="confirm_password" class="form-label">Confirm New Password</label>
+                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>Update Password
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Two-Factor Authentication -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-shield-check me-2"></i>Two-Factor Authentication
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="badge bg-danger me-2">Disabled</span>
+                            <span>Two-factor authentication is currently disabled</span>
+                        </div>
+                        <p class="text-muted">Add an extra layer of security to your account by enabling two-factor authentication.</p>
+                        <button class="btn btn-success" onclick="alert('2FA setup coming soon!')">
+                            <i class="bi bi-shield-plus me-2"></i>Enable 2FA
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Login Sessions -->
+            <div class="col-12 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clock-history me-2"></i>Recent Login Activity
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Date & Time</th>
+                                        <th>IP Address</th>
+                                        <th>Device/Browser</th>
+                                        <th>Location</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Current Time</td>
+                                        <td>127.0.0.1</td>
+                                        <td>Chrome on Desktop</td>
+                                        <td>Local Development</td>
+                                        <td><span class="badge bg-success">Current Session</span></td>
+                                    </tr>
+                                    <!-- More sessions would be listed here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-outline-danger" onclick="alert('Session management coming soon!')">
+                                <i class="bi bi-x-circle me-2"></i>Terminate All Other Sessions
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Audit -->
+            <div class="col-12 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-shield-exclamation me-2"></i>Security Audit
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Password Security</h6>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar bg-warning" role="progressbar" style="width: 70%"></div>
+                                </div>
+                                <small class="text-muted">Your password is moderately secure. Consider using a stronger password.</small>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Account Security Score</h6>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar bg-warning" role="progressbar" style="width: 60%"></div>
+                                </div>
+                                <small class="text-muted">Enable 2FA to improve your security score.</small>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <h6>Security Recommendations</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-exclamation-triangle text-warning me-2"></i>Enable two-factor authentication</li>
+                                <li><i class="bi bi-exclamation-triangle text-warning me-2"></i>Use a stronger password with mixed characters</li>
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Account email is verified</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

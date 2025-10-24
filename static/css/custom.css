@@ -1,0 +1,66 @@
+/* InvoicePlane Python - Custom Styles */
+
+.ip-logo {
+    max-height: 40px;
+    width: auto;
+}
+
+.sidebar-brand {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.stats-card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+}
+
+.invoice-status-draft {
+    background-color: #6c757d;
+}
+
+.invoice-status-sent {
+    background-color: #007bff;
+}
+
+.invoice-status-paid {
+    background-color: #28a745;
+}
+
+.invoice-status-overdue {
+    background-color: #dc3545;
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Custom table styles */
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* Print styles */
+@media print {
+    .sidebar, .navbar, .no-print {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+    }
+}

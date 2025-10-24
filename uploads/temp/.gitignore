@@ -1,0 +1,5 @@
+*
+!mpdf
+!.gitignore
+!.htaccess
+!**/index.html

@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Reports</h2>
+        </div>
+
+        <!-- Report Categories -->
+        <div class="row">
+            <!-- Invoice Aging Report -->
+            <div class="col-md-6 col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clock-history me-2"></i>Invoice Aging
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">View overdue invoices and aging analysis</p>
+                        <div class="d-flex justify-content-end">
+                            <a href="/reports/invoice-aging" class="btn btn-success">
+                                <i class="bi bi-play-fill me-1"></i>Run Report
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment History Report -->
+            <div class="col-md-6 col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-credit-card me-2"></i>Payment History
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">Track payment trends and history</p>
+                        <div class="collapse" id="paymentHistoryOptions">
+                            <div class="card card-body bg-light">
+                                <form method="GET" action="/reports/payment-history">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="payment_from_date" class="form-label">From Date</label>
+                                            <div class="input-group">
+                                                <input type="date" class="form-control" id="payment_from_date" name="from_date">
+                                                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="payment_to_date" class="form-label">To Date</label>
+                                            <div class="input-group">
+                                                <input type="date" class="form-control" id="payment_to_date" name="to_date">
+                                                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 text-end">
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="bi bi-play-fill me-1"></i>Run Report
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-center">
+                            <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#paymentHistoryOptions">
+                                <i class="bi bi-gear me-1"></i>Report Options
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales by Client Report -->
+            <div class="col-md-6 col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-people me-2"></i>Sales by Client
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">Analyze sales performance by client</p>
+                        <div class="collapse" id="salesByClientOptions">
+                            <div class="card card-body bg-light">
+                                <form method="GET" action="/reports/sales-by-client">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="client_from_date" class="form-label">From Date</label>
+                                            <div class="input-group">
+                                                <input type="date" class="form-control" id="client_from_date" name="from_date">
+                                                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="client_to_date" class="form-label">To Date</label>
+                                            <div class="input-group">
+                                                <input type="date" class="form-control" id="client_to_date" name="to_date">
+                                                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 text-end">
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="bi bi-play-fill me-1"></i>Run Report
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-center">
+                            <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#salesByClientOptions">
+                                <i class="bi bi-gear me-1"></i>Report Options
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales by Date Report -->
+            <div class="col-md-6 col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-calendar-range me-2"></i>Sales by Date
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">Track sales trends over time periods</p>
+                        <div class="collapse" id="salesByDateOptions">
+                            <div class="card card-body bg-light">
+                                <form method="GET" action="/reports/sales-by-date">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="date_from_date" class="form-label">From Date</label>
+                                            <div class="input-group">
+                                                <input type="date" class="form-control" id="date_from_date" name="from_date">
+                                                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="date_to_date" class="form-label">To Date</label>
+                                            <div class="input-group">
+                                                <input type="date" class="form-control" id="date_to_date" name="to_date">
+                                                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="min_quantity" class="form-label">Minimal Quantity</label>
+                                            <div class="input-group">
+                                                <input type="number" class="form-control" id="min_quantity" name="min_quantity" placeholder="0">
+                                                <span class="input-group-text"><i class="bi bi-hash"></i></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="max_quantity" class="form-label">Maximum Quantity</label>
+                                            <div class="input-group">
+                                                <input type="number" class="form-control" id="max_quantity" name="max_quantity" placeholder="999999">
+                                                <span class="input-group-text"><i class="bi bi-hash"></i></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="values_with_taxes" name="values_with_taxes">
+                                                <label class="form-check-label" for="values_with_taxes">
+                                                    Values with taxes
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 text-end">
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="bi bi-play-fill me-1"></i>Run Report
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-center">
+                            <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#salesByDateOptions">
+                                <i class="bi bi-gear me-1"></i>Report Options
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats Overview -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-graph-up me-2"></i>Quick Overview
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <div class="border-end">
+                                    <h4 class="text-primary">{{ stats.total_invoices | default(0) }}</h4>
+                                    <p class="text-muted mb-0">Total Invoices</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border-end">
+                                    <h4 class="text-success">${{ "%.2f"|format(stats.total_revenue | default(0)) }}</h4>
+                                    <p class="text-muted mb-0">Total Revenue</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border-end">
+                                    <h4 class="text-warning">{{ stats.overdue_invoices | default(0) }}</h4>
+                                    <p class="text-muted mb-0">Overdue Invoices</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <h4 class="text-info">${{ "%.2f"|format(stats.outstanding_amount | default(0)) }}</h4>
+                                <p class="text-muted mb-0">Outstanding Amount</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

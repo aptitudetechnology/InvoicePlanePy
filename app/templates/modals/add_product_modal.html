@@ -1,0 +1,62 @@
+<!-- Product Selection Modal -->
+<div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add product</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Search and Filter Section -->
+        <div class="row mb-3">
+          <div class="col-md-3">
+            <select class="form-select" id="familyFilter">
+              <option value="">Any family</option>
+              <!-- Families will be loaded dynamically -->
+            </select>
+          </div>
+          <div class="col-md-6">
+            <input type="text" class="form-control" id="productNameSearch" placeholder="Product name">
+          </div>
+          <div class="col-md-3">
+            <div class="btn-group" role="group">
+              <button type="button" class="btn btn-outline-primary btn-sm" id="searchProductsBtn">Search product</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="resetProductSearchBtn">Reset</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Products Table -->
+        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+          <table class="table table-sm table-hover">
+            <thead class="table-light sticky-top">
+              <tr>
+                <th width="5%"></th>
+                <th width="10%">SKU</th>
+                <th width="15%">Family name</th>
+                <th width="25%">Product name</th>
+                <th width="35%">Product description</th>
+                <th width="10%">Price</th>
+              </tr>
+            </thead>
+            <tbody id="productTableBody">
+              <!-- Products will be loaded dynamically -->
+            </tbody>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Selection Summary -->
+        <div class="mt-3">
+          <div id="selectionSummary" class="text-muted">
+            <small>No products selected</small>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" disabled id="addProductsBtn">Add Selected Products</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Payment Methods</h2>
+            <div>
+                <button class="btn btn-primary me-2">
+                    <i class="bi bi-plus"></i> Add Payment Method
+                </button>
+                <a href="/settings" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Settings
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Configure the payment methods available for recording payments and displaying on invoices.
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Method Name</th>
+                                <th>Description</th>
+                                <th>Active</th>
+                                <th>Sort Order</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><i class="bi bi-cash me-2"></i><strong>Cash</strong></td>
+                                <td>Cash payments</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                                <td>1</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><i class="bi bi-credit-card me-2"></i><strong>Credit Card</strong></td>
+                                <td>Credit/Debit card payments</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                                <td>2</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><i class="bi bi-bank me-2"></i><strong>Bank Transfer</strong></td>
+                                <td>Electronic bank transfers</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                                <td>3</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><i class="bi bi-check2-square me-2"></i><strong>Check</strong></td>
+                                <td>Paper check payments</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                                <td>4</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><i class="bi bi-paypal me-2"></i><strong>PayPal</strong></td>
+                                <td>PayPal online payments</td>
+                                <td><span class="badge bg-warning">Inactive</span></td>
+                                <td>5</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-4">
+                    <h6>Payment Method Settings</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="bg-light p-3 rounded">
+                                <strong>Active Methods:</strong><br>
+                                Only active payment methods will be available when recording payments or displayed on payment forms.
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bg-light p-3 rounded">
+                                <strong>Sort Order:</strong><br>
+                                Payment methods are displayed in order from lowest to highest sort number.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
