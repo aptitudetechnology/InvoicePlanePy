@@ -758,7 +758,6 @@ async def import_data(
 async def import_clients_sql(
     request: Request,
     sql_file: UploadFile = File(...),
-    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Import clients from SQL file"""
@@ -798,7 +797,6 @@ async def import_clients_sql(
 async def import_products_sql(
     request: Request,
     sql_file: UploadFile = File(...),
-    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Import products from SQL file"""
@@ -899,7 +897,6 @@ async def run_import_diagnostic(
 async def import_invoices_sql(
     request: Request,
     sql_file: UploadFile = File(...),
-    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Import invoices from SQL file"""
