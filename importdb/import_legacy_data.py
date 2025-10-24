@@ -707,7 +707,7 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
         logger.info("Parsing all invoice items...")
         try:
             all_item_rows = list(parse_inserts(sql_file, "ip_invoice_items"))
-            logger.info(f"Found {len(all_item_rows)} total invoice item records")
+            logger.info(f"Found {len(all_item_rows)} total invoice item records in SQL file")
             
             # Group items by invoice_id for efficient lookup
             items_by_invoice = {}
@@ -719,8 +719,14 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
                     items_by_invoice[inv_id].append(item)
             
             logger.info(f"Grouped items into {len(items_by_invoice)} invoice groups")
-            for inv_id, items in items_by_invoice.items():
-                logger.debug(f"Invoice {inv_id}: {len(items)} items")
+            total_items = sum(len(items) for items in items_by_invoice.values())
+            logger.info(f"Total items across all invoices: {total_items}")
+            
+            # Show sample of first invoice with items
+            for inv_id, items in list(items_by_invoice.items())[:3]:
+                logger.info(f"Invoice {inv_id}: {len(items)} items")
+                if items:
+                    logger.info(f"Sample item: {items[0]}")
                 
         except Exception as e:
             logger.error(f"Failed to parse invoice items from SQL file: {e}")
@@ -810,6 +816,9 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
                         if invoice_items:
                             logger.info(f"Sample item for invoice {legacy_invoice_id}: {invoice_items[0]}")
                         
+                        items_processed = 0
+                        items_skipped = 0
+                        
                         for item_row in invoice_items:
                                 logger.debug(f"Processing invoice item: {item_row}")
                                 
@@ -854,14 +863,17 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
                                     # Skip invoice items without required fields
                                     if not item_mapped.get("name") or item_mapped.get("name") == "":
                                         logger.warning(f"Skipping invoice item without required name: {item_row}")
+                                        items_skipped += 1
                                         continue
                                     
                                     if item_mapped.get("quantity") is None:
                                         logger.warning(f"Skipping invoice item without quantity: {item_row}")
+                                        items_skipped += 1
                                         continue
                                         
                                     if item_mapped.get("price") is None:
                                         logger.warning(f"Skipping invoice item without price: {item_row}")
+                                        items_skipped += 1
                                         continue
 
                                     # Map product_id using the ID mapping if provided
@@ -917,20 +929,24 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
                                         invoice_item = InvoiceItem(**item_mapped)
                                         session.add(invoice_item)
                                         logger.debug(f"Successfully created invoice item: {item_mapped}")
+                                        items_processed += 1
                                     except Exception as e:
                                         logger.error(f"Error creating invoice item: {e}")
                                         logger.error(f"Item data: {item_mapped}")
+                                        items_skipped += 1
                                         continue
                                         
                                 except Exception as e:
                                     logger.error(f"Unexpected error processing invoice item: {e}")
                                     logger.error(f"Item row: {item_row}")
+                                    items_skipped += 1
                                     continue
 
                     # Calculate invoice totals from items
                     session.flush()  # Ensure all items are saved
                     items = session.query(InvoiceItem).filter_by(invoice_id=invoice.id).all()
                     logger.info(f"Created {len(items)} invoice items for invoice {invoice.id}")
+                    logger.info(f"Items processed: {items_processed}, items skipped: {items_skipped}")
 
                     if items:
                         invoice.subtotal = sum((item.subtotal for item in items), Decimal('0'))

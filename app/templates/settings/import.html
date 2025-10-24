@@ -556,7 +556,8 @@ async function verifyImport() {
             showVerificationResult(result);
         } else {
             document.getElementById('verifyAlert').className = 'alert alert-danger';
-            document.getElementById('verifyAlert').innerHTML = `Verification failed: ${result.detail}`;
+            const errorMsg = typeof result.detail === 'object' ? JSON.stringify(result.detail) : (result.detail || 'Unknown error');
+            document.getElementById('verifyAlert').innerHTML = `Verification failed: ${errorMsg}`;
         }
 
     } catch (error) {
