@@ -1062,7 +1062,7 @@ async def import_complete_sql(
         os.unlink(temp_file_path)
 
         # All imports successful
-        success_message = f"Complete import successful! Imported {results['families']['count']} product families, {results['tax_rates']['count']} tax rates, {results['products']['count']} products, {results['clients']['count']} clients, and {results['invoices']['count']} invoices."
+        success_message = f"Complete import successful! Imported {results['families']['count']} product families, {results['tax_rates']['count']} tax rates, {results['products']['count']} products, {results['clients']['count']} clients, and {results['invoices']['count']} invoices with {item_count} invoice items."
 
         return JSONResponse({
             "success": True,
