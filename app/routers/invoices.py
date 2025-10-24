@@ -12,6 +12,7 @@ from app.database import get_db
 from app.models.user import User
 from app.models.invoice import Invoice, InvoiceItem, InvoiceStatus
 from app.models.client import Client
+from app.models.product import Product
 from app.models.invoicesettings import InvoiceSettings
 from app.dependencies import get_current_user
 
@@ -524,10 +525,16 @@ async def edit_invoice_post(
                 order=i
             )
 
-            # Try to link to product if item_id is provided
+            # Try to link to product if item_id is provided and it's a valid product
             item_id = form_data.get(f"item_id_{i}")
             if item_id and item_id.isdigit() and int(item_id) > 0:
-                invoice_item.product_id = int(item_id)
+                product_id = int(item_id)
+                # Verify this is actually a valid product ID, not just an invoice item ID
+                existing_product = db.query(Product).filter(Product.id == product_id).first()
+                if existing_product:
+                    invoice_item.product_id = product_id
+                else:
+                    logging.warning(f"Invalid product_id {product_id} provided for invoice item, leaving product_id as None")
 
             db.add(invoice_item)
             item_count += 1

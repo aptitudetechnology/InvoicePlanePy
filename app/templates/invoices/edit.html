@@ -132,7 +132,7 @@
                 <select class="form-select item-tax-rate tax-rate-select" name="item_tax_rate_{{ loop.index0 }}" onchange="calculateItemTotal(this)">
                     <option value="0">None (0%)</option>
                     </select>
-                <input type="hidden" class="initial-tax-rate" value="{{ item.tax_rate if item.tax_rate is not none else 0 }}">
+                <input type="hidden" class="initial-tax-rate" value="{% if item.tax_amount and item.subtotal and item.subtotal > 0 %}{{ ((item.tax_amount / item.subtotal) * 100)|round(2) }}{% else %}0{% endif %}">
             </td>
             <td>
                 <input type="number" class="form-control item-total" name="item_total_{{ loop.index0 }}" value="{{ item.total if item.total else 0 }}" readonly>
