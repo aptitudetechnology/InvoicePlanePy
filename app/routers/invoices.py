@@ -9,7 +9,7 @@ import secrets
 
 from app.database import get_db
 from app.models.user import User
-from app.models.invoice import Invoice, InvoiceItem
+from app.models.invoice import Invoice, InvoiceItem, InvoiceStatus
 from app.models.client import Client
 from app.models.invoicesettings import InvoiceSettings
 from app.dependencies import get_current_user
@@ -331,22 +331,137 @@ async def edit_invoice_post(
     request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    # Add form fields as needed
+    client_id: int = Form(...),
+    invoice_number: str = Form(None),
+    status: str = Form(None),
+    invoice_date: str = Form(...),
+    due_date: str = Form(None),
+    payment_method: str = Form(None),
+    discount_percentage: float = Form(0),
+    discount_amount: float = Form(0),
+    terms: str = Form(None),
+    notes: str = Form(None),
+    items_count: int = Form(1),
 ):
     """Handle invoice edit form submission"""
-    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+    try:
+        invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
 
-    if not invoice:
-        raise HTTPException(status_code=404, detail="Invoice not found")
+        if not invoice:
+            raise HTTPException(status_code=404, detail="Invoice not found")
 
-    # Check permissions
-    if not current_user.is_admin and invoice.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Permission denied")
+        # Check permissions
+        if not current_user.is_admin and invoice.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Permission denied")
 
-    # For now, just redirect back to the invoice view
-    # TODO: Implement actual invoice update logic
-    from fastapi.responses import RedirectResponse
-    return RedirectResponse(url=f"/invoices/{invoice_id}", status_code=303)
+        # Parse form data
+        form_data = await request.form()
+
+        # Update basic invoice fields
+        invoice.client_id = client_id
+        if invoice_number:
+            invoice.invoice_number = invoice_number
+
+        # Update status
+        if status:
+            status_map = {
+                'draft': InvoiceStatus.DRAFT.value,
+                'sent': InvoiceStatus.SENT.value,
+                'viewed': InvoiceStatus.VIEWED.value,
+                'paid': InvoiceStatus.PAID.value,
+                'overdue': InvoiceStatus.OVERDUE.value,
+                'cancelled': InvoiceStatus.CANCELLED.value
+            }
+            invoice.status = status_map.get(status, InvoiceStatus.DRAFT.value)
+
+        # Update dates
+        if invoice_date:
+            invoice.issue_date = datetime.strptime(invoice_date, "%Y-%m-%d").date()
+        if due_date:
+            invoice.due_date = datetime.strptime(due_date, "%Y-%m-%d").date()
+
+        # Update other fields
+        invoice.discount_percentage = discount_percentage or 0
+        invoice.discount_amount = discount_amount or 0
+        invoice.terms = terms
+        invoice.notes = notes
+
+        # Delete existing items
+        db.query(InvoiceItem).filter(InvoiceItem.invoice_id == invoice_id).delete()
+
+        # Process invoice items
+        subtotal = 0
+        tax_total = 0
+
+        for i in range(items_count):
+            item_name = form_data.get(f"item_name_{i}")
+            if not item_name:  # Skip empty rows
+                continue
+
+            item_description = form_data.get(f"item_description_{i}", "")
+            item_quantity = float(form_data.get(f"item_quantity_{i}", 1))
+            item_price = float(form_data.get(f"item_price_{i}", 0))
+            item_discount = float(form_data.get(f"item_discount_{i}", 0))
+            item_tax_rate = float(form_data.get(f"item_tax_rate_{i}", 0))
+            item_unit = form_data.get(f"item_unit_{i}", "none")
+
+            # Calculate item totals
+            item_subtotal = item_quantity * item_price
+            item_tax_amount = (item_subtotal - item_discount) * (item_tax_rate / 100)
+            item_total = item_subtotal - item_discount + item_tax_amount
+
+            # Create new invoice item
+            invoice_item = InvoiceItem(
+                invoice_id=invoice_id,
+                name=item_name,
+                description=item_description,
+                quantity=item_quantity,
+                price=item_price,
+                discount_amount=item_discount,
+                subtotal=item_subtotal,
+                tax_amount=item_tax_amount,
+                total=item_total,
+                order=i
+            )
+
+            # Try to link to product if item_id is provided
+            item_id = form_data.get(f"item_id_{i}")
+            if item_id and item_id.isdigit():
+                invoice_item.product_id = int(item_id)
+
+            db.add(invoice_item)
+
+            # Accumulate totals
+            subtotal += item_subtotal
+            tax_total += item_tax_amount
+
+        # Calculate final totals
+        discount_total = 0
+        if discount_percentage > 0:
+            discount_total = subtotal * (discount_percentage / 100)
+        else:
+            discount_total = discount_amount
+
+        total = subtotal + tax_total - discount_total
+
+        # Update invoice totals
+        invoice.subtotal = subtotal
+        invoice.tax_total = tax_total
+        invoice.discount_amount = discount_total
+        invoice.total = total
+        invoice.balance = total - (invoice.paid_amount or 0)
+
+        # Commit changes
+        db.commit()
+
+        # Redirect back to invoice view
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url=f"/invoices/{invoice_id}", status_code=303)
+
+    except Exception as e:
+        db.rollback()
+        logging.error(f"Error updating invoice {invoice_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error updating invoice: {str(e)}")
 
 
 """
