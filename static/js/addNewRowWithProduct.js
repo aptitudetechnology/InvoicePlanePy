@@ -2,6 +2,7 @@
 // Usage: window.addNewRowWithProduct(productName, price, productId, tableBodyId = 'quote-items-body', defaultTaxRates = [])
 
 (() => {
+  console.log('addNewRowWithProduct.js: IIFE starting');
   let itemCounter = window.itemCounter || 0; // Initialize or retrieve from global scope
 
   function addNewRowWithProduct(productName, price, productId, tableBodyId = 'quote-items', defaultTaxRates = []) {
@@ -153,10 +154,6 @@
   }
 
 
-  // Expose globally for modal and other scripts
-  window.addNewRowWithProduct = addNewRowWithProduct;
-  window.updateQuoteOverallTotal = updateQuoteOverallTotal; // Renamed for clarity
-
   // Function to add a new product row to invoice table (different structure than quotes)
   function addNewRowWithProductForInvoice(productName, price, productId, tableBodyId = 'quote-items') {
     const tableBody = document.getElementById(tableBodyId);
@@ -226,6 +223,17 @@
     }
   }
 
+  // Expose globally for modal and other scripts
+  window.addNewRowWithProduct = addNewRowWithProduct;
+  window.updateQuoteOverallTotal = updateQuoteOverallTotal; // Renamed for clarity
+
   // Expose the invoice function globally
   window.addNewRowWithProductForInvoice = addNewRowWithProductForInvoice;
+  
+  console.log('addNewRowWithProduct.js: Functions exposed:', {
+    addNewRowWithProduct: !!window.addNewRowWithProduct,
+    addNewRowWithProductForInvoice: !!window.addNewRowWithProductForInvoice,
+    updateQuoteOverallTotal: !!window.updateQuoteOverallTotal
+  });
+  console.log('addNewRowWithProduct.js: IIFE completed successfully');
 })();
