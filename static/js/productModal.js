@@ -117,7 +117,8 @@ class ProductModal {
   }
 
   updateSelectionSummary() {
-    const selectedCount = this.selectedProducts.size;
+    const selectedCheckboxes = document.querySelectorAll('.product-checkbox:checked');
+    const selectedCount = selectedCheckboxes.length;
     const summaryElement = document.getElementById('selectionSummary');
     if (summaryElement) {
       summaryElement.textContent = `${selectedCount} product${selectedCount !== 1 ? 's' : ''} selected`;
