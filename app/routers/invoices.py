@@ -254,6 +254,92 @@ async def invoice_create_post_redirect(
         invoice_date, due_date, payment_method, invoice_terms
     )
 
+@router.get("/verify-import")
+async def verify_imported_invoices(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Verify that imported invoices have all required fields populated.
+    """
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin privileges required")
+
+    try:
+        # Get all invoices with their items
+        invoices = db.query(Invoice).options(
+            joinedload(Invoice.items)
+        ).all()
+
+        verification_results = {
+            "total_invoices": len(invoices),
+            "invoices_with_items": 0,
+            "invoices_with_totals": 0,
+            "issues": [],
+            "sample_invoices": []
+        }
+
+        for invoice in invoices[:5]:  # Check first 5 invoices as samples
+            invoice_status = {
+                "id": invoice.id,
+                "number": invoice.invoice_number,
+                "has_items": len(invoice.items) > 0,
+                "has_totals": all([
+                    invoice.subtotal is not None,
+                    invoice.total is not None,
+                    invoice.balance is not None
+                ]),
+                "items": []
+            }
+
+            if invoice.items:
+                verification_results["invoices_with_items"] += 1
+
+            if invoice_status["has_totals"]:
+                verification_results["invoices_with_totals"] += 1
+
+            # Check each item
+            for item in invoice.items:
+                item_status = {
+                    "name": item.name,
+                    "description": item.description,
+                    "quantity": item.quantity,
+                    "price": item.price,
+                    "has_name": item.name and item.name.strip() != "",
+                    "has_description": item.description and item.description.strip() != "",
+                    "has_quantity": item.quantity is not None,
+                    "has_price": item.price is not None,
+                    "has_totals": all([
+                        item.subtotal is not None,
+                        item.total is not None
+                    ])
+                }
+                invoice_status["items"].append(item_status)
+
+                # Check for issues
+                if not item_status["has_name"]:
+                    verification_results["issues"].append(f"Invoice {invoice.invoice_number}: Item missing name")
+                if not item_status["has_quantity"]:
+                    verification_results["issues"].append(f"Invoice {invoice.invoice_number}: Item missing quantity")
+                if not item_status["has_price"]:
+                    verification_results["issues"].append(f"Invoice {invoice.invoice_number}: Item missing price")
+
+            verification_results["sample_invoices"].append(invoice_status)
+
+        # Overall assessment
+        if verification_results["total_invoices"] == 0:
+            verification_results["status"] = "no_invoices"
+        elif len(verification_results["issues"]) == 0 and verification_results["invoices_with_items"] == verification_results["total_invoices"]:
+            verification_results["status"] = "success"
+        else:
+            verification_results["status"] = "issues_found"
+
+        return verification_results
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Verification failed: {str(e)}")
+
+
 @router.get("/{invoice_id}", response_class=HTMLResponse)
 async def view_invoice(
     invoice_id: int,
@@ -708,92 +794,6 @@ async def import_invoices_web(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
-
-
-@router.get("/verify-import")
-async def verify_imported_invoices(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """
-    Verify that imported invoices have all required fields populated.
-    """
-    if not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Admin privileges required")
-
-    try:
-        # Get all invoices with their items
-        invoices = db.query(Invoice).options(
-            joinedload(Invoice.items)
-        ).all()
-
-        verification_results = {
-            "total_invoices": len(invoices),
-            "invoices_with_items": 0,
-            "invoices_with_totals": 0,
-            "issues": [],
-            "sample_invoices": []
-        }
-
-        for invoice in invoices[:5]:  # Check first 5 invoices as samples
-            invoice_status = {
-                "id": invoice.id,
-                "number": invoice.invoice_number,
-                "has_items": len(invoice.items) > 0,
-                "has_totals": all([
-                    invoice.subtotal is not None,
-                    invoice.total is not None,
-                    invoice.balance is not None
-                ]),
-                "items": []
-            }
-
-            if invoice.items:
-                verification_results["invoices_with_items"] += 1
-
-            if invoice_status["has_totals"]:
-                verification_results["invoices_with_totals"] += 1
-
-            # Check each item
-            for item in invoice.items:
-                item_status = {
-                    "name": item.name,
-                    "description": item.description,
-                    "quantity": item.quantity,
-                    "price": item.price,
-                    "has_name": item.name and item.name.strip() != "",
-                    "has_description": item.description and item.description.strip() != "",
-                    "has_quantity": item.quantity is not None,
-                    "has_price": item.price is not None,
-                    "has_totals": all([
-                        item.subtotal is not None,
-                        item.total is not None
-                    ])
-                }
-                invoice_status["items"].append(item_status)
-
-                # Check for issues
-                if not item_status["has_name"]:
-                    verification_results["issues"].append(f"Invoice {invoice.invoice_number}: Item missing name")
-                if not item_status["has_quantity"]:
-                    verification_results["issues"].append(f"Invoice {invoice.invoice_number}: Item missing quantity")
-                if not item_status["has_price"]:
-                    verification_results["issues"].append(f"Invoice {invoice.invoice_number}: Item missing price")
-
-            verification_results["sample_invoices"].append(invoice_status)
-
-        # Overall assessment
-        if verification_results["total_invoices"] == 0:
-            verification_results["status"] = "no_invoices"
-        elif len(verification_results["issues"]) == 0 and verification_results["invoices_with_items"] == verification_results["total_invoices"]:
-            verification_results["status"] = "success"
-        else:
-            verification_results["status"] = "issues_found"
-
-        return verification_results
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Verification failed: {str(e)}")
 
 
 @router.get("/import", response_class=HTMLResponse)
