@@ -723,10 +723,10 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
             logger.info(f"Total items across all invoices: {total_items}")
             
             # Show sample of first invoice with items
-            for inv_id, items in list(items_by_invoice.items())[:3]:
+            for inv_id, items in list(items_by_invoice.items())[:5]:
                 logger.info(f"Invoice {inv_id}: {len(items)} items")
                 if items:
-                    logger.info(f"Sample item: {items[0]}")
+                    logger.info(f"Sample item for invoice {inv_id}: invoice_id={items[0].get('invoice_id')}, name={items[0].get('item_name')}, quantity={items[0].get('item_quantity')}, price={items[0].get('item_price')}")
                 
         except Exception as e:
             logger.error(f"Failed to parse invoice items from SQL file: {e}")
@@ -813,6 +813,17 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
                         invoice_items = items_by_invoice.get(str(legacy_invoice_id), [])
                         logger.info(f"Found {len(invoice_items)} items for invoice {legacy_invoice_id}")
                         
+                        # Debug: Log all invoice_ids that have items
+                        if invoice_items:
+                            logger.info(f"Invoice {legacy_invoice_id} has {len(invoice_items)} items - this should create items!")
+                            logger.info(f"Sample item data: {invoice_items[0] if invoice_items else 'None'}")
+                        else:
+                            logger.info(f"Invoice {legacy_invoice_id} has no items in items_by_invoice dict")
+                        
+                        # Debug: Show what invoice_ids are available
+                        available_invoice_ids = list(items_by_invoice.keys())[:10]  # First 10
+                        logger.info(f"Available invoice_ids in items_by_invoice: {available_invoice_ids}")
+                        
                         if invoice_items:
                             logger.info(f"Sample item for invoice {legacy_invoice_id}: {invoice_items[0]}")
                         
@@ -863,16 +874,19 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
                                     # Skip invoice items without required fields
                                     if not item_mapped.get("name") or item_mapped.get("name") == "":
                                         logger.warning(f"Skipping invoice item without required name: {item_row}")
+                                        logger.warning(f"Mapped item data: {item_mapped}")
                                         items_skipped += 1
                                         continue
                                     
                                     if item_mapped.get("quantity") is None:
                                         logger.warning(f"Skipping invoice item without quantity: {item_row}")
+                                        logger.warning(f"Mapped item data: {item_mapped}")
                                         items_skipped += 1
                                         continue
                                         
                                     if item_mapped.get("price") is None:
                                         logger.warning(f"Skipping invoice item without price: {item_row}")
+                                        logger.warning(f"Mapped item data: {item_mapped}")
                                         items_skipped += 1
                                         continue
 
@@ -929,6 +943,7 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
                                         invoice_item = InvoiceItem(**item_mapped)
                                         session.add(invoice_item)
                                         logger.debug(f"Successfully created invoice item: {item_mapped}")
+                                        logger.info(f"Added invoice item to session: name='{item_mapped.get('name')}', quantity={item_mapped.get('quantity')}, price={item_mapped.get('price')}")
                                         items_processed += 1
                                     except Exception as e:
                                         logger.error(f"Error creating invoice item: {e}")
@@ -947,6 +962,14 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
                     items = session.query(InvoiceItem).filter_by(invoice_id=invoice.id).all()
                     logger.info(f"Created {len(items)} invoice items for invoice {invoice.id}")
                     logger.info(f"Items processed: {items_processed}, items skipped: {items_skipped}")
+                    
+                    # Debug: Show actual items created
+                    if items:
+                        logger.info(f"Actual items in database for invoice {invoice.id}: {len(items)}")
+                        for item in items[:2]:  # Show first 2 items
+                            logger.info(f"  Item: {item.name}, qty={item.quantity}, price={item.price}")
+                    else:
+                        logger.warning(f"No items found in database query for invoice {invoice.id} after processing {items_processed} items")
 
                     if items:
                         invoice.subtotal = sum((item.subtotal for item in items), Decimal('0'))
