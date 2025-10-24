@@ -910,8 +910,14 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
                                     logger.debug(f"Mapping keys sample: {list(product_id_mapping.keys())[:5]}")
                                     new_product_id = product_id_mapping.get(str(product_id))
                                     if new_product_id:
-                                        item_mapped["product_id"] = new_product_id
-                                        logger.debug(f"Mapped legacy product_id {product_id} to new product_id {new_product_id}")
+                                        # Verify the mapped product exists in the database
+                                        existing_product = session.query(Product).filter_by(id=new_product_id).first()
+                                        if existing_product:
+                                            item_mapped["product_id"] = new_product_id
+                                            logger.debug(f"Mapped legacy product_id {product_id} to new product_id {new_product_id}")
+                                        else:
+                                            logger.warning(f"Mapped product_id {new_product_id} not found in database, setting product_id to None")
+                                            item_mapped["product_id"] = None
                                     else:
                                         logger.warning(f"No mapping found for legacy product_id {product_id}, keeping original ID for reference but allowing import")
                                         # Keep the original product_id for reference, but allow the item to be imported
