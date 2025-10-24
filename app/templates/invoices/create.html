@@ -57,14 +57,7 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const invoiceDateInput = document.getElementById('invoice_date');
-        // Set the current date in the specified format (DD/MM/YYYY)
-        const today = new Date();
-        const day = String(today.getDate()).padStart(2, '0');
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const year = today.getFullYear();
-        invoiceDateInput.value = `${day}/${month}/${year}`;
-        invoiceDateInput.setAttribute('readonly', true);
+        // No special handling needed - HTML5 date input handles current date automatically
     });
 </script>
 {% endblock %}
