@@ -345,6 +345,75 @@
     // Make function globally available for the add product functionality
     window.populateTaxRateDropdown = populateTaxRateDropdown;
 
+    // Inline function to add product rows to invoice table
+    window.addNewRowWithProductForInvoice = function(productName, price, productId, tableBodyId = 'quote-items') {
+        const tableBody = document.getElementById(tableBodyId);
+        if (!tableBody) {
+            console.error('Invoice items table body not found!');
+            return;
+        }
+
+        // Get the current index based on existing rows
+        const index = tableBody.children.length;
+
+        // Create new row with invoice-specific structure
+        const row = document.createElement('tr');
+        row.setAttribute('data-product-id', productId || '');
+        row.setAttribute('data-item-id', `new-${index}`);
+
+        row.innerHTML = `
+          <td>
+            <input type="hidden" name="item_id_${index}" value="">
+            <input type="text" class="form-control item-name" name="item_name_${index}" value="${productName}" placeholder="Item name" onchange="calculateItemTotal(this)">
+            <textarea class="form-control mt-2 item-description" name="item_description_${index}" rows="2" placeholder="Description"></textarea>
+          </td>
+          <td>
+            <input type="number" class="form-control item-quantity" name="item_quantity_${index}" min="1" value="1" onchange="calculateItemTotal(this)">
+            <select class="form-select mt-2 item-unit" name="item_unit_${index}">
+              <option value="none">None</option>
+              <option value="piece">Piece</option>
+              <option value="hour">Hour</option>
+              <option value="day">Day</option>
+              <option value="month">Month</option>
+            </select>
+          </td>
+          <td>
+            <input type="number" class="form-control item-price" name="item_price_${index}" min="0" step="0.01" value="${parseFloat(price).toFixed(2)}" onchange="calculateItemTotal(this)">
+          </td>
+          <td>
+            <input type="number" class="form-control item-discount" name="item_discount_${index}" min="0" step="0.01" value="0" onchange="calculateItemTotal(this)">
+          </td>
+          <td>
+            <select class="form-select item-tax-rate tax-rate-select" name="item_tax_rate_${index}" onchange="calculateItemTotal(this)">
+              <option value="0">None (0%)</option>
+            </select>
+            <input type="hidden" class="initial-tax-rate" value="0">
+          </td>
+          <td>
+            <input type="number" class="form-control item-total" name="item_total_${index}" value="${parseFloat(price).toFixed(2)}" readonly>
+          </td>
+          <td>
+            <button type="button" class="btn btn-sm btn-danger remove-row-btn" onclick="removeRow(this)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        `;
+
+        tableBody.appendChild(row);
+
+        // Populate tax rate dropdown for the new row
+        const taxRateSelect = row.querySelector('.tax-rate-select');
+        if (taxRateSelect && typeof populateTaxRateDropdown === 'function') {
+            populateTaxRateDropdown(taxRateSelect);
+        }
+
+        // Trigger calculation for the new row
+        const firstInput = row.querySelector('.item-name');
+        if (firstInput && typeof calculateItemTotal === 'function') {
+            calculateItemTotal(firstInput);
+        }
+    };
+
     // Create tax rate dropdown HTML for new rows
     function createTaxRateDropdownHTML(itemIndex, selectedRate = 0) {
         let optionsHTML = '<option value="0">None (0%)</option>';
@@ -596,27 +665,20 @@
             const products = event.detail.products;
 
             if (products && products.length > 0) {
-                // Function to add products with retry logic
-                function addProductsWithRetry(retryCount = 0) {
+                products.forEach(product => {
+                    console.log('Adding product to invoice:', product);
+                    // Use the inline addNewRowWithProductForInvoice function
                     if (window.addNewRowWithProductForInvoice) {
-                        products.forEach(product => {
-                            console.log('Adding product to invoice:', product);
-                            window.addNewRowWithProductForInvoice(
-                                product.name,
-                                product.price,
-                                product.id,
-                                'quote-items' // table body ID for invoices
-                            );
-                        });
-                    } else if (retryCount < 10) {
-                        console.log(`addNewRowWithProductForInvoice not available, retrying... (${retryCount + 1}/10)`);
-                        setTimeout(() => addProductsWithRetry(retryCount + 1), 100);
+                        window.addNewRowWithProductForInvoice(
+                            product.name,
+                            product.price,
+                            product.id,
+                            'quote-items' // table body ID for invoices
+                        );
                     } else {
-                        console.error('addNewRowWithProductForInvoice function not available after 10 retries');
+                        console.error('addNewRowWithProductForInvoice function not available');
                     }
-                }
-
-                addProductsWithRetry();
+                });
             }
         });
     });
