@@ -903,30 +903,31 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
                                     items_skipped += 1
                                     continue
 
-                        # Map product_id using the ID mapping if provided
-                        product_id = item_mapped.get("product_id")
-                        if product_id and product_id_mapping:
-                            logger.debug(f"Looking up product_id {product_id} (type: {type(product_id)}) in mapping with {len(product_id_mapping)} entries")
-                            logger.debug(f"Mapping keys sample: {list(product_id_mapping.keys())[:5]}")
-                            new_product_id = product_id_mapping.get(str(product_id))
-                            if new_product_id:
-                                item_mapped["product_id"] = new_product_id
-                                logger.debug(f"Mapped legacy product_id {product_id} to new product_id {new_product_id}")
-                            else:
-                                logger.warning(f"No mapping found for legacy product_id {product_id}, keeping original ID for reference but allowing import")
-                                # Keep the original product_id for reference, but allow the item to be imported
-                                # This preserves the legacy product reference even if the product wasn't imported
-                                item_mapped["product_id"] = None  # Set to None since the product doesn't exist in new system
-                                logger.debug(f"Set product_id to None for unmapped product {product_id}")
-                        elif product_id:
-                            # No mapping provided, check if the product exists
-                            logger.debug(f"No product_id_mapping provided, checking if product_id {product_id} exists directly")
-                            existing_product = session.query(Product).filter_by(id=product_id).first()
-                            if existing_product:
-                                logger.debug(f"Found existing product with ID {product_id}")
-                            else:
-                                logger.warning(f"Product {product_id} not found, but allowing invoice item import with product_id = None")
-                                item_mapped["product_id"] = None                                # Calculate item totals
+                                # Map product_id using the ID mapping if provided
+                                product_id = item_mapped.get("product_id")
+                                if product_id and product_id_mapping:
+                                    logger.debug(f"Looking up product_id {product_id} (type: {type(product_id)}) in mapping with {len(product_id_mapping)} entries")
+                                    logger.debug(f"Mapping keys sample: {list(product_id_mapping.keys())[:5]}")
+                                    new_product_id = product_id_mapping.get(str(product_id))
+                                    if new_product_id:
+                                        item_mapped["product_id"] = new_product_id
+                                        logger.debug(f"Mapped legacy product_id {product_id} to new product_id {new_product_id}")
+                                    else:
+                                        logger.warning(f"No mapping found for legacy product_id {product_id}, keeping original ID for reference but allowing import")
+                                        # Keep the original product_id for reference, but allow the item to be imported
+                                        # This preserves the legacy product reference even if the product wasn't imported
+                                        item_mapped["product_id"] = None  # Set to None since the product doesn't exist in new system
+                                        logger.debug(f"Set product_id to None for unmapped product {product_id}")
+                                elif product_id:
+                                    # No mapping provided, check if the product exists
+                                    logger.debug(f"No product_id_mapping provided, checking if product_id {product_id} exists directly")
+                                    existing_product = session.query(Product).filter_by(id=product_id).first()
+                                    if existing_product:
+                                        logger.debug(f"Found existing product with ID {product_id}")
+                                    else:
+                                        logger.warning(f"Product {product_id} not found, but allowing invoice item import with product_id = None")
+                                        item_mapped["product_id"] = None
+                                # Calculate item totals
                                 quantity = Decimal(str(item_mapped.get("quantity", 0)))
                                 price = Decimal(str(item_mapped.get("price", 0)))
                                 # No discount_amount in legacy schema, so set to 0
@@ -969,14 +970,12 @@ def import_invoices(dry_run=False, sql_file=None, client_id_mapping=None, produc
                                     logger.error(f"Item data: {item_mapped}")
                                     items_skipped += 1
                                     continue
-                                    
+                            
                             except Exception as e:
                                 logger.error(f"Unexpected error processing invoice item: {e}")
                                 logger.error(f"Item row: {item_row}")
                                 items_skipped += 1
-                                continue
-
-                    # Calculate invoice totals from items
+                                continue# Calculate invoice totals from items
                     session.flush()  # Ensure all items are saved
                     items = session.query(InvoiceItem).filter_by(invoice_id=invoice.id).all()
                     logger.info(f"Created {len(items)} invoice items for invoice {invoice.id}")

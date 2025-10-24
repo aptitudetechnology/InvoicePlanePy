@@ -21,4 +21,5 @@ sql1/
 *.bak
 npm-debug.log
 yarn-error.log
+importdb/invoiceplane.sql
 
